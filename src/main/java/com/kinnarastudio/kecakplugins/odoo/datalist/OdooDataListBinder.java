@@ -15,6 +15,7 @@ import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,7 +71,8 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPrimaryKeyColumnName() {
-        return getPropertyString("primaryKeyColumn");
+        final String value = getPropertyString("primaryKeyColumn");
+        return value.isEmpty() ? "id" : value;
     }
 
     @Override

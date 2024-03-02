@@ -3,14 +3,13 @@ import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class Test {
+public class OdooTest {
     public final static String PROPERTIES_FILE = "test.properties";
     private final String baseUrl;
     private final String database;
@@ -22,13 +21,12 @@ public class Test {
 
     private final OdooRpc rpc;
 
-    public Test() {
+    public OdooTest() {
         final Properties properties = getProperties(PROPERTIES_FILE);
 
         baseUrl = properties.get("baseUrl").toString();
         database = properties.get("database").toString();
         user = properties.get("user").toString();
-        ;
         apiKey = properties.get("apiKey").toString();
         model = "res.partner";
 
@@ -99,7 +97,7 @@ public class Test {
     }
     protected Properties getProperties(String file) {
         Properties prop = new Properties();
-        try (InputStream inputStream = Test.class.getResourceAsStream(file)) {
+        try (InputStream inputStream = OdooTest.class.getResourceAsStream(file)) {
             prop.load(inputStream);
         } catch (IOException e) {
             e.printStackTrace(System.out);

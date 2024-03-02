@@ -36,21 +36,24 @@ public class OdooFormStoreBinder extends FormBinder implements FormStoreElementB
                 .map(Hashtable::entrySet)
                 .map(Collection::stream)
                 .orElseGet(Stream::empty)
-                .filter(e -> {
-                    final Object value = e.getValue();
-                    return value != null && !String.valueOf(value).isEmpty();
-                })
+                .filter(e -> !e.getKey().toString().isEmpty() && Objects.nonNull(e.getValue()))
                 .collect(Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue));
 
         try {
+            final int recordId = Optional.ofNullable(record.get("id"))
+                    .map(String::valueOf)
+                    .map(Try.onFunction(Integer::parseInt, (NumberFormatException ignored) -> null))
+                    .orElseGet(() -> Optional.ofNullable(formData.getPrimaryKeyValue())
+                            .map(Try.onFunction(Integer::parseInt, (NumberFormatException ignored) -> null))
+                            .orElse(0));
 
-            if (formData.getPrimaryKeyValue() != null) {
-                final int primaryKey = Integer.parseInt(formData.getPrimaryKeyValue());
-                rpc.write(model, primaryKey, record);
+            if (recordId != 0) {
+                rpc.write(model, recordId, record);
             } else {
                 final int primaryKey = rpc.create(model, record);
                 if (rowSet != null) rowSet.forEach(row -> row.setId(String.valueOf(primaryKey)));
             }
+
 
             return rowSet;
         } catch (OdooCallMethodException e) {
