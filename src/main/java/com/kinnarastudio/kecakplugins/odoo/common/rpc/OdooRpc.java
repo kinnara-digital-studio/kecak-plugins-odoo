@@ -1,5 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.common.rpc;
 
+import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.kecakplugins.odoo.common.XmlRpcUtil;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
@@ -130,6 +131,9 @@ public class OdooRpc {
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
                     .map(o -> (Map<String, Object>) o)
+                    .peek(m -> m.forEach((key, value) -> {
+                        if(value instanceof Boolean && !(boolean) value) m.replace(key, null);
+                    }))
                     .toArray(Map[]::new);
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
@@ -180,7 +184,10 @@ public class OdooRpc {
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
                     .findFirst()
-                    .map(o -> (Map<String, Object>) o);
+                    .map(o -> (Map<String, Object>) o)
+                    .map(Try.toPeek(m -> m.forEach((key, value) -> {
+                        if(value instanceof Boolean && !(boolean) value) m.replace(key, null);
+                    })));
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);
