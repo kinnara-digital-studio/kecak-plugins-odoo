@@ -55,11 +55,12 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
                         final String label = (String) metadata.getOrDefault("string", field);
 
-                        final boolean sortable = "true".equals(metadata.getOrDefault("sortable", false));
+                        final boolean sortable = "true".equals(metadata.getOrDefault("sortable", true));
 
                         return new DataListColumn(field, label, sortable);
                     })
                     .toArray(DataListColumn[]::new);
+
         } catch (OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return new DataListColumn[0];
@@ -68,7 +69,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPrimaryKeyColumnName() {
-        return null;
+        return "id";
     }
 
     @Override
@@ -80,17 +81,16 @@ public class OdooDataListBinder extends DataListBinderDefault {
         final String model = OdooUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final SearchFilter[] filters = Optional.ofNullable(filterQueryObjects)
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
-                .filter(f -> f instanceof IOdooFilter)
-                .map(f -> (IOdooFilter) f)
-                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())))
-                .toArray(SearchFilter[]::new);
+        final SearchFilter[] filters = getFilters(filterQueryObjects);
 
+        for (SearchFilter filter : filters) {
+            LogUtil.info(getClassName(), "getData : filter [" + filter.getField() + "] [" + filter.getOperator() + "] [" + filter.getValue() + "]");
+        }
         try {
-            return Arrays.stream(rpc.searchRead(model, filters, start, rows))
+            final String order = sort == null ? null : String.join(" ", sort, desc != null && desc ? "desc" : "");
+            return Arrays.stream(rpc.searchRead(model, filters, order, start, rows))
                     .collect(Collectors.toCollection(DataListCollection<Map>::new));
+
         } catch (OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
@@ -106,13 +106,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
         final String model = OdooUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final SearchFilter[] filters = Optional.ofNullable(filterQueryObjects)
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
-                .filter(f -> f instanceof IOdooFilter)
-                .map(f -> (IOdooFilter) f)
-                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())))
-                .toArray(SearchFilter[]::new);
+        final SearchFilter[] filters = getFilters(filterQueryObjects);
 
         try {
             return rpc.searchCount(model, filters);
@@ -160,5 +154,16 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())
                 .toString();
+    }
+
+    protected SearchFilter[] getFilters(DataListFilterQueryObject[] filterQueryObjects) {
+        return Optional.ofNullable(filterQueryObjects)
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .filter(f -> f instanceof IOdooFilter)
+                .map(f -> (IOdooFilter) f)
+                .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
+                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())))
+                .toArray(SearchFilter[]::new);
     }
 }

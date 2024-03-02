@@ -40,6 +40,7 @@ public class OdooRpc {
         }
     }
 
+    @Nonnull
     public Map<String, Map<String, Object>> fieldsGet(String model) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -68,7 +69,8 @@ public class OdooRpc {
      * @param model
      * @return
      */
-    public Integer[] search(String model, SearchFilter[] filters, Integer offset, Integer limit) throws OdooCallMethodException {
+    @Nonnull
+    public Integer[] search(String model, SearchFilter[] filters, String order, Integer offset, Integer limit) throws OdooCallMethodException {
         try {
             final int uid = login();
 
@@ -89,6 +91,7 @@ public class OdooRpc {
                         {
                             if (offset != null) put("offset", offset);
                             if (limit != null) put("limit", limit);
+                            if (order != null) put("order", order);
                         }
                     }
             };
@@ -103,7 +106,7 @@ public class OdooRpc {
     }
 
     @Nonnull
-    public Map<String, Object>[] searchRead(String model, SearchFilter[] filters, Integer offset, Integer limit) throws OdooCallMethodException {
+    public Map<String, Object>[] searchRead(String model, SearchFilter[] filters, String order, Integer offset, Integer limit) throws OdooCallMethodException {
         try {
             final int uid = login();
 
@@ -124,6 +127,7 @@ public class OdooRpc {
                         {
                             if (offset != null) put("offset", offset);
                             if (limit != null) put("limit", limit);
+                            if (order != null) put("order", order);
                         }
                     }
             };

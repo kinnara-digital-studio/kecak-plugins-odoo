@@ -3,6 +3,26 @@
     "title": "Odoo DataList Filter",
     "properties": [
       {
+        "name": "mode",
+        "type": "radio",
+        "label": "Mode",
+        "value": "",
+        "options": [
+          {
+            "value": "",
+            "label": "Exact Match"
+          },
+          {
+            "value": "startsWith",
+            "label": "Starts With"
+          },
+          {
+            "value": "contains",
+            "label": "Contains"
+          }
+        ]
+      },
+      {
         "name": "filterPlugin",
         "type": "elementselect",
         "label": "Filter Plugin",

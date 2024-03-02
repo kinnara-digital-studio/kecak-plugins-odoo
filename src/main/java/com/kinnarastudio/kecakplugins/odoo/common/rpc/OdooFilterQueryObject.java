@@ -4,9 +4,14 @@ import org.joget.apps.datalist.model.DataListFilterQueryObject;
 
 public class OdooFilterQueryObject extends DataListFilterQueryObject implements IOdooFilter {
     private final String field;
+    private final String value;
 
-    public OdooFilterQueryObject(String field) {
+    private final String operator;
+
+    public OdooFilterQueryObject(String field, String operator, String value) {
         this.field = field;
+        this.operator = operator;
+        this.value = value;
     }
 
     @Override
@@ -16,11 +21,11 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
 
     @Override
     public String getOperator() {
-        return "=";
+        return operator;
     }
 
     @Override
     public String getValue() {
-        return null;
+        return value;
     }
 }

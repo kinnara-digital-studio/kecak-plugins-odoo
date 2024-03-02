@@ -1,4 +1,5 @@
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 
@@ -20,16 +21,19 @@ public class Test {
 
     private final OdooRpc rpc;
 
-    public Test(){
-        final Properties properties = getProperties();
+    public Test() {
+        final Properties properties = getProperties(PROPERTIES_FILE);
+
         baseUrl = properties.get("baseUrl").toString();
         database = properties.get("database").toString();
-        user = properties.get("user").toString();;
+        user = properties.get("user").toString();
+        ;
         apiKey = properties.get("apiKey").toString();
         model = "res.partner";
 
         rpc = new OdooRpc(baseUrl, database, user, apiKey);
     }
+
     @org.junit.Test
     public void testLogin() throws OdooAuthorizationException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
@@ -41,25 +45,23 @@ public class Test {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final int count = rpc.searchCount(model, null);
-        System.out.println(count);
-
-        for (Object partner : rpc.searchRead(model, null, null, 1)) {
+        for (Map<String, Object> partner : rpc.searchRead(model, new SearchFilter[]{ new SearchFilter("id", "=", "23"), new SearchFilter("id", "=", 23) }, "id desc", null, 3)) {
             System.out.println(partner.getClass());
-            System.out.println(partner);
+            System.out.println(partner.get("id"));
         }
     }
+
     @org.junit.Test
     public void testRead() throws OdooCallMethodException {
-        int recordId = rpc.search(model, null, null, 1)[0];
+        int recordId = rpc.search(model, null, null, null, 1)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
-                .orElseThrow(() -> new RuntimeException("record not found"));
+                .orElseThrow(() -> new OdooCallMethodException("record not found"));
 
         record.forEach((k, v) -> System.out.println(k + "->" + v));
     }
 
     @org.junit.Test
-    public void testFieldsGet () throws OdooCallMethodException {
+    public void testFieldsGet() throws OdooCallMethodException {
         final Map<String, Map<String, Object>> fields = rpc.fieldsGet(model);
 
         assert !fields.isEmpty();
@@ -70,9 +72,9 @@ public class Test {
         });
     }
 
-    protected Properties getProperties() {
+    protected Properties getProperties(String file) {
         Properties prop = new Properties();
-        try (InputStream inputStream = Test.class.getResourceAsStream(PROPERTIES_FILE)) {
+        try (InputStream inputStream = Test.class.getResourceAsStream(file)) {
             prop.load(inputStream);
         } catch (IOException e) {
             e.printStackTrace(System.out);

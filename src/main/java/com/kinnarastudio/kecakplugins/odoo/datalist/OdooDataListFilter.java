@@ -24,7 +24,28 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
     public DataListFilterQueryObject getQueryObject(DataList dataList, String name) {
         final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
         final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
-        return new OdooFilterQueryObject(name);
+
+        if(getValue(dataList, name) == null) {
+            return null;
+        }
+
+        final String value;
+        final String operator;
+
+        final String mode = getMode();
+        if("startsWith".equalsIgnoreCase(mode)) {
+            value = getValue(dataList, name) + "%";
+            operator = "=ilike";
+        } else if("contains".equalsIgnoreCase(mode)) {
+            value = "%" + getValue(dataList, name) + "%";
+            operator = "=ilike";
+        } else {
+            value = getValue(dataList, name);
+            operator = "=";
+        }
+
+        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value);
+        return filterQueryObject;
     }
 
     @Override
@@ -59,5 +80,9 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
 
     protected Map<String, Object> getFilterPlugin() {
         return (Map<String, Object>) getProperty("filterPlugin");
+    }
+
+    protected String getMode() {
+        return getPropertyString("mode");
     }
 }
