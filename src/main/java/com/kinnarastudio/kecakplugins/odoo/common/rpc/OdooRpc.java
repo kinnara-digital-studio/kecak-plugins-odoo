@@ -87,13 +87,11 @@ public class OdooRpc {
                     model,
                     "search",
                     new Object[]{objectFilters},
-                    new HashMap<String, Object>() {
-                        {
-                            if (offset != null) put("offset", offset);
-                            if (limit != null) put("limit", limit);
-                            if (order != null) put("order", order);
-                        }
-                    }
+                    new HashMap<String, Object>() {{
+                        if (offset != null) put("offset", offset);
+                        if (limit != null) put("limit", limit);
+                        if (order != null) put("order", order);
+                    }}
             };
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
@@ -123,13 +121,11 @@ public class OdooRpc {
                     model,
                     "search_read",
                     new Object[]{objectFilters},
-                    new HashMap<String, Object>() {
-                        {
-                            if (offset != null) put("offset", offset);
-                            if (limit != null) put("limit", limit);
-                            if (order != null) put("order", order);
-                        }
-                    }
+                    new HashMap<String, Object>() {{
+                        if (offset != null) put("offset", offset);
+                        if (limit != null) put("limit", limit);
+                        if (order != null) put("order", order);
+                    }}
             };
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))

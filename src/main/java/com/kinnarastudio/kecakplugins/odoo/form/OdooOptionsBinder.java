@@ -25,13 +25,12 @@ import java.util.stream.Stream;
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
     final public static String LABEL = "Odoo Options Binder";
 
-
     final private Predicate<String> isEmpty = String::isEmpty;
     final private Predicate<String> isNotEmpty = isEmpty.negate();
 
     @Override
     public boolean useAjax() {
-        return false;
+        return true;
     }
 
     @Override
@@ -50,6 +49,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final SearchFilter[] filters = groupingField.isEmpty() ? null : Optional.ofNullable(dependencyValues)
                 .map(Arrays::stream)
                 .orElseGet(Stream::empty)
+                .filter(isNotEmpty)
                 .map(s -> new SearchFilter(groupingField, s))
                 .toArray(SearchFilter[]::new);
 
