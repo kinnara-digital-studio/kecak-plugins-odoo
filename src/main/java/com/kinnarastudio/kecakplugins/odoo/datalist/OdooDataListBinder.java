@@ -11,6 +11,7 @@ import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.*;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 
 import java.util.*;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
+ * Odoo DataList Binder
  */
 public class OdooDataListBinder extends DataListBinderDefault {
     public final static String LABEL = "Odoo DataList Binder";
@@ -69,7 +70,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPrimaryKeyColumnName() {
-        return "id";
+        return getPropertyString("primaryKeyColumn");
     }
 
     @Override
@@ -83,9 +84,6 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
         final SearchFilter[] filters = getFilters(filterQueryObjects);
 
-        for (SearchFilter filter : filters) {
-            LogUtil.info(getClassName(), "getData : filter [" + filter.getField() + "] [" + filter.getOperator() + "] [" + filter.getValue() + "]");
-        }
         try {
             final String order = sort == null ? null : String.join(" ", sort, desc != null && desc ? "desc" : "");
             return Arrays.stream(rpc.searchRead(model, filters, order, start, rows))
@@ -123,7 +121,10 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        String buildNumber = resourceBundle.getString("buildNumber");
+        return buildNumber;
     }
 
     @Override

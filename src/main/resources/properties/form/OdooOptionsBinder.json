@@ -1,0 +1,28 @@
+[
+  {
+    "title": "Odoo Options Binder",
+    "properties": [
+      {
+        "name": "valueField",
+        "label": "Value field",
+        "type": "textfield"
+      },
+      {
+        "name": "labelField",
+        "label": "Label field",
+        "type": "textfield",
+        "required": "true"
+      },
+      {
+        "name": "groupingField",
+        "label": "Grouping field",
+        "type": "textfield"
+      },
+      {
+        "name": "emptyLabel",
+        "label": "Empty label",
+        "type": "textfield"
+      }
+    ]
+  }
+]
