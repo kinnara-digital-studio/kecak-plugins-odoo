@@ -5,6 +5,7 @@ import com.kinnarastudio.kecakplugins.odoo.common.XmlRpcUtil;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.apache.xmlrpc.XmlRpcException;
+import org.joget.commons.util.LogUtil;
 
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
@@ -132,7 +133,7 @@ public class OdooRpc {
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
                     .map(o -> (Map<String, Object>) o)
                     .peek(m -> m.forEach((key, value) -> {
-                        if(value instanceof Boolean && !(boolean) value) m.replace(key, null);
+                        if (value instanceof Boolean && !(boolean) value) m.replace(key, null);
                     }))
                     .toArray(Map[]::new);
 
@@ -186,8 +187,75 @@ public class OdooRpc {
                     .findFirst()
                     .map(o -> (Map<String, Object>) o)
                     .map(Try.toPeek(m -> m.forEach((key, value) -> {
-                        if(value instanceof Boolean && !(boolean) value) m.replace(key, null);
+                        if (value instanceof Boolean && !(boolean) value) m.replace(key, null);
                     })));
+
+        } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
+            throw new OdooCallMethodException(e);
+        }
+    }
+
+    public int create(String model, Map<String, Object> row) throws OdooCallMethodException {
+        try {
+            final int uid = login();
+
+            final Object[] params = new Object[]{
+                    database,
+                    uid,
+                    apiKey,
+                    model,
+                    "create",
+                    new Object[]{row},
+            };
+
+            int recordId = (int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
+
+            LogUtil.info(getClass().getName(), "rpc create : new record has been created with id [" + recordId + "]");
+
+            return recordId;
+
+        } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
+            throw new OdooCallMethodException(e);
+        }
+    }
+
+    public void write(String model, int recordId, Map<String, Object> row) throws OdooCallMethodException {
+        try {
+            final int uid = login();
+
+            final Object[] params = new Object[]{
+                    database,
+                    uid,
+                    apiKey,
+                    model,
+                    "write",
+                    new Object[]{recordId, row},
+            };
+
+            XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
+
+            LogUtil.info(getClass().getName(), "rpc write : record id [" + recordId + "] has been update");
+
+        } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
+            throw new OdooCallMethodException(e);
+        }
+    }
+
+    public void unlink(String model, int recordId) throws OdooCallMethodException {
+        try {
+            final int uid = login();
+
+            final Object[] params = new Object[]{
+                    database,
+                    uid,
+                    apiKey,
+                    model,
+                    "unlink",
+                    new Object[]{recordId},
+            };
+
+            XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
+            LogUtil.info(getClass().getName(), "rpc unlink : record ["+recordId+"] has been deleted");
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);

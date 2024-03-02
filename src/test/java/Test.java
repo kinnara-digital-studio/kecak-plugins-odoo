@@ -6,6 +6,7 @@ import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -45,7 +46,7 @@ public class Test {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        for (Map<String, Object> partner : rpc.searchRead(model, new SearchFilter[]{ new SearchFilter("id", "=", "23"), new SearchFilter("id", "=", 23) }, "id desc", null, 3)) {
+        for (Map<String, Object> partner : rpc.searchRead(model, new SearchFilter[]{new SearchFilter("id", "=", "23"), new SearchFilter("id", "=", 23)}, "id desc", null, 3)) {
             System.out.println(partner.getClass());
             System.out.println(partner.get("id"));
         }
@@ -72,6 +73,30 @@ public class Test {
         });
     }
 
+    @org.junit.Test
+    public void testWrite() throws OdooCallMethodException {
+        final Map<String, Object> record = new HashMap<String, Object>() {{
+            put("city", "Bandung");
+        }};
+
+        rpc.write(model, 47, record);
+    }
+
+    @org.junit.Test
+    public void testCreate() throws OdooCallMethodException {
+        final Map<String, Object> record = new HashMap<String, Object>() {{
+            put("name", "Anita Peterson");
+        }};
+
+        int recordId = rpc.create(model, record);
+
+        System.out.println(recordId);
+    }
+
+    @org.junit.Test
+    public void testDelete() throws OdooCallMethodException {
+        rpc.unlink(model, 62);
+    }
     protected Properties getProperties(String file) {
         Properties prop = new Properties();
         try (InputStream inputStream = Test.class.getResourceAsStream(file)) {
