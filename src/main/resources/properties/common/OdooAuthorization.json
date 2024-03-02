@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Authorization",
+    "properties": [
+      {
+        "name": "baseUrl",
+        "type": "textfield",
+        "label": "Base URL",
+        "required": "true"
+      },
+      {
+        "name": "database",
+        "type": "textfield",
+        "label": "Database",
+        "required": "true"
+      },
+      {
+        "name": "user",
+        "type": "textfield",
+        "label": "User",
+        "required": "true"
+      },
+      {
+        "name": "apiKey",
+        "type": "textfield",
+        "label": "API Key",
+        "required": "true"
+      },
+      {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      }
+    ]
+  }
+]

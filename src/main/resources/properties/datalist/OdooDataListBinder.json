@@ -1,0 +1,19 @@
+[
+  {
+    "title": "Odoo DataList Binder",
+    "properties": [
+      {
+        "name" : "method",
+        "type": "selectbox",
+        "label": "Method",
+        "required": "true",
+        "options": [
+          {
+            "value": "search_read",
+            "label": "Search Read"
+          }
+        ]
+      }
+    ]
+  }
+]

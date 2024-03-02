@@ -1,0 +1,15 @@
+[
+  {
+    "title": "Odoo DataList Filter",
+    "properties": [
+      {
+        "name": "filterPlugin",
+        "type": "elementselect",
+        "label": "Filter Plugin",
+        "required": "true",
+        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.datalist.model.DataListFilterType",
+        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
+      }
+    ]
+  }
+]
