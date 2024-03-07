@@ -8,6 +8,7 @@ import com.kinnarastudio.kecakplugins.odoo.datalist.OdooDataListFilter;
 import com.kinnarastudio.kecakplugins.odoo.form.OdooFormLoadBinder;
 import com.kinnarastudio.kecakplugins.odoo.form.OdooFormStoreBinder;
 import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
+import com.kinnarastudio.kecakplugins.odoo.tool.OdooRpcTool;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -25,6 +26,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(OdooFormLoadBinder.class.getName(), new OdooFormLoadBinder(), null));
         registrationList.add(context.registerService(OdooFormStoreBinder.class.getName(), new OdooFormStoreBinder(), null));
         registrationList.add(context.registerService(OdooOptionsBinder.class.getName(), new OdooOptionsBinder(), null));
+        registrationList.add(context.registerService(OdooRpcTool.class.getName(), new OdooRpcTool(), null));
     }
 
     public void stop(BundleContext context) {

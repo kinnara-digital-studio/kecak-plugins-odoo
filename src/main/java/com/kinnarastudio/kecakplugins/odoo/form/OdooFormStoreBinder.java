@@ -3,7 +3,7 @@ package com.kinnarastudio.kecakplugins.odoo.form;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
-import com.kinnarastudio.kecakplugins.odoo.common.OdooUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
@@ -22,11 +22,11 @@ public class OdooFormStoreBinder extends FormBinder implements FormStoreElementB
 
     @Override
     public FormRowSet store(Element element, FormRowSet rowSet, FormData formData) {
-        final String baseUrl = OdooUtil.getBaseUrl(this);
-        final String database = OdooUtil.getDatabase(this);
-        final String user = OdooUtil.getUsername(this);
-        final String apiKey = OdooUtil.getApiKey(this);
-        final String model = OdooUtil.getModel(this);
+        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+        final String database = OdooAuthorizationUtil.getDatabase(this);
+        final String user = OdooAuthorizationUtil.getUsername(this);
+        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+        final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final Map<String, Object> record = Optional.ofNullable(rowSet)
@@ -108,11 +108,11 @@ public class OdooFormStoreBinder extends FormBinder implements FormStoreElementB
 
     @Override
     public void delete(Element element, FormRowSet rowSet, FormData formData, boolean deleteGrid, boolean deleteSubform, boolean abortProcess, boolean deleteFiles, boolean hardDelete) {
-        final String baseUrl = OdooUtil.getBaseUrl(this);
-        final String database = OdooUtil.getDatabase(this);
-        final String user = OdooUtil.getUsername(this);
-        final String apiKey = OdooUtil.getApiKey(this);
-        final String model = OdooUtil.getModel(this);
+        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+        final String database = OdooAuthorizationUtil.getDatabase(this);
+        final String user = OdooAuthorizationUtil.getUsername(this);
+        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+        final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         Optional.ofNullable(rowSet)

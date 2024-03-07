@@ -8,9 +8,9 @@
     <name>kecak-plugins-odoo</name>
     <url>http://www.kecak.org</url>
     <scm>
-        <connection>scm:git:ssh://</connection>
-        <developerConnection>scm:git:ssh://</developerConnection>
-        <url>ssh://</url>
+        <connection>scm:git:ssh://git@github.com:kinnara-digital-studio/kecak-plugins-odoo.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:kinnara-digital-studio/kecak-plugins-odoo.git</developerConnection>
+        <url>ssh://git@github.com:kinnara-digital-studio/kecak-plugins-odoo.git</url>
         <tag>HEAD</tag>
     </scm>
     <build>

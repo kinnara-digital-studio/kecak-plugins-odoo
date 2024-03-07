@@ -1,7 +1,12 @@
 package com.kinnarastudio.kecakplugins.odoo.common.rpc;
 
 public class SearchFilter {
-    public final static String EQ = "=";
+    public final static String EQUAL = "=";
+    public final static String NOT_EQUAL = "<>";
+    public final static String GREATER = ">";
+    public final static String GREATER_EQUAL = ">=";
+    public final static String LESS = "<";
+    public final static String LESS_EQUAL = "<=";
     private final String field;
     private final String operator;
     private final Object value;
@@ -13,7 +18,7 @@ public class SearchFilter {
     }
 
     public SearchFilter(String field, Object value) {
-        this(field, EQ, value);
+        this(field, EQUAL, value);
     }
 
     public String getField() {

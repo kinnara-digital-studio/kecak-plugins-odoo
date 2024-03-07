@@ -3,7 +3,7 @@ package com.kinnarastudio.kecakplugins.odoo.datalist;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
-import com.kinnarastudio.kecakplugins.odoo.common.OdooUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
@@ -15,7 +15,6 @@ import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -28,6 +27,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
     public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<String>() {
         {
             add("string");
+            add("date");
             add("datetime");
             add("integer");
             add("char");
@@ -37,11 +37,11 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public DataListColumn[] getColumns() {
-        final String baseUrl = OdooUtil.getBaseUrl(this);
-        final String database = OdooUtil.getDatabase(this);
-        final String user = OdooUtil.getUsername(this);
-        final String apiKey = OdooUtil.getApiKey(this);
-        final String model = OdooUtil.getModel(this);
+        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+        final String database = OdooAuthorizationUtil.getDatabase(this);
+        final String user = OdooAuthorizationUtil.getUsername(this);
+        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+        final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
@@ -77,11 +77,11 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public DataListCollection getData(DataList dataList, Map properties, DataListFilterQueryObject[] filterQueryObjects, String sort, Boolean desc, Integer start, Integer rows) {
-        final String baseUrl = OdooUtil.getBaseUrl(this);
-        final String database = OdooUtil.getDatabase(this);
-        final String user = OdooUtil.getUsername(this);
-        final String apiKey = OdooUtil.getApiKey(this);
-        final String model = OdooUtil.getModel(this);
+        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+        final String database = OdooAuthorizationUtil.getDatabase(this);
+        final String user = OdooAuthorizationUtil.getUsername(this);
+        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+        final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final SearchFilter[] filters = getFilters(filterQueryObjects);
@@ -99,11 +99,11 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public int getDataTotalRowCount(DataList dataList, Map properties, DataListFilterQueryObject[] filterQueryObjects) {
-        final String baseUrl = OdooUtil.getBaseUrl(this);
-        final String database = OdooUtil.getDatabase(this);
-        final String user = OdooUtil.getUsername(this);
-        final String apiKey = OdooUtil.getApiKey(this);
-        final String model = OdooUtil.getModel(this);
+        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+        final String database = OdooAuthorizationUtil.getDatabase(this);
+        final String user = OdooAuthorizationUtil.getUsername(this);
+        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+        final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final SearchFilter[] filters = getFilters(filterQueryObjects);
