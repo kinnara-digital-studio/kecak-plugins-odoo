@@ -3,6 +3,7 @@ package com.kinnarastudio.kecakplugins.odoo.common.property;
 import org.joget.plugin.base.ExtDefaultPlugin;
 
 public final class OdooAuthorizationUtil {
+    private OdooAuthorizationUtil() {}
     public static String getBaseUrl(ExtDefaultPlugin plugin) {
         return plugin.getPropertyString("baseUrl");
     }

@@ -1,6 +1,6 @@
 [
   {
-    "title": "Authorization",
+    "title": "Odoo Authorization",
     "properties": [
       {
         "name": "baseUrl",

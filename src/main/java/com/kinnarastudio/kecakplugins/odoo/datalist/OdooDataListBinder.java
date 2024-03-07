@@ -4,6 +4,7 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
@@ -11,6 +12,7 @@ import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.*;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.ExtDefaultPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 
@@ -160,13 +162,16 @@ public class OdooDataListBinder extends DataListBinderDefault {
     }
 
     protected SearchFilter[] getFilters(DataListFilterQueryObject[] filterQueryObjects) {
-        return Optional.ofNullable(filterQueryObjects)
+        final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
+        final Stream<SearchFilter> filterQueryObjectStream = Optional.ofNullable(filterQueryObjects)
                 .map(Arrays::stream)
                 .orElseGet(Stream::empty)
                 .filter(f -> f instanceof IOdooFilter)
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
-                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())))
+                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())));
+
+        return Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
     }
 }

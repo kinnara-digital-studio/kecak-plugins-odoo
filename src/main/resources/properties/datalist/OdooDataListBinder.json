@@ -20,6 +20,53 @@
         "label": "Primary Key Column",
         "value": "id",
         "required": "true"
+      },
+      {
+        "name": "filter",
+        "type": "grid",
+        "label": "Filter",
+        "columns": [
+          {
+            "key": "field",
+            "label": "Field",
+            "required": "true"
+          },
+          {
+            "key": "operator",
+            "label": "Operator",
+            "required": "true",
+            "options": [
+              {
+                "value": "=",
+                "label": "Equal"
+              },
+              {
+                "value": "<>",
+                "label": "Not Equal"
+              },
+              {
+                "value": ">",
+                "label": "Greater Than"
+              },
+              {
+                "value": ">=",
+                "label": "Greater Equal"
+              },
+              {
+                "value": "<",
+                "label": "Less Than"
+              },
+              {
+                "value": "<=",
+                "label": "Less Equal"
+              }
+            ]
+          },
+          {
+            "key": "value",
+            "label": "Value"
+          }
+        ]
       }
     ]
   }

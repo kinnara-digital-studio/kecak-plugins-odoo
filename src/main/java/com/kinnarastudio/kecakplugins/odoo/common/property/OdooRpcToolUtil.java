@@ -1,7 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
 import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooUtilityException;
 import org.joget.apps.app.dao.FormDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.FormDefinition;
@@ -21,6 +20,8 @@ import java.util.stream.Stream;
  *
  */
 public final class OdooRpcToolUtil {
+    private OdooRpcToolUtil() {}
+
     public static String getMethod(ExtDefaultPlugin plugin) {
         return plugin.getPropertyString("method");
     }

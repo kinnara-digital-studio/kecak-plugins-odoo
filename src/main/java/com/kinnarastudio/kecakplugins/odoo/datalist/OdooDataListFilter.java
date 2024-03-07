@@ -45,7 +45,7 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
             operator = "=";
         }
 
-        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value);
+        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
         return filterQueryObject;
     }
 

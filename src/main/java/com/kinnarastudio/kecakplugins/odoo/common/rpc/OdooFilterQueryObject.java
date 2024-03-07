@@ -7,11 +7,13 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
     private final String value;
 
     private final String operator;
+    private final DataType dataType;
 
-    public OdooFilterQueryObject(String field, String operator, String value) {
+    public OdooFilterQueryObject(String field, String operator, String value, DataType dataType) {
         this.field = field;
         this.operator = operator;
         this.value = value;
+        this.dataType = dataType;
     }
 
     @Override
@@ -27,5 +29,11 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
     @Override
     public String getValue() {
         return value;
+    }
+
+
+    public enum DataType {
+        STRING,
+        INTEGER
     }
 }
