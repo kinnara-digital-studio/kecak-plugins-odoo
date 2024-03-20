@@ -1,0 +1,117 @@
+[
+  {
+    "title": "Odoo DataList RPC Tool",
+    "properties": [
+      {
+        "type": "header",
+        "label": "Source"
+      },
+      {
+        "name" : "dataListId",
+        "label" : "DataList",
+        "type" : "selectbox",
+        "options_ajax":"[CONTEXT_PATH]/web/json/console/app[APP_PATH]/datalist/options",
+        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
+      },
+      {
+        "name": "method",
+        "type":"selectbox",
+        "required": "true",
+        "label": "Method",
+        "options": [
+          {
+            "value": "write",
+            "label": "Write"
+          },
+          {
+            "value": "create",
+            "label": "Create"
+          },
+          {
+            "value": "unlink",
+            "label": "Delete"
+          }
+        ]
+      },
+      {
+        "name": "recordId",
+        "type": "textfield",
+        "label": "Record ID",
+        "required": "true",
+        "control_field" : "method",
+        "control_value" : "read"
+      },
+      {
+        "name": "record",
+        "type": "grid",
+        "label": "Record",
+        "control_field" : "method",
+        "control_value" : "create|write",
+        "control_use_regex": "true",
+        "columns": [
+          {
+            "key": "field",
+            "label": "Field",
+            "required": "true"
+          },
+          {
+            "key": "value",
+            "label": "Value",
+            "required": "true"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Result",
+    "properties": [
+      {
+        "type": "header",
+        "label": "Process"
+      },
+      {
+        "name": "resultWfVariable",
+        "type": "textfield",
+        "label": "Workflow Variable",
+        "control_field" : "method",
+        "control_value" : "create|write",
+        "control_use_regex": "true"
+      },
+      {
+        "name": "resultRecord",
+        "type": "grid",
+        "label": "Record",
+        "control_field" : "method",
+        "control_value" : "read",
+        "columns": [
+          {
+            "key": "field",
+            "label": "Field",
+            "required": "true"
+          },
+          {
+            "key": "wfVariable",
+            "label": "Workflow Variable",
+            "required": "true"
+          }
+        ]
+      },
+      {
+        "type": "header",
+        "label": "Store in Form",
+        "control_field" : "method",
+        "control_value" : "read"
+      },
+      {
+        "name" : "resultFormDefId",
+        "label" : "Form",
+        "type" : "selectbox",
+        "options_ajax":"[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options",
+        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
+        "control_field" : "method",
+        "control_value" : "read"
+      }
+    ]
+  }
+]

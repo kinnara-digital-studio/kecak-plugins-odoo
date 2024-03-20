@@ -8,24 +8,21 @@ import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.form.model.Form;
-import org.joget.apps.form.model.FormData;
-import org.joget.apps.form.service.FormService;
-import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
-import org.kecak.apps.form.service.FormDataUtil;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 
+/**
+ * Execute Odoo RPC
+ */
 public class OdooRpcTool extends DefaultApplicationPlugin {
     public final static String LABEL = "Odoo RPC Tool";
 
@@ -70,51 +67,6 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                     final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
                     final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
                     workflowManager.activityVariable(workflowAssignment.getActivityId(), resultWorkflowVariable, String.valueOf(resultValue));
-
-                    break;
-                }
-
-                case "read": {
-                    final Map<String, Object> incomingRecord = rpc.read(model, optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method")))
-                            .orElseThrow(() -> new OdooCallMethodException("No result found when trying to read model [" + model + "] id [" + optRecordId.get() + "]"));
-
-                    final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-                    final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
-
-                    final Map<String, String> resultRecord = OdooRpcToolUtil.getResultRecord(this);
-                    resultRecord.forEach((field, workflowVariable) -> {
-                        final Object value = incomingRecord.get(field);
-                        LogUtil.info(getClass().getName(), "resultMap [" + field + "][" + value + "]");
-                        if (value != null) {
-                            workflowManager.activityVariable(workflowAssignment.getActivityId(), workflowVariable, String.valueOf(value));
-                        }
-                    });
-
-                    final Optional<Form> optForm = OdooRpcToolUtil.getResultForm(this);
-                    optForm.ifPresent(form -> {
-                        final FormData formData = new FormData();
-                        formData.setPrimaryKeyValue(resultRecord.get("id"));
-
-                        FormDataUtil.elementStream(form, formData)
-                                .forEach(e -> {
-                                    final String elementId = e.getPropertyString(FormUtil.PROPERTY_ID);
-                                    final String parameterName = FormUtil.getElementParameterName(e);
-                                    final String value = resultRecord.get(elementId);
-                                    if (value != null) {
-                                        formData.addRequestParameterValues(parameterName, new String[]{value});
-                                    }
-                                });
-
-                        final FormService formService = (FormService) AppUtil.getApplicationContext().getBean("formService");
-
-                        formService.executeFormStoreBinders(form, formData)
-
-                                // display error
-                                .getFormErrors()
-                                .forEach((elementId, message) -> {
-                                    LogUtil.warn(getClass().getName(), "Error submitting form [" + form.getPropertyString("id") + "] element [" + elementId + "] message [" + message + "]");
-                                });
-                    });
 
                     break;
                 }

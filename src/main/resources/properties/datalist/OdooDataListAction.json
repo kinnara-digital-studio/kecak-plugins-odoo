@@ -1,0 +1,48 @@
+[
+  {
+    "title": "DataList Action",
+    "properties": [
+      {
+        "name": "label",
+        "label": "Label",
+        "type": "textfield",
+        "required": "true"
+      },
+      {
+        "name": "confirmation",
+        "label": "Confirmation",
+        "type": "textfield"
+      }
+    ]
+  },
+  {
+    "title": "Redirect",
+    "properties": [
+      {
+        "name": "href",
+        "label": "@@datalist.hyperlinkdatalistaction.hyperlink@@",
+        "type": "textfield"
+      },
+      {
+        "label" : "@@datalist.hyperlinkdatalistaction.hyperlinkTarget@@",
+        "name" : "target",
+        "type" : "selectbox",
+        "description" : "@@datalist.hyperlinkdatalistaction.hyperlinkTarget.desc@@",
+        "options" : [
+          {
+            "value" : "_self",
+            "label" : "@@datalist.hyperlinkdatalistaction.currentWindow@@"
+          },
+          {
+            "value" : "_blank",
+            "label" : "@@datalist.hyperlinkdatalistaction.newWindow@@"
+          },
+          {
+            "value" : "popup",
+            "label" : "@@datalist.hyperlinkdatalistaction.popup@@"
+          }
+        ]
+      }
+    ]
+  }
+]

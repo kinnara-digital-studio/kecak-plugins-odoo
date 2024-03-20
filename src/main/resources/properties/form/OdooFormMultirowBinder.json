@@ -1,0 +1,13 @@
+[
+  {
+    "title": "Odoo Form Multirow Binder",
+    "properties": [
+      {
+        "name": "foreignKeyField",
+        "label": "Foreign Key",
+        "type": "textfield",
+        "required": "true"
+      }
+    ]
+  }
+]
