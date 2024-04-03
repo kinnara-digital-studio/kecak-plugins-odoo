@@ -12,6 +12,12 @@ import java.net.MalformedURLException;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * Odoo RPC
+ *
+ * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#external-api">External API</a>
+ *
+ */
 public class OdooRpc {
     public final static String PATH_COMMON = "/xmlrpc/2/common";
     public final static String PATH_OBJECT = "/xmlrpc/2/object";
@@ -27,6 +33,16 @@ public class OdooRpc {
         this.apiKey = apiKey;
     }
 
+    /**
+     * Login
+     *
+     * Authenticate
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#logging-in">Loggin in</a>
+     *
+     * @return
+     * @throws OdooAuthorizationException
+     */
     public int login() throws OdooAuthorizationException {
         try {
             final Object ret = XmlRpcUtil.execute(baseUrl + "/" + PATH_COMMON, "login", new Object[]{database, user, apiKey});
@@ -42,6 +58,17 @@ public class OdooRpc {
         }
     }
 
+    /**
+     * Fields Get
+     *
+     * Implementation of odoo's xmlrpc <b>fields_get()</b> method
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-record-fields">List record fields</a>
+     *
+     * @param model
+     * @return
+     * @throws OdooCallMethodException
+     */
     @Nonnull
     public Map<String, Map<String, Object>> fieldsGet(String model) throws OdooCallMethodException {
         try {
@@ -66,10 +93,19 @@ public class OdooRpc {
     }
 
     /**
-     * Get recordId
+     * Search
+     *
+     * Implementation of odoo's xmlrpc <b>search()</b> method
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-records">List Records</a>
      *
      * @param model
+     * @param filters
+     * @param order
+     * @param offset
+     * @param limit
      * @return
+     * @throws OdooCallMethodException
      */
     @Nonnull
     public Integer[] search(String model, SearchFilter[] filters, String order, Integer offset, Integer limit) throws OdooCallMethodException {
@@ -105,6 +141,21 @@ public class OdooRpc {
         }
     }
 
+    /**
+     * Search Read
+     *
+     * Implementation of odoo's xmlrpc <b>search_read()</b> method
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#search-and-read">Search and Read</a>
+     *
+     * @param model
+     * @param filters
+     * @param order
+     * @param offset
+     * @param limit
+     * @return
+     * @throws OdooCallMethodException
+     */
     @Nonnull
     public Map<String, Object>[] searchRead(String model, SearchFilter[] filters, String order, Integer offset, Integer limit) throws OdooCallMethodException {
         try {
@@ -115,6 +166,7 @@ public class OdooRpc {
                     .orElseGet(Stream::empty)
                     .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValue()})
                     .toArray(Object[]::new);
+
 
             final Object[] params = new Object[]{
                     database,
@@ -143,6 +195,18 @@ public class OdooRpc {
     }
 
 
+    /**
+     * Search Count
+     *
+     * Implementation of odoo's xmlrpc <b>search_count()</b>
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#count-records">Count records</a>
+     *
+     * @param model
+     * @param filters
+     * @return
+     * @throws OdooCallMethodException
+     */
     public int searchCount(String model, SearchFilter[] filters) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -170,6 +234,18 @@ public class OdooRpc {
         }
     }
 
+    /**
+     * Read
+     *
+     * Implementation of odoo's xmlrpc <b>read()</b>
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#read-records">Read records</a>
+     *
+     * @param model
+     * @param recordId
+     * @return
+     * @throws OdooCallMethodException
+     */
     public Optional<Map<String, Object>> read(String model, int recordId) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -195,6 +271,18 @@ public class OdooRpc {
         }
     }
 
+    /**
+     * Create
+     *
+     * Implementation of odoo's xmlrpc <b>create()</b>
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#create-records">Create records</a>
+     *
+     * @param model
+     * @param row
+     * @return
+     * @throws OdooCallMethodException
+     */
     public int create(String model, Map<String, Object> row) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -219,6 +307,18 @@ public class OdooRpc {
         }
     }
 
+    /**
+     * Write
+     *
+     * Implementation of odoo's xmlrpc <b>write()</b>
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#update-records">Update records</a>
+     *
+     * @param model
+     * @param recordId
+     * @param row
+     * @throws OdooCallMethodException
+     */
     public void write(String model, int recordId, Map<String, Object> row) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -241,6 +341,18 @@ public class OdooRpc {
         }
     }
 
+
+    /**
+     * Unlink
+     *
+     * Implementation of odoo's xmlrpc <b>unlink()</b>
+     *
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#delete-records">Delete records</a>
+     *
+     * @param model
+     * @param recordId
+     * @throws OdooCallMethodException
+     */
     public void unlink(String model, int recordId) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -255,7 +367,7 @@ public class OdooRpc {
             };
 
             XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
-            LogUtil.info(getClass().getName(), "rpc unlink : record ["+recordId+"] has been deleted");
+            LogUtil.info(getClass().getName(), "rpc unlink : record [" + recordId + "] has been deleted");
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);
