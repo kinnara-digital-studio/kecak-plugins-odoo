@@ -5,31 +5,143 @@
       {
         "name": "mode",
         "type": "radio",
-        "label": "Mode",
+        "label": "Filtered Using",
         "value": "",
         "options": [
           {
             "value": "",
-            "label": "Exact Match"
+            "label": "Text Field"
           },
           {
-            "value": "startsWith",
-            "label": "Starts With"
+            "value": "multiple",
+            "label": "Multiple Selection"
           },
           {
-            "value": "contains",
-            "label": "Contains"
+            "value": "dateTime",
+            "label": "Date Time"
           }
         ]
-      },
-      {
-        "name": "filterPlugin",
-        "type": "elementselect",
-        "label": "Filter Plugin",
-        "required": "true",
-        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.datalist.model.DataListFilterType",
-        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
       }
     ]
+  },
+  {
+    "title":"@@datalist.tfdlft.config@@",
+    "control_field": "mode",
+    "control_value": "",
+    "properties":[
+      {
+        "name":"defaultValue",
+        "label":"@@datalist.tfdlft.defaultValue@@",
+        "type":"textfield"
+      }
+    ]
+  },
+  {
+    "title": "@@datalist.dtdlfp.title@@",
+    "control_field": "mode",
+    "control_value": "dateTime",
+    "properties": [
+        {
+            "name": "showTime",
+            "label": "@@datalist.dtdlfp.showTime@@",
+            "type": "checkbox",
+            "value": "",
+            "options" : [
+                {
+                    "value" : "true",
+                    "label" : ""
+                }
+            ]
+        },
+        {
+            "name": "singleValue",
+            "label":  "Single Value",
+            "description" : "@@datalist.dtdlfp.singleValue.desc@@",
+            "value" : "true",
+            "type": "checkbox",
+            "options": [
+                {
+                    "value" : "true",
+                    "label" : ""
+                }
+            ]
+        },
+        {
+            "name": "format",
+            "label": "Format",
+            "type": "textfield",
+            "value": "mm/dd/yy",
+            "required": "true"
+        },
+        {
+            "name" : "databaseDateFunction",
+            "label" : "@@datalist.dtdlfp.databaseDateFunction@@",
+            "description" : "@@datalist.dtdlfp.databaseDateFunction.desc@@",
+            "type": "textfield"
+        },
+        {
+            "name" : "filterDateFunction",
+            "label" : "@@datalist.dtdlfp.filterDateFunction@@",
+            "description" : "@@datalist.dtdlfp.filterDateFunction.desc@@",
+            "type": "textfield"
+        },
+        {
+            "label": "@@datalist.dtdlfp.defaultValue@@",
+            "type": "header"
+        },
+        {
+            "name": "defaultValue",
+            "label": "@@datalist.dtdlfp.defaultValue@@",
+            "description": "@@datalist.dtdlfp.defaultValue.desc@@",
+            "type": "textfield"
+        }
+    ]
+  },
+  {
+    "title" : "@@datalist.sbdlfp.editSelectBox@@",
+    "control_field": "mode",
+    "control_value": "multiple",
+    "properties" : [{
+	        "name" : "defaultValue",
+	        "label" : "@@datalist.sbdlfp.defaultValue@@",
+	        "type" : "textfield"
+    	},
+    	{
+	        "name" : "options",
+	        "label" : "@@datalist.sbdlfp.options@@",
+	        "type" : "grid",
+	        "columns" : [{
+	            "key" : "value",
+	            "label" : "@@datalist.sbdlfp.value@@"
+	        },
+	        {
+	            "key" : "label",
+	            "label" : "@@datalist.sbdlfp.label@@"
+	        }]
+    	},
+    	{
+	        "name" : "optionsBinder",
+	        "label" : "@@datalist.sbdlfp.chooseOptionsBinder@@",
+	        "type" : "elementselect",
+	        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormAjaxOptionsBinder",
+	        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
+	    },
+		{
+			"name" : "size",
+			"label" : "@@datalist.sbdlfp.size@@",
+			"type" : "textfield",
+			"regex_validation" : "^[0-9]+$"
+		},
+		{
+			"name" :"multivalue",
+			"label" : "@@datalist.sbdlfp.multivalue@@",
+			"type" : "checkbox",
+			"options" : [
+				{
+					"value" : "true",
+					"label" : ""
+				}
+			]
+		}]
   }
 ]
