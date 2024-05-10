@@ -37,13 +37,13 @@
     ]
   },
   {
-    "title": "@@datalist.dtdlfp.title@@",
+    "title": "Configure Date Time",
     "control_field": "mode",
     "control_value": "dateTime",
     "properties": [
         {
             "name": "showTime",
-            "label": "@@datalist.dtdlfp.showTime@@",
+            "label": "Show Time",
             "type": "checkbox",
             "value": "",
             "options" : [
@@ -56,7 +56,7 @@
         {
             "name": "singleValue",
             "label":  "Single Value",
-            "description" : "@@datalist.dtdlfp.singleValue.desc@@",
+            "description" : "Single Value",
             "value" : "true",
             "type": "checkbox",
             "options": [
@@ -75,66 +75,66 @@
         },
         {
             "name" : "databaseDateFunction",
-            "label" : "@@datalist.dtdlfp.databaseDateFunction@@",
-            "description" : "@@datalist.dtdlfp.databaseDateFunction.desc@@",
+            "label" : "Database Date Function",
+            "description" : "Function to convert database column to datetime format. Use '?' to mark column name. For example : str_to_date(?, '%d/%m/%Y')",
             "type": "textfield"
         },
         {
             "name" : "filterDateFunction",
-            "label" : "@@datalist.dtdlfp.filterDateFunction@@",
-            "description" : "@@datalist.dtdlfp.filterDateFunction.desc@@",
+            "label" : "Filter Value Date Function",
+            "description" : "Function to convert filter value to datetime format. Use '?' to mark value name. For example : str_to_date(?, '%d/%m/%Y')datalist.dtdlfp.singleValue=Single Value",
             "type": "textfield"
         },
         {
-            "label": "@@datalist.dtdlfp.defaultValue@@",
+            "label": "Default Value",
             "type": "header"
         },
         {
             "name": "defaultValue",
-            "label": "@@datalist.dtdlfp.defaultValue@@",
-            "description": "@@datalist.dtdlfp.defaultValue.desc@@",
+            "label": "Default Value",
+            "description": "Use ; as date range separator",
             "type": "textfield"
         }
     ]
   },
   {
-    "title" : "@@datalist.sbdlfp.editSelectBox@@",
+    "title" : "Configure Selection",
     "control_field": "mode",
     "control_value": "multiple",
     "properties" : [{
 	        "name" : "defaultValue",
-	        "label" : "@@datalist.sbdlfp.defaultValue@@",
+	        "label" : "Default Value",
 	        "type" : "textfield"
     	},
     	{
 	        "name" : "options",
-	        "label" : "@@datalist.sbdlfp.options@@",
+	        "label" : "Options (Hardcoded)",
 	        "type" : "grid",
 	        "columns" : [{
 	            "key" : "value",
-	            "label" : "@@datalist.sbdlfp.value@@"
+	            "label" : "Value"
 	        },
 	        {
 	            "key" : "label",
-	            "label" : "@@datalist.sbdlfp.label@@"
+	            "label" : "Label"
 	        }]
     	},
     	{
 	        "name" : "optionsBinder",
-	        "label" : "@@datalist.sbdlfp.chooseOptionsBinder@@",
+	        "label" : "Or Choose Options Binder",
 	        "type" : "elementselect",
 	        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=org.joget.apps.form.model.FormAjaxOptionsBinder",
 	        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions"
 	    },
 		{
 			"name" : "size",
-			"label" : "@@datalist.sbdlfp.size@@",
+			"label" : "Size (px)",
 			"type" : "textfield",
 			"regex_validation" : "^[0-9]+$"
 		},
 		{
 			"name" :"multivalue",
-			"label" : "@@datalist.sbdlfp.multivalue@@",
+			"label" : "Multivalue",
 			"type" : "checkbox",
 			"options" : [
 				{
