@@ -101,7 +101,8 @@
     "title" : "Configure Selection",
     "control_field": "mode",
     "control_value": "multiple",
-    "properties" : [{
+    "properties" : [
+      {
 	        "name" : "defaultValue",
 	        "label" : "Default Value",
 	        "type" : "textfield"
@@ -142,6 +143,7 @@
 					"label" : ""
 				}
 			]
-		}]
+		}
+  ]
   }
 ]

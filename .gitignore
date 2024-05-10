@@ -4,3 +4,5 @@ target/
 .project
 *.iml
 test.properties
+node_modules/
+package-lock.json

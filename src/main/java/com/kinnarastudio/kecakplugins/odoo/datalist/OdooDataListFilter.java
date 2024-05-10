@@ -10,17 +10,25 @@ import org.joget.apps.form.model.FormAjaxOptionsBinder;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.Plugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.plugin.property.model.PropertyEditable;
 import org.joget.workflow.util.WorkflowUtil;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -29,12 +37,14 @@ import javax.servlet.http.HttpServletRequest;
 public class OdooDataListFilter extends DataListFilterTypeDefault{
     public final static String LABEL = "Odoo DataList Filter";
 
+    private final static DateFormat hibernateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     @Override
     public String getTemplate(DataList dataList, String name, String label) {
         final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
         // final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
         // return filterPlugin.getTemplate(dataList, name, label);
-
+        
         Map dataModel = new HashMap();
         
         dataModel.put("name", dataList.getDataListEncodedParamName(DataList.PARAMETER_FILTER_PREFIX+name));
@@ -63,7 +73,8 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
         dataModel.put("request", request);
         dataModel.put("properties", getProperties());
 
-        //Multiple (Using Select Box DataList Filter)
+        //Multiple (Using Select Box DataList Filter and Process Assignment DataList Filter for the looping)
+        dataModel.put("values", getValueSet(dataList, name, getPropertyString("defaultValue")));
         FormRowSet options = getStreamOptions()
                 .collect(Collectors.toCollection(FormRowSet::new));
 
@@ -160,30 +171,168 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
 
     @Override
     public DataListFilterQueryObject getQueryObject(DataList dataList, String name) {
-        final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
-        // final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
-
-        if(getValue(dataList, name) == null) {
-            return null;
-        }
-
-        final String value;
-        final String operator;
-
         final String mode = getMode();
-        if("startsWith".equalsIgnoreCase(mode)) {
-            value = getValue(dataList, name) + "%";
-            operator = "=ilike";
-        } else if("contains".equalsIgnoreCase(mode)) {
-            value = "%" + getValue(dataList, name) + "%";
-            operator = "=ilike";
-        } else {
-            value = getValue(dataList, name);
-            operator = "=";
-        }
+        if("multiple".equalsIgnoreCase(mode)) {
+            DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
+            if (dataList != null && dataList.getBinder() != null) {
+                List<String> paramList = new ArrayList<>(getValueSet(dataList, name, getPropertyString("defaultValue")));
 
-        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
-        return filterQueryObject;
+                String[] paramArray = paramList.toArray(new String[0]);
+
+                final String columnName = dataList.getBinder().getColumnName(name);
+                String query = paramList.stream()
+                        .map(s -> "(" + columnName + " = ? OR " + columnName + " LIKE ? || ';%' OR " + columnName + " LIKE '%;' || ? OR " + columnName + " LIKE '%;' || ? || ';%')")
+                        .collect(Collectors.joining(" AND "));
+
+                String[] params = paramList.stream()
+                        .flatMap(s -> repeat(s, 4))
+                        .toArray(String[]::new);
+
+                queryObject.setQuery("(" + (paramList.isEmpty() ? "1 = 1" : query) + ")");
+                queryObject.setValues(params);
+
+                // LogUtil.info(getClassName(),"Parameter List: " + paramList);
+                // LogUtil.info(getClassName(),"Query: " + query);
+                // LogUtil.info(getClassName(),"Parameter: " + Arrays.toString(params));
+
+                LogUtil.info(getClassName(),"Parameter Array: " + Arrays.toString(paramArray));
+                // return queryObject;
+                return new DataListFilterQueryObject() {{
+                    if (paramArray.length > 0) {
+                        setQuery("id in " + Arrays.stream(paramArray).map(s -> "?").collect(Collectors.joining(", ", "(", ")")));
+                    } else if (paramArray.length == 0) {
+                        setQuery("1 = 1");
+                    } else {
+                        setQuery("1 <> 1");
+                    }
+        
+                    setValues(paramArray);
+                    setOperator("and");
+        
+                    LogUtil.info(getClassName(), "query [" + getQuery() + "]");
+                }};
+            }
+        } else if("dateTime".equalsIgnoreCase(mode)) {
+            final DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
+
+            final boolean singleValue = "true".equalsIgnoreCase(getPropertyString("singleValue"));
+
+            String valueFrom, valueTo;
+            final String defaultValue = AppUtil.processHashVariable(getPropertyString("defaultValue"), null, null, null);
+            if(!defaultValue.isEmpty()) {
+                // more likely it is called from plugin kecak-plugins-datalist-api
+                String[] defaultValues = defaultValue.split(";");
+                valueFrom = getValue(dataList, name + "-from", defaultValues.length < 1 ? null : defaultValues[0]);
+                valueTo = singleValue ? valueFrom : getValue(dataList, name + "-to", defaultValues.length < 2 ? null : defaultValues[1]);
+            } else {
+                final Optional<String> optValues = Optional.ofNullable(getValue(dataList, name));
+                if(optValues.isPresent()) {
+                    String[] split = optValues.get().split(";");
+                    valueFrom = Arrays.stream(split).findFirst().orElse("");
+                    valueTo = Arrays.stream(split).skip(1).findFirst().orElse("");
+                } else {
+                    valueFrom = Optional.ofNullable(getValue(dataList, name + "_from")).orElse("");
+                    valueTo = singleValue ? valueFrom : Optional.ofNullable(getValue(dataList, name + "_to")).orElse("");
+                }
+            }
+
+            final boolean showTime = "true".equals(getPropertyString("showTime"));
+
+            @Nonnull
+            final String databaseDateFunction;
+            boolean emptyFilter = false;
+            if(valueFrom == null || valueFrom.isEmpty()) {
+                valueFrom = "1970-01-01 00:00:00";
+                databaseDateFunction = "";
+                emptyFilter = true;
+            } else {
+                valueFrom = showTime ? valueFrom : valueFrom + " 00:00:00";
+                databaseDateFunction = getPropertyString("databaseDateFunction");
+                emptyFilter = false;
+            }
+
+            @Nonnull
+            final String filterDateFunction;
+            if (valueTo == null || valueTo.isEmpty()) {
+                valueTo = "9999-12-31 23:59:59";
+                filterDateFunction = "";
+            } else {
+                valueTo = showTime ? valueTo : valueTo + " 23:59:59";
+                filterDateFunction = getPropertyString("filterDateFunction");
+                emptyFilter = false;
+            }
+
+            if (dataList != null && dataList.getBinder() != null) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("((");
+                if(databaseDateFunction.isEmpty()) {
+                    sb.append(String.format("CAST(%s AS date)", dataList.getBinder().getColumnName(name)));
+                } else {
+                    sb.append(databaseDateFunction.replaceAll("\\?", dataList.getBinder().getColumnName(name)));
+                }
+
+                sb.append(" BETWEEN ");
+
+                if(filterDateFunction.isEmpty()) {
+                    sb.append("CAST(? AS date) AND CAST(? AS date))");
+                } else {
+                    sb.append(String.format("%s AND %s)", filterDateFunction, filterDateFunction));
+                }
+                if(emptyFilter){
+                    sb.append(" OR (" + String.format("CAST(%s AS date)", dataList.getBinder().getColumnName(name)) + " IS NULL)");
+                }
+                sb.append(")");
+                queryObject.setQuery(sb.toString());
+                queryObject.setValues(new String[]{valueFrom, valueTo});
+
+                return queryObject;
+            }
+        } else if("".equalsIgnoreCase(mode)) {
+            DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
+            String value = getValue(dataList, name, getPropertyString("defaultValue"));
+            if (dataList != null && dataList.getBinder() != null && value != null && !value.isEmpty()) {
+                String cname = dataList.getBinder().getColumnName(name);
+                
+                //support aggregate function
+                if (cname.toLowerCase().contains("count(")
+                        || cname.toLowerCase().contains("sum(")
+                        || cname.toLowerCase().contains("avg(")
+                        || cname.toLowerCase().contains("min(")
+                        || cname.toLowerCase().contains("max(")) {
+                    queryObject.setQuery(cname + " = ?");
+                    queryObject.setValues(new String[]{value});
+                } else {
+                    queryObject.setQuery("lower(" + cname + ") like lower(?)");
+                    queryObject.setValues(new String[]{'%' + value + '%'});
+                }
+                
+                return queryObject;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Return values as set
+     * @param datalist
+     * @param name
+     * @param defaultValue
+     * @return
+     */
+    @Nonnull
+    private Set<String> getValueSet(DataList datalist, String name, String defaultValue) {
+        return Optional.ofNullable(getValues(datalist, name, defaultValue))
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .map(s -> s.split(";"))
+                .flatMap(Arrays::stream)
+                .distinct()
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
+    }
+
+    protected <T> Stream<T> repeat(T value, int n) {
+        return IntStream.rangeClosed(1, n).limit(n).boxed().map(i -> value);
     }
 
     @Override
@@ -226,4 +375,13 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
     protected String getMode() {
         return getPropertyString("mode");
     }
+
+    // @Override
+    // public Set<String> getOfflineStaticResources() {
+    //     Set<String> urls = new HashSet<String>();
+    //     String contextPath = AppUtil.getRequestContextPath();
+    //     urls.add(contextPath + "/plugin/org.joget.apps.datalist.lib.TextFieldDataListFilterType/js/jquery.placeholder.min.js");
+        
+    //     return urls;
+    // }
 }
