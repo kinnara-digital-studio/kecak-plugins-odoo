@@ -288,26 +288,21 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
                 return queryObject;
             }
         } else if("".equalsIgnoreCase(mode)) {
-            DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
-            String value = getValue(dataList, name, getPropertyString("defaultValue"));
-            if (dataList != null && dataList.getBinder() != null && value != null && !value.isEmpty()) {
-                String cname = dataList.getBinder().getColumnName(name);
-                
-                //support aggregate function
-                if (cname.toLowerCase().contains("count(")
-                        || cname.toLowerCase().contains("sum(")
-                        || cname.toLowerCase().contains("avg(")
-                        || cname.toLowerCase().contains("min(")
-                        || cname.toLowerCase().contains("max(")) {
-                    queryObject.setQuery(cname + " = ?");
-                    queryObject.setValues(new String[]{value});
-                } else {
-                    queryObject.setQuery("lower(" + cname + ") like lower(?)");
-                    queryObject.setValues(new String[]{'%' + value + '%'});
-                }
-                
-                return queryObject;
+            final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+            final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
+
+            if(getValue(dataList, name) == null) {
+                return null;
             }
+
+            final String value;
+            final String operator;
+            
+            value = getValue(dataList, name);
+            operator = "=";
+
+            final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+            return filterQueryObject;
         }
         return null;
     }
