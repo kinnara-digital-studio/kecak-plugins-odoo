@@ -173,45 +173,33 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
     public DataListFilterQueryObject getQueryObject(DataList dataList, String name) {
         final String mode = getMode();
         if("multiple".equalsIgnoreCase(mode)) {
-            DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
-            if (dataList != null && dataList.getBinder() != null) {
-                List<String> paramList = new ArrayList<>(getValueSet(dataList, name, getPropertyString("defaultValue")));
-
-                String[] paramArray = paramList.toArray(new String[0]);
-
-                final String columnName = dataList.getBinder().getColumnName(name);
-                String query = paramList.stream()
-                        .map(s -> "(" + columnName + " = ? OR " + columnName + " LIKE ? || ';%' OR " + columnName + " LIKE '%;' || ? OR " + columnName + " LIKE '%;' || ? || ';%')")
-                        .collect(Collectors.joining(" AND "));
-
-                String[] params = paramList.stream()
-                        .flatMap(s -> repeat(s, 4))
-                        .toArray(String[]::new);
-
-                queryObject.setQuery("(" + (paramList.isEmpty() ? "1 = 1" : query) + ")");
-                queryObject.setValues(params);
-
-                // LogUtil.info(getClassName(),"Parameter List: " + paramList);
-                // LogUtil.info(getClassName(),"Query: " + query);
-                // LogUtil.info(getClassName(),"Parameter: " + Arrays.toString(params));
-
-                LogUtil.info(getClassName(),"Parameter Array: " + Arrays.toString(paramArray));
-                // return queryObject;
-                return new DataListFilterQueryObject() {{
-                    if (paramArray.length > 0) {
-                        setQuery("id in " + Arrays.stream(paramArray).map(s -> "?").collect(Collectors.joining(", ", "(", ")")));
-                    } else if (paramArray.length == 0) {
-                        setQuery("1 = 1");
-                    } else {
-                        setQuery("1 <> 1");
-                    }
-        
-                    setValues(paramArray);
-                    setOperator("and");
-        
-                    LogUtil.info(getClassName(), "query [" + getQuery() + "]");
-                }};
+            final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+            final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
+            
+            if(getValue(dataList, name) == null) {
+                return null;
             }
+
+            final String [] value;
+            final String operator;
+            
+            value = getValues(dataList, name);
+            operator = "in";
+
+            DataListFilterQueryObject filterQueryObject;
+
+            if (value[0].equals(""))
+            {
+                filterQueryObject = new OdooFilterQueryObject(name, operator, "", OdooFilterQueryObject.DataType.STRING);
+            }
+            else
+            {
+                filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+            }
+
+            LogUtil.info(getClassName(), "Length: " + value.length);
+
+            return filterQueryObject;
         } else if("dateTime".equalsIgnoreCase(mode)) {
             final DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
 
@@ -301,7 +289,10 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
             value = getValue(dataList, name);
             operator = "=";
 
+            LogUtil.info(getClassName(), "Value: " + value);
+
             final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+            // LogUtil.info(getClassName(), "Query filter: " + );
             return filterQueryObject;
         }
         return null;

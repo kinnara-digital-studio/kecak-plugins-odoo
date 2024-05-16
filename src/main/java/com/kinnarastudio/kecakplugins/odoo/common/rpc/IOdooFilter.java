@@ -5,5 +5,5 @@ public interface IOdooFilter {
 
     String getOperator();
 
-    String getValue();
+    Object getValue();
 }

@@ -167,8 +167,8 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .orElseGet(Stream::empty)
                 .filter(f -> f instanceof IOdooFilter)
                 .map(f -> (IOdooFilter) f)
-                .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
-                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())));
+                .filter(f -> f.getValue() != null && !f.getValue().equals(""))
+                .map(f -> new SearchFilter(f.getField(), f.getOperator(), f.getValue()));
 
         return Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);

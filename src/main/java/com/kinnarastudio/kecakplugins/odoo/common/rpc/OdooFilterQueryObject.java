@@ -4,12 +4,12 @@ import org.joget.apps.datalist.model.DataListFilterQueryObject;
 
 public class OdooFilterQueryObject extends DataListFilterQueryObject implements IOdooFilter {
     private final String field;
-    private final String value;
+    private final Object value;
 
     private final String operator;
     private final DataType dataType;
 
-    public OdooFilterQueryObject(String field, String operator, String value, DataType dataType) {
+    public OdooFilterQueryObject(String field, String operator, Object value, DataType dataType) {
         this.field = field;
         this.operator = operator;
         this.value = value;
@@ -27,7 +27,7 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
     }
 
     @Override
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
