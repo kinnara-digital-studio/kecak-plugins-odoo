@@ -168,7 +168,19 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .filter(f -> f instanceof IOdooFilter)
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().equals(""))
-                .map(f -> new SearchFilter(f.getField(), f.getOperator(), f.getValue()));
+                .map(f -> {
+                    if (f.getOperator().equals("between"))
+                    {
+                        String [] value = (String[]) f.getValue();
+                        return new SearchFilter[] {
+                            new SearchFilter(f.getField(), ">=", value[0]),
+                            new SearchFilter(f.getField(), "<=", value[1])
+                        };
+                    }
+                    return new SearchFilter[] {
+                        new SearchFilter(f.getField(), f.getOperator(), f.getValue())
+                    };                })
+                .flatMap(Arrays::stream);
 
         return Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);

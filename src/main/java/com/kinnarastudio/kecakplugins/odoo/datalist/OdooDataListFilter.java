@@ -201,80 +201,161 @@ public class OdooDataListFilter extends DataListFilterTypeDefault{
 
             return filterQueryObject;
         } else if("dateTime".equalsIgnoreCase(mode)) {
-            final DataListFilterQueryObject queryObject = new DataListFilterQueryObject();
+            final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+            final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
 
             final boolean singleValue = "true".equalsIgnoreCase(getPropertyString("singleValue"));
 
-            String valueFrom, valueTo;
-            final String defaultValue = AppUtil.processHashVariable(getPropertyString("defaultValue"), null, null, null);
-            if(!defaultValue.isEmpty()) {
-                // more likely it is called from plugin kecak-plugins-datalist-api
-                String[] defaultValues = defaultValue.split(";");
-                valueFrom = getValue(dataList, name + "-from", defaultValues.length < 1 ? null : defaultValues[0]);
-                valueTo = singleValue ? valueFrom : getValue(dataList, name + "-to", defaultValues.length < 2 ? null : defaultValues[1]);
-            } else {
-                final Optional<String> optValues = Optional.ofNullable(getValue(dataList, name));
-                if(optValues.isPresent()) {
-                    String[] split = optValues.get().split(";");
-                    valueFrom = Arrays.stream(split).findFirst().orElse("");
-                    valueTo = Arrays.stream(split).skip(1).findFirst().orElse("");
-                } else {
-                    valueFrom = Optional.ofNullable(getValue(dataList, name + "_from")).orElse("");
-                    valueTo = singleValue ? valueFrom : Optional.ofNullable(getValue(dataList, name + "_to")).orElse("");
+            if (singleValue == true)
+            {
+                // LogUtil.info(getClassName(), "Boolean Value Result: " + singleValue);
+
+                if(getValue(dataList, name + "-from") == null) {
+                    return null;
+                }
+
+                final String value;
+                final String operator;
+                
+                value = getValue(dataList, name + "-from");
+                operator = ">=";
+
+                LogUtil.info(getClassName(), "Value: " + value);
+
+                final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+                return filterQueryObject;
+            }
+            else
+            {
+                if (getValue(dataList, name + "-from")== null && getValue(dataList, name + "-to") == null)
+                {
+                    return null;
+                }
+                else if(getValue(dataList, name + "-from").equals("") && !getValue(dataList, name + "-to").equals("")) {
+                    final String value;
+                    final String operator;
+                    
+                    value = getValue(dataList, name + "-to");
+                    operator = "<=";
+                    LogUtil.info(getClassName(), "Value To: " + value);
+                    DataListFilterQueryObject filterQueryObject;
+                     
+                    filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+
+                    return filterQueryObject;
+                }
+                
+                else if (!getValue(dataList, name + "-from").equals("") && getValue(dataList, name + "-to").equals(""))
+                {
+                    if(getValue(dataList, name + "-from") == null) {
+                        return null;
+                    }
+    
+                    final String value;
+                    final String operator;
+                    
+                    value = getValue(dataList, name + "-from");
+                    operator = ">=";
+    
+                    LogUtil.info(getClassName(), "Value From: " + value);
+    
+                    final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+                    return filterQueryObject;
+                }
+                else if (!getValue(dataList, name + "-from").equals("") && !getValue(dataList, name + "-to").equals(""))
+                {
+                    final String value1, value2;
+                    final String operator;
+                    
+                    value1 = getValue(dataList, name + "-from");
+                    value2 = getValue(dataList, name + "-to");
+                    operator = "between";
+
+                    LogUtil.info(getClassName(), "Value From: " + value1);
+                    LogUtil.info(getClassName(), "Value To: " + value2);
+
+                    String [] values = new String [2];
+                    values[0] = value1;
+                    values[1] = value2;
+
+                    final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, values, OdooFilterQueryObject.DataType.STRING);
+                    return filterQueryObject;
                 }
             }
 
-            final boolean showTime = "true".equals(getPropertyString("showTime"));
+            // String valueFrom, valueTo;
+            // final boolean showTime = "true".equals(getPropertyString("showTime"));
 
-            @Nonnull
-            final String databaseDateFunction;
-            boolean emptyFilter = false;
-            if(valueFrom == null || valueFrom.isEmpty()) {
-                valueFrom = "1970-01-01 00:00:00";
-                databaseDateFunction = "";
-                emptyFilter = true;
-            } else {
-                valueFrom = showTime ? valueFrom : valueFrom + " 00:00:00";
-                databaseDateFunction = getPropertyString("databaseDateFunction");
-                emptyFilter = false;
-            }
+            // final String defaultValue = AppUtil.processHashVariable(getPropertyString("defaultValue"), null, null, null);
+            // if(!defaultValue.isEmpty()) {
+            //     // more likely it is called from plugin kecak-plugins-datalist-api
+            //     String[] defaultValues = defaultValue.split(";");
+            //     valueFrom = getValue(dataList, name + "-from", defaultValues.length < 1 ? null : defaultValues[0]);
+            //     valueTo = singleValue ? valueFrom : getValue(dataList, name + "-to", defaultValues.length < 2 ? null : defaultValues[1]);
+            // } else {
+            //     final Optional<String> optValues = Optional.ofNullable(getValue(dataList, name));
 
-            @Nonnull
-            final String filterDateFunction;
-            if (valueTo == null || valueTo.isEmpty()) {
-                valueTo = "9999-12-31 23:59:59";
-                filterDateFunction = "";
-            } else {
-                valueTo = showTime ? valueTo : valueTo + " 23:59:59";
-                filterDateFunction = getPropertyString("filterDateFunction");
-                emptyFilter = false;
-            }
+            //     LogUtil.info(getClassName(), "Optional Values: " + optValues);
 
-            if (dataList != null && dataList.getBinder() != null) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("((");
-                if(databaseDateFunction.isEmpty()) {
-                    sb.append(String.format("CAST(%s AS date)", dataList.getBinder().getColumnName(name)));
-                } else {
-                    sb.append(databaseDateFunction.replaceAll("\\?", dataList.getBinder().getColumnName(name)));
-                }
+            //     if(optValues.isPresent()) {
+            //         String[] split = optValues.get().split(";");
+            //         valueFrom = Arrays.stream(split).findFirst().orElse("");
+            //         valueTo = Arrays.stream(split).skip(1).findFirst().orElse("");
+            //     } else {
+            //         valueFrom = Optional.ofNullable(getValue(dataList, name + "_from")).orElse("");
+            //         valueTo = singleValue ? valueFrom : Optional.ofNullable(getValue(dataList, name + "_to")).orElse("");
+            //     }
+            // }
 
-                sb.append(" BETWEEN ");
+            // @Nonnull
+            // final String databaseDateFunction;
+            // boolean emptyFilter = false;
+            // if(valueFrom == null || valueFrom.isEmpty()) {
+            //     valueFrom = "1970-01-01 00:00:00";
+            //     databaseDateFunction = "";
+            //     emptyFilter = true;
+            // } else {
+            //     valueFrom = showTime ? valueFrom : valueFrom + " 00:00:00";
+            //     databaseDateFunction = getPropertyString("databaseDateFunction");
+            //     emptyFilter = false;
+            // }
 
-                if(filterDateFunction.isEmpty()) {
-                    sb.append("CAST(? AS date) AND CAST(? AS date))");
-                } else {
-                    sb.append(String.format("%s AND %s)", filterDateFunction, filterDateFunction));
-                }
-                if(emptyFilter){
-                    sb.append(" OR (" + String.format("CAST(%s AS date)", dataList.getBinder().getColumnName(name)) + " IS NULL)");
-                }
-                sb.append(")");
-                queryObject.setQuery(sb.toString());
-                queryObject.setValues(new String[]{valueFrom, valueTo});
+            // @Nonnull
+            // final String filterDateFunction;
+            // if (valueTo == null || valueTo.isEmpty()) {
+            //     valueTo = "9999-12-31 23:59:59";
+            //     filterDateFunction = "";
+            // } else {
+            //     valueTo = showTime ? valueTo : valueTo + " 23:59:59";
+            //     filterDateFunction = getPropertyString("filterDateFunction");
+            //     emptyFilter = false;
+            // }
 
-                return queryObject;
-            }
+            // if (dataList != null && dataList.getBinder() != null) {
+            //     StringBuilder sb = new StringBuilder();
+            //     sb.append("((");
+            //     if(databaseDateFunction.isEmpty()) {
+            //         sb.append(String.format("CAST(%s AS date)", dataList.getBinder().getColumnName(name)));
+            //     } else {
+            //         sb.append(databaseDateFunction.replaceAll("\\?", dataList.getBinder().getColumnName(name)));
+            //     }
+
+            //     sb.append(" BETWEEN ");
+
+            //     if(filterDateFunction.isEmpty()) {
+            //         sb.append("CAST(? AS date) AND CAST(? AS date))");
+            //     } else {
+            //         sb.append(String.format("%s AND %s)", filterDateFunction, filterDateFunction));
+            //     }
+            //     if(emptyFilter){
+            //         sb.append(" OR (" + String.format("CAST(%s AS date)", dataList.getBinder().getColumnName(name)) + " IS NULL)");
+            //     }
+            //     sb.append(")");
+            //     queryObject.setQuery(sb.toString());
+            //     queryObject.setValues(new String[]{valueFrom, valueTo});
+
+            //     return queryObject;
+            // }
         } else if("".equalsIgnoreCase(mode)) {
             final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
             final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());

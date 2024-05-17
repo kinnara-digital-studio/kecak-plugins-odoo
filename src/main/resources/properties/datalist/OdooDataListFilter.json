@@ -70,7 +70,7 @@
             "name": "format",
             "label": "Format",
             "type": "textfield",
-            "value": "mm/dd/yy",
+            "value": "yyyy-MM-dd",
             "required": "true"
         },
         {
