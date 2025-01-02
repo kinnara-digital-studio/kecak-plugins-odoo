@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.odoo.tool;
+package com.kinnarastudio.kecakplugins.odoo.process;
 
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
@@ -102,7 +102,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
     public String getPropertyOptions() {
         final String[] resources = new String[]{
                 "/properties/common/OdooAuthorization.json",
-                "/properties/tool/OdooRpcTool.json"
+                "/properties/process/OdooRpcTool.json"
         };
 
         return Arrays.stream(resources)
