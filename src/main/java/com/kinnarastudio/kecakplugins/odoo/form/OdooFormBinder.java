@@ -17,8 +17,40 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class OdooFormStoreBinder extends FormBinder implements FormStoreElementBinder, FormDeleteBinder {
-    public final static String LABEL = "Odoo Form Store Binder";
+/**
+ * Load Odoo data based on Odoo's primary key
+ */
+public class OdooFormBinder extends FormBinder implements FormLoadElementBinder, FormStoreElementBinder, FormDeleteBinder {
+    public final static String LABEL = "Odoo Form Binder";
+
+    @Override
+    public FormRowSet load(Element element, String primaryKey, FormData formData) {
+        if(primaryKey == null) return null;
+
+        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+        final String database = OdooAuthorizationUtil.getDatabase(this);
+        final String user = OdooAuthorizationUtil.getUsername(this);
+        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+        final String model = OdooAuthorizationUtil.getModel(this);
+        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+
+        try {
+            return rpc.read(model, Integer.parseInt(primaryKey))
+                    .map(m -> new FormRow() {{
+                        m.forEach((k, v) -> {
+                            if (v != null) setProperty(k, String.valueOf(v));
+                        });
+                    }})
+                    .map(r -> new FormRowSet() {{
+                        add(r);
+                    }})
+
+                    .orElse(null);
+        } catch (OdooCallMethodException e) {
+            LogUtil.error(getClass().getName(), e, e.getMessage());
+            return null;
+        }
+    }
 
     @Override
     public FormRowSet store(Element element, FormRowSet rowSet, FormData formData) {
@@ -91,7 +123,7 @@ public class OdooFormStoreBinder extends FormBinder implements FormStoreElementB
 
     @Override
     public String getClassName() {
-        return getClass().getName();
+        return OdooFormBinder.class.getName();
     }
 
     @Override
@@ -115,9 +147,8 @@ public class OdooFormStoreBinder extends FormBinder implements FormStoreElementB
         final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        Optional.ofNullable(rowSet)
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
+        Optional.ofNullable(rowSet).stream()
+                .flatMap(Collection::stream)
                 .map(FormRow::getId)
                 .map(Try.onFunction(Integer::parseInt))
                 .forEach(Try.onConsumer(id -> rpc.unlink(model, id)));
