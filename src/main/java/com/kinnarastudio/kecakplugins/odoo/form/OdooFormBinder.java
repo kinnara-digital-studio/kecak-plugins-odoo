@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * Load Odoo data based on Odoo's primary key
  */
-public class OdooFormBinder extends FormBinder implements FormLoadElementBinder, FormStoreElementBinder, FormDeleteBinder {
+public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormStoreBinder, FormDeleteBinder {
     public final static String LABEL = "Odoo Form Binder";
 
     @Override
