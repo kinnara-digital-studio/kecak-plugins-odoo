@@ -4,6 +4,7 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
@@ -16,6 +17,7 @@ import org.json.JSONArray;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
@@ -46,29 +48,41 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String labelField = getLabelField();
         final String groupingField = getGroupingField();
 
-        final SearchFilter[] filters = groupingField.isEmpty() ? null : Optional.ofNullable(dependencyValues)
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
-                .filter(isNotEmpty)
-                .map(s -> new SearchFilter(groupingField, s))
+        final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
+        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Optional.ofNullable(dependencyValues)
+                .stream()
+                .flatMap(Arrays::stream)
+                .filter(Predicate.not(String::isEmpty))
+                .map(s -> new SearchFilter(groupingField, s));
+
+        final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
 
         try {
+            final boolean hideEmptyValue = hideEmptyValue();
+
             return Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
                         final String label = String.valueOf(m.get(labelField));
+
+                        if(hideEmptyValue && value.isEmpty())
+                            return null;
+
                         return new FormRow() {{
                             setProperty(FormUtil.PROPERTY_VALUE, value);
                             setProperty(FormUtil.PROPERTY_LABEL, label);
                         }};
                     })
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);
-                        add(new FormRow() {{
-                            setProperty(FormUtil.PROPERTY_VALUE, "");
-                            setProperty(FormUtil.PROPERTY_LABEL, getEmptyLabel());
-                        }});
+                        if(!hideEmptyValue) {
+                            add(new FormRow() {{
+                                setProperty(FormUtil.PROPERTY_VALUE, "");
+                                setProperty(FormUtil.PROPERTY_LABEL, getEmptyLabel());
+                            }});
+                        }
                     }}));
 
         } catch (OdooCallMethodException e) {
@@ -143,5 +157,9 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
     protected String getEmptyLabel() {
         return getPropertyString("emptyLabel");
+    }
+
+    protected boolean hideEmptyValue() {
+        return "true".equalsIgnoreCase(getPropertyString("hideEmptyValue"));
     }
 }

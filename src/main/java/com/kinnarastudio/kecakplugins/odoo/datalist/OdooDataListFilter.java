@@ -10,9 +10,13 @@ import org.joget.plugin.base.PluginManager;
 
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OdooDataListFilter extends DataListFilterTypeDefault {
     public final static String LABEL = "Odoo DataList Filter";
+
+    final Pattern p = Pattern.compile("(\\$)");
 
     @Override
     public String getTemplate(DataList dataList, String name, String label) {
@@ -38,8 +42,12 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
             value = getValue(dataList, name) + "%";
             operator = "=ilike";
         } else if("contains".equalsIgnoreCase(mode)) {
-            value = "%" + getValue(dataList, name) + "%";
-            operator = "=ilike";
+            value = getValue(dataList, name);
+            operator = "ilike";
+        } else if("custom".equalsIgnoreCase(mode)) {
+            value = getValue(dataList, name);
+            name = getConditionField(name);
+            operator = getConditionOperator();
         } else {
             value = getValue(dataList, name);
             operator = "=";
@@ -88,5 +96,20 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
 
     protected String getMode() {
         return getPropertyString("mode");
+    }
+
+    protected String getConditionField(String name) {
+        final Matcher m = p.matcher(getPropertyString("conditionField"));
+        final StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            m.appendReplacement(sb, name);
+        }
+
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    protected String getConditionOperator() {
+        return getPropertyString("conditionOperator");
     }
 }

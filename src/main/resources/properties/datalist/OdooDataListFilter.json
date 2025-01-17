@@ -19,8 +19,31 @@
           {
             "value": "contains",
             "label": "Contains"
+          },
+          {
+            "value": "custom",
+            "label": "Custom"
           }
         ]
+      },
+      {
+
+        "name": "conditionField",
+        "label": "Condition Field",
+        "type": "textfield",
+        "value": "$",
+        "control_field": "mode",
+        "control_value": "custom",
+        "required": "true"
+      },
+      {
+        "name": "conditionOperator",
+        "label": "Condition Operator",
+        "type": "textfield",
+        "value": "ilike",
+        "control_field": "mode",
+        "control_value": "custom",
+        "required": "true"
       },
       {
         "name": "filterPlugin",

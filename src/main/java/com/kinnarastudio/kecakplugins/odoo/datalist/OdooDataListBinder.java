@@ -25,16 +25,15 @@ import java.util.stream.Stream;
 public class OdooDataListBinder extends DataListBinderDefault {
     public final static String LABEL = "Odoo DataList Binder";
 
-    public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<String>() {
-        {
-            add("string");
-            add("date");
-            add("datetime");
-            add("integer");
-            add("char");
-            add("monetery");
-        }
-    };
+    public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<>() {{
+        add("string");
+        add("date");
+        add("datetime");
+        add("integer");
+        add("char");
+        add("monetery");
+        add("boolean");
+    }};
 
     @Override
     public DataListColumn[] getColumns() {
@@ -47,11 +46,12 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
         try {
             return rpc.fieldsGet(model).entrySet().stream()
-                    .filter(e -> {
-                        final Map<String, Object> metadata = e.getValue();
-                        final String type = (String) metadata.get("type");
-                        return VALID_COLUMN_TYPES.contains(type);
-                    })
+//                    .filter(e -> {
+//                        final Map<String, Object> metadata = e.getValue();
+//                        final String type = (String) metadata.get("type");
+//                        return VALID_COLUMN_TYPES.contains(type);
+//                    })
+
                     .map(e -> {
                         final String field = e.getKey();
                         final Map<String, Object> metadata = e.getValue();
@@ -163,8 +163,8 @@ public class OdooDataListBinder extends DataListBinderDefault {
     protected SearchFilter[] getFilters(DataListFilterQueryObject[] filterQueryObjects) {
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
         final Stream<SearchFilter> filterQueryObjectStream = Optional.ofNullable(filterQueryObjects)
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Arrays::stream)
                 .filter(f -> f instanceof IOdooFilter)
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
