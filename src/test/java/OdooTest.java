@@ -17,7 +17,6 @@ public class OdooTest {
     private final String user;
 
     private final String apiKey;
-    private final String model;
 
     private final OdooRpc rpc;
 
@@ -28,7 +27,6 @@ public class OdooTest {
         database = properties.get("database").toString();
         user = properties.get("user").toString();
         apiKey = properties.get("apiKey").toString();
-        model = "product.template";
 
         rpc = new OdooRpc(baseUrl, database, user, apiKey);
     }
@@ -44,6 +42,7 @@ public class OdooTest {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
+        String model = "product.template";
         for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{ new SearchFilter("purchase_ok", "=", "null")}, "id", null, null)) {
             System.out.println(record.get("id") + "|" + record.get("name") + "|" + Arrays.stream((Object[])record.get("categ_id")).map(String::valueOf).collect(Collectors.joining(";")) + "|" + Optional.ofNullable(record.get("categ_id")).map(Object::getClass).map(Class::getName).orElse(Integer.class.getName()) +"|"+Object.class.getName());
         }
@@ -51,6 +50,8 @@ public class OdooTest {
 
     @org.junit.Test
     public void testRead() throws OdooCallMethodException {
+
+        String model = "product.template";
         int recordId = rpc.search(model, null, null, null, 1)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
                 .orElseThrow(() -> new OdooCallMethodException("record not found"));
@@ -72,6 +73,8 @@ public class OdooTest {
 
     @org.junit.Test
     public void testWrite() throws OdooCallMethodException {
+
+        String model = "product.template";
         final Map<String, Object> record = new HashMap<String, Object>() {{
             put("city", "Bandung");
         }};
@@ -81,8 +84,16 @@ public class OdooTest {
 
     @org.junit.Test
     public void testCreate() throws OdooCallMethodException {
+
+        String model = "room.booking";
+        int roomId = 2;
+        int organizerId = 2;
         final Map<String, Object> record = new HashMap<>() {{
-            put("name", "Anita Peterson");
+            put("name", "Training Kecak");
+            put("room_id", roomId);
+            put("organizer_id", organizerId);
+            put("start_datetime", "2024-01-27 01:30");
+            put("stop_datetime", "2024-01-27 02:30");
         }};
 
         int recordId = rpc.create(model, record);
@@ -92,6 +103,8 @@ public class OdooTest {
 
     @org.junit.Test
     public void testDelete() throws OdooCallMethodException {
+
+        String model = "product.template";
         rpc.unlink(model, 62);
     }
 

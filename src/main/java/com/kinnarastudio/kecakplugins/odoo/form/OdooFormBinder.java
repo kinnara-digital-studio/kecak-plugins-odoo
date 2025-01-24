@@ -15,7 +15,6 @@ import org.json.JSONArray;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Load Odoo data based on Odoo's primary key
@@ -25,7 +24,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
 
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
-        if(primaryKey == null) return null;
+        if (primaryKey == null) return null;
 
         final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
         final String database = OdooAuthorizationUtil.getDatabase(this);
@@ -38,7 +37,18 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
             return rpc.read(model, Integer.parseInt(primaryKey))
                     .map(m -> new FormRow() {{
                         m.forEach((k, v) -> {
-                            if (v != null) setProperty(k, String.valueOf(v));
+                            if (v != null) {
+                                final String value;
+                                if (v.getClass() == Object[].class) {
+                                    value = Arrays.stream((Object[]) v)
+                                            .map(String::valueOf)
+                                            .collect(Collectors.joining(";"));
+                                } else {
+                                    value = String.valueOf(v);
+                                }
+
+                                setProperty(k, value);
+                            }
                         });
                     }})
                     .map(r -> new FormRowSet() {{
@@ -62,14 +72,27 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final Map<String, Object> record = Optional.ofNullable(rowSet)
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Collection::stream)
                 .findFirst()
                 .map(Hashtable::entrySet)
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Collection::stream)
+                .peek(Try.onConsumer(e -> {
+                    final String childId = String.valueOf(e.getKey());
+
+                    final Element child = FormUtil.findElement(childId, element, formData);
+                    if(child == null) {
+                        return;
+                    }
+
+                    final FormLoadBinder optionsBinder = child.getOptionsBinder();
+                    if (optionsBinder instanceof OdooOptionsBinder) {
+                        e.setValue(Integer.parseInt(String.valueOf(e.getValue())));
+                    }
+                }))
                 .filter(e -> !e.getKey().toString().isEmpty() && Objects.nonNull(e.getValue()))
-                .collect(Collectors.toMap(e -> e.getKey().toString(), Map.Entry::getValue));
+                .collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue));
 
         try {
             final int recordId = Optional.ofNullable(record.get("id"))
