@@ -15,7 +15,7 @@ import java.util.*;
  * Copy from {@link org.joget.apps.form.lib.WorkflowFormBinder} but using
  * {@link OdooFormBinder} instead of {@link DefaultFormBinder}
  */
-public class OdooWorkflowFormBinder extends OdooFormBinder {
+public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadElementBinder, FormStoreElementBinder {
     public final static String LABEL = "Odoo Workflow Form Binder";
 
     @Override
@@ -32,7 +32,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder {
             } else if (processId != null && !processId.isEmpty()) {
                 variableList = workflowManager.getProcessVariableList(processId);
             } else {
-                variableList = new ArrayList<WorkflowVariable>();
+                variableList = new ArrayList<>();
             }
 
             if (variableList != null && !variableList.isEmpty()) {
@@ -44,7 +44,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder {
                     row = rows.iterator().next();
                 }
 
-                Map<String, String> variableMap = new HashMap<String, String>();
+                Map<String, String> variableMap = new HashMap<>();
                 for (WorkflowVariable variable : variableList) {
                     Object val = variable.getVal();
                     if (val != null) {
