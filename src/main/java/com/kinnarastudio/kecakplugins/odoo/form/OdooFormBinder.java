@@ -170,10 +170,17 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        Optional.ofNullable(rowSet).stream()
+        final int[] ids = Optional.ofNullable(rowSet).stream()
                 .flatMap(Collection::stream)
                 .map(FormRow::getId)
                 .map(Try.onFunction(Integer::parseInt))
-                .forEach(Try.onConsumer(id -> rpc.unlink(model, id)));
+                .mapToInt(i -> i)
+                .toArray();
+
+        try {
+            rpc.unlink(model, ids);
+        } catch (OdooCallMethodException e) {
+            LogUtil.error(getClassName(), e, e.getMessage());
+        }
     }
 }

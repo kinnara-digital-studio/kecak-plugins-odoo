@@ -10,6 +10,7 @@ import org.joget.commons.util.LogUtil;
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -109,8 +110,8 @@ public class OdooRpc {
             final int uid = login();
 
             final Object[] objectFilters = Optional.ofNullable(filters)
-                    .map(Arrays::stream)
-                    .orElseGet(Stream::empty)
+                    .stream()
+                    .flatMap(Arrays::stream)
                     .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValue()})
                     .toArray(Object[]::new);
 
@@ -157,8 +158,8 @@ public class OdooRpc {
             final int uid = login();
 
             final Object[] objectFilters = Optional.ofNullable(filters)
-                    .map(Arrays::stream)
-                    .orElseGet(Stream::empty)
+                    .stream()
+                    .flatMap(Arrays::stream)
                     .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValue()})
                     .toArray(Object[]::new);
 
@@ -358,6 +359,31 @@ public class OdooRpc {
 
             XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
             LogUtil.info(getClass().getName(), "rpc unlink : model [" + model + "] record [" + recordId + "] has been deleted");
+
+        } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
+            throw new OdooCallMethodException(e);
+        }
+    }
+
+    public void unlink(String model, int[] recordIds) throws OdooCallMethodException {
+        try {
+            final int uid = login();
+
+            final Object[] objectFilters = Arrays.stream(recordIds)
+                    .mapToObj(i -> new Object[]{"id", "=", i})
+                    .toArray(Object[]::new);
+
+            final Object[] params = new Object[]{
+                    database,
+                    uid,
+                    apiKey,
+                    model,
+                    "unlink",
+                    new Object[]{objectFilters},
+            };
+
+            XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
+            LogUtil.info(getClass().getName(), "rpc unlink : model [" + model + "] record [" + Arrays.stream(recordIds).mapToObj(String::valueOf).collect(Collectors.joining(",")) + "] have been deleted");
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);
