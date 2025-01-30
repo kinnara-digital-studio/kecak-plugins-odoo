@@ -10,15 +10,23 @@ import java.util.Arrays;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-public class OdooDataListFormatter extends DataListColumnFormatDefault {
-    public final static String LABEL = "Odoo DataList Formatter";
+public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
+    public final static String LABEL = "Odoo Object DataList Formatter";
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
         if(value instanceof Object[]) {
-            return Arrays.stream((Object[])value)
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(";"));
+            final Object[] values = (Object[]) value;
+            if(isAsOptions()) {
+                return Arrays.stream(values).skip(1)
+                        .findFirst()
+                        .map(String::valueOf)
+                        .orElse("");
+            } else {
+                return Arrays.stream(values)
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(";"));
+            }
         }
 
         return String.valueOf(value);
@@ -54,6 +62,18 @@ public class OdooDataListFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String getPropertyOptions() {
-        return "";
+        return AppUtil.readPluginResource(getClassName(), "/properties/datalist/OdooObjectDataListFormatter.json");
+    }
+
+    protected String getFormattingType() {
+        return getPropertyString("formattingType");
+    }
+
+    protected boolean isAsOptions() {
+        return "asOptions".equalsIgnoreCase(getFormattingType());
+    }
+
+    protected boolean isJoiningArrayOfObject() {
+        return "joiningArrayOfObject".equalsIgnoreCase(getFormattingType());
     }
 }

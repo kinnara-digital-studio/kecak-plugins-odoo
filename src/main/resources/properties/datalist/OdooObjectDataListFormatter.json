@@ -1,0 +1,24 @@
+[
+  {
+    "title": "Odoo Object DataList Formatter",
+    "properties": [
+      {
+        "name": "formattingType",
+        "label": "Formatting Type",
+        "type": "radio",
+        "value": "asOptions",
+        "required": "true",
+        "options": [
+          {
+            "value": "asOptions",
+            "label": "As Options"
+          },
+          {
+            "value": "joiningArrayOfObject",
+            "label": "Joining array of objects"
+          }
+        ]
+      }
+    ]
+  }
+]
