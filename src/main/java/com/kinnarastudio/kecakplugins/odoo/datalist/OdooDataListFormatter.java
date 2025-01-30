@@ -15,7 +15,7 @@ public class OdooDataListFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
-        if(value.getClass() == Object[].class) {
+        if(value instanceof Object[]) {
             return Arrays.stream((Object[])value)
                     .map(String::valueOf)
                     .collect(Collectors.joining(";"));
