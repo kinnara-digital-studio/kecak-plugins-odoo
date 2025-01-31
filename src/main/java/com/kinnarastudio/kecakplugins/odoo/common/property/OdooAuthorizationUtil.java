@@ -1,15 +1,16 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
+import org.joget.apps.app.service.AppUtil;
 import org.joget.plugin.base.ExtDefaultPlugin;
 
 public final class OdooAuthorizationUtil {
     private OdooAuthorizationUtil() {}
     public static String getBaseUrl(ExtDefaultPlugin plugin) {
-        return plugin.getPropertyString("baseUrl");
+        return AppUtil.processHashVariable(plugin.getPropertyString("baseUrl"), null, null, null);
     }
 
     public static String getDatabase(ExtDefaultPlugin plugin) {
-        return plugin.getPropertyString("database");
+        return AppUtil.processHashVariable(plugin.getPropertyString("database"), null, null, null);
     }
 
     /**
@@ -19,7 +20,7 @@ public final class OdooAuthorizationUtil {
      * @return
      */
     public static String getUsername(ExtDefaultPlugin plugin) {
-        return plugin.getPropertyString("user");
+        return AppUtil.processHashVariable(plugin.getPropertyString("user"), null, null, null);
     }
 
     /**
@@ -29,10 +30,10 @@ public final class OdooAuthorizationUtil {
      * @return
      */
     public static String getApiKey(ExtDefaultPlugin plugin) {
-        return plugin.getPropertyString("apiKey");
+        return AppUtil.processHashVariable(plugin.getPropertyString("apiKey"), null, null, null);
     }
 
     public static String getModel(ExtDefaultPlugin plugin) {
-        return plugin.getPropertyString("model");
+        return AppUtil.processHashVariable(plugin.getPropertyString("model"), null, null, null);
     }
 }
