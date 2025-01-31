@@ -3,6 +3,12 @@
     "title": "Odoo Options Binder",
     "properties": [
       {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      },
+      {
         "name": "valueField",
         "label": "Value field",
         "type": "textfield"

@@ -86,7 +86,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
                         final String childId = String.valueOf(e.getKey());
 
                         final Element child = FormUtil.findElement(childId, element, formData);
-                        if(child == null) {
+                        if (child == null) {
                             return;
                         }
 
@@ -154,7 +154,10 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{"/properties/common/OdooAuthorization.json"};
+        final String[] resources = new String[]{
+                "/properties/common/OdooAuthorization.json",
+                "/properties/form/OdooFormBinder.json"
+        };
 
         return Arrays.stream(resources)
                 .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere"))

@@ -4,7 +4,6 @@ import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;

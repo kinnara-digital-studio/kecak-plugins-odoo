@@ -1,0 +1,13 @@
+[
+  {
+    "title":"Odoo Form Binder",
+    "properties":[
+      {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      }
+    ]
+  }
+]

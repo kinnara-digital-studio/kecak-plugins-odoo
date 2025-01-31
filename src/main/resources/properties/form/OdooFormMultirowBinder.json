@@ -3,6 +3,12 @@
     "title": "Odoo Form Multirow Binder",
     "properties": [
       {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      },
+      {
         "name": "foreignKeyField",
         "label": "Foreign Key",
         "type": "textfield",

@@ -3,6 +3,12 @@
     "title": "DataList Action",
     "properties": [
       {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      },
+      {
         "name": "label",
         "label": "Label",
         "type": "textfield",

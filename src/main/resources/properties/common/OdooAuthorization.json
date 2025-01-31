@@ -25,12 +25,6 @@
         "type": "textfield",
         "label": "API Key",
         "required": "true"
-      },
-      {
-        "name": "model",
-        "type": "textfield",
-        "label": "Model",
-        "required": "true"
       }
     ]
   }

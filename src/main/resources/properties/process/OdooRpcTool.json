@@ -3,6 +3,12 @@
     "title": "Odoo RPC Tool",
     "properties": [
       {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      },
+      {
         "name": "method",
         "type":"selectbox",
         "required": "true",
