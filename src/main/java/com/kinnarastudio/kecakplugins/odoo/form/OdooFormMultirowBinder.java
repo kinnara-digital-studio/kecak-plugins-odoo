@@ -17,12 +17,11 @@ import org.json.JSONArray;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Odoo Form MultiRow Binder
  */
-public class OdooFormMultirowBinder extends FormBinder implements FormLoadElementBinder, FormStoreElementBinder, FormLoadMultiRowElementBinder , FormStoreMultiRowElementBinder{
+public class OdooFormMultirowBinder extends FormBinder implements FormLoadElementBinder, FormStoreElementBinder, FormLoadMultiRowElementBinder, FormStoreMultiRowElementBinder {
     public final static String LABEL = "Odoo Form Multirow Binder";
 
     @Override
@@ -42,11 +41,14 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     new SearchFilter(foreignKeyField, Integer.parseInt(primaryKey))
             };
 
+            final Set<String> fields = rpc.fieldsGet(model).keySet();
+
             return Arrays.stream(rpc.searchRead(model, searchFilters, null, null, null))
                     .map(m -> new FormRow() {{
-                        m.forEach((k, v) -> {
-                            if (v != null) setProperty(k, String.valueOf(v));
-                        });
+                        m.entrySet()
+                                .stream()
+                                .filter(e -> fields.contains(e.getKey()) && e.getValue() != null)
+                                .forEach(e -> setProperty(e.getKey(), String.valueOf(e.getValue())));
                     }})
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);
@@ -59,7 +61,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
     @Override
     public FormRowSet store(Element element, FormRowSet rowSet, FormData formData) {
-        if(rowSet == null) return null;
+        if (rowSet == null) return null;
 
         final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
         final String database = OdooAuthorizationUtil.getDatabase(this);
@@ -95,7 +97,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     }
 
                     int index = Collections.binarySearch(originalRowSet, row, Comparator.comparing(FormRow::getId));
-                    if(index >= 0) {
+                    if (index >= 0) {
                         // exclude from to be deleted row
                         originalRowSet.remove(index);
                     }
@@ -103,14 +105,13 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     return row;
                 }))
 
-                .collect(Collectors.toCollection(() -> new FormRowSet(){{
+                .collect(Collectors.toCollection(() -> new FormRowSet() {{
                     setMultiRow(true);
                 }}));
 
         // delete old data
-        Optional.of(originalRowSet)
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
+        Optional.of(originalRowSet).stream()
+                .flatMap(Collection::stream)
                 .map(FormRow::getId)
                 .filter(Objects::nonNull)
                 .map(Try.onFunction(Integer::parseInt))

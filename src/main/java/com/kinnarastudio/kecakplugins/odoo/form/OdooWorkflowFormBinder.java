@@ -4,6 +4,7 @@ import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowVariable;
 import org.joget.workflow.model.service.WorkflowManager;
@@ -21,12 +22,13 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
         FormRowSet rows = super.load(element, primaryKey, formData);
+
         if (rows != null) {
             // handle workflow variables
             String activityId = formData.getActivityId();
             String processId = formData.getProcessId();
             WorkflowManager workflowManager = (WorkflowManager) WorkflowUtil.getApplicationContext().getBean("workflowManager");
-            Collection<WorkflowVariable> variableList = null;
+            Collection<WorkflowVariable> variableList;
             if (activityId != null && !activityId.isEmpty()) {
                 variableList = workflowManager.getActivityVariableList(activityId);
             } else if (processId != null && !processId.isEmpty()) {
@@ -36,7 +38,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
             }
 
             if (variableList != null && !variableList.isEmpty()) {
-                FormRow row = null;
+                FormRow row;
                 if (rows.isEmpty()) {
                     row = new FormRow();
                     rows.add(row);
@@ -73,7 +75,9 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
 
                     // recursively find element(s) mapped to workflow variable
                     FormRow row = rows.iterator().next();
-                    Map<String, String> variableMap = new HashMap<String, String>();
+                    formData.setPrimaryKeyValue(row.getId());
+
+                    Map<String, String> variableMap = new HashMap<>();
                     variableMap = storeWorkflowVariables(element, row, variableMap);
 
                     if (activityId != null) {
@@ -84,7 +88,8 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
                 }
             }
         }
-        return result;    }
+        return result;
+    }
 
     @Override
     public String getName() {
@@ -111,8 +116,9 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
 
     /**
      * Recursive into elements to set workflow variable values to be loaded.
+     *
      * @param element
-     * @param row The current row of data to be loaded
+     * @param row         The current row of data to be loaded
      * @param variableMap The variable name=value pairs.
      * @return
      */
@@ -125,7 +131,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
                 row.put(id, variableValue);
             }
         }
-        for (Iterator<Element> i = element.getChildren().iterator(); i.hasNext();) {
+        for (Iterator<Element> i = element.getChildren().iterator(); i.hasNext(); ) {
             Element child = i.next();
             loadWorkflowVariables(child, row, variableMap);
         }
@@ -134,8 +140,9 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
 
     /**
      * Recursive into elements to retrieve workflow variable values to be stored.
+     *
      * @param element
-     * @param row The current row of data
+     * @param row         The current row of data
      * @param variableMap The variable name=value pairs to be stored.
      * @return
      */
@@ -148,7 +155,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
                 variableMap.put(variableName, value);
             }
         }
-        for (Iterator<Element> i = element.getChildren().iterator(); i.hasNext();) {
+        for (Iterator<Element> i = element.getChildren().iterator(); i.hasNext(); ) {
             Element child = i.next();
             storeWorkflowVariables(child, row, variableMap);
         }

@@ -39,7 +39,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
                         m.forEach((k, v) -> {
                             if (v != null) {
                                 final String value;
-                                if (v.getClass() == Object[].class) {
+                                if (v instanceof Object[]) {
                                     value = Arrays.stream((Object[]) v)
                                             .map(String::valueOf)
                                             .collect(Collectors.joining(";"));
@@ -71,30 +71,34 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final Map<String, Object> record = Optional.ofNullable(rowSet)
-                .stream()
-                .flatMap(Collection::stream)
-                .findFirst()
-                .map(Hashtable::entrySet)
-                .stream()
-                .flatMap(Collection::stream)
-                .peek(Try.onConsumer(e -> {
-                    final String childId = String.valueOf(e.getKey());
-
-                    final Element child = FormUtil.findElement(childId, element, formData);
-                    if(child == null) {
-                        return;
-                    }
-
-                    final FormLoadBinder optionsBinder = child.getOptionsBinder();
-                    if (optionsBinder instanceof OdooOptionsBinder) {
-                        e.setValue(Integer.parseInt(String.valueOf(e.getValue())));
-                    }
-                }))
-                .filter(e -> !e.getKey().toString().isEmpty() && Objects.nonNull(e.getValue()))
-                .collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue));
 
         try {
+            final Set<String> fields = rpc.fieldsGet(model).keySet();
+
+            final Map<String, Object> record = Optional.ofNullable(rowSet)
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .findFirst()
+                    .map(FormRow::entrySet)
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .peek(Try.onConsumer(e -> {
+                        final String childId = String.valueOf(e.getKey());
+
+                        final Element child = FormUtil.findElement(childId, element, formData);
+                        if(child == null) {
+                            return;
+                        }
+
+                        final FormLoadBinder optionsBinder = child.getOptionsBinder();
+                        if (optionsBinder instanceof OdooOptionsBinder) {
+                            e.setValue(Integer.parseInt(String.valueOf(e.getValue())));
+                        }
+                    }))
+                    .filter(e -> fields.contains(String.valueOf(e.getKey())) && Objects.nonNull(e.getValue()))
+                    .collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue));
+
+
             final int recordId = Optional.ofNullable(record.get("id"))
                     .map(String::valueOf)
                     .map(Try.onFunction(Integer::parseInt, (NumberFormatException ignored) -> null))
@@ -108,7 +112,6 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
                 final int primaryKey = rpc.create(model, record);
                 if (rowSet != null) rowSet.forEach(row -> row.setId(String.valueOf(primaryKey)));
             }
-
 
             return rowSet;
         } catch (OdooCallMethodException e) {
