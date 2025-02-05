@@ -15,9 +15,9 @@ public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
-        if(value instanceof Object[]) {
+        if (value instanceof Object[]) {
             final Object[] values = (Object[]) value;
-            if(isAsOptions()) {
+            if (isAsOptions()) {
                 return Arrays.stream(values).skip(1)
                         .findFirst()
                         .map(String::valueOf)
@@ -27,6 +27,8 @@ public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
                         .map(String::valueOf)
                         .collect(Collectors.joining(";"));
             }
+        } else if (asDecodedImage()) {
+            return String.format("<img src='data:image/png;base64, %s' />", value);
         }
 
         return String.valueOf(value);
@@ -71,6 +73,10 @@ public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
 
     protected boolean isAsOptions() {
         return "asOptions".equalsIgnoreCase(getFormattingType());
+    }
+
+    protected boolean asDecodedImage() {
+        return "asDecodedImage".equalsIgnoreCase(getFormattingType());
     }
 
     protected boolean isJoiningArrayOfObject() {

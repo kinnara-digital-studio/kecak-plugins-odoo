@@ -16,6 +16,10 @@
           {
             "value": "joiningArrayOfObject",
             "label": "Joining array of objects"
+          },
+          {
+            "value": "asDecodedImage",
+            "label": "Decoded Image"
           }
         ]
       }
