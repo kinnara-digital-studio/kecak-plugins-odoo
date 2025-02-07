@@ -17,7 +17,15 @@ public final class OdooDataListBinderUtil {
                     final String field = m.get("field");
                     final String operator = m.get("operator");
                     final IOdooFilter.DataType dataType = "integer".equalsIgnoreCase(m.get("dataType")) ? IOdooFilter.DataType.INTEGER : IOdooFilter.DataType.STRING;
-                    final Object value = dataType == IOdooFilter.DataType.INTEGER ? Integer.parseInt(String.valueOf(m.get("value"))) : String.valueOf(m.get("value"));
+                    final String strValue = String.valueOf(m.get("value"));
+
+                    Object value;
+                    try {
+                        value = dataType == IOdooFilter.DataType.INTEGER ? Integer.parseInt(strValue) : strValue;
+                    } catch (NumberFormatException e) {
+                        value = strValue;
+                    }
+
                     return new SearchFilter(field, operator, value);
                 })
                 .toArray(SearchFilter[]::new);

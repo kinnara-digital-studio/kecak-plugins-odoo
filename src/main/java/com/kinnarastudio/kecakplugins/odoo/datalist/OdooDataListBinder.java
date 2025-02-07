@@ -169,10 +169,11 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .filter(f -> f instanceof IOdooFilter)
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
-                .map(f -> {
+                .map(Try.onFunction(f -> {
                     final Object value = f.getDataType() == IOdooFilter.DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
                     return new SearchFilter(f.getField(), f.getOperator(), value);
-                });
+                }, (NumberFormatException ignored) -> null))
+                .filter(Objects::nonNull);
 
         return Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
