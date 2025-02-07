@@ -6,4 +6,11 @@ public interface IOdooFilter {
     String getOperator();
 
     String getValue();
+
+    DataType getDataType();
+
+    enum DataType {
+        STRING,
+        INTEGER
+    }
 }

@@ -27,7 +27,6 @@
         ]
       },
       {
-
         "name": "conditionField",
         "label": "Condition Field",
         "type": "textfield",
@@ -35,6 +34,23 @@
         "control_field": "mode",
         "control_value": "custom",
         "required": "true"
+      },
+      {
+        "name": "dataType",
+        "label": "Data Type",
+        "type": "selectbox",
+        "value": "string",
+        "required": "true",
+        "options": [
+          {
+            "value": "string",
+            "label": "STRING"
+          },
+          {
+            "value": "integer",
+            "label": "INTEGER"
+          }
+        ]
       },
       {
         "name": "conditionOperator",

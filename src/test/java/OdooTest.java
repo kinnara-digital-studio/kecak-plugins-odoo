@@ -42,17 +42,17 @@ public class OdooTest {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        String model = "product.template";
-        for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{ new SearchFilter("purchase_ok", "=", "null")}, "id", null, null)) {
-            System.out.println(record.get("id") + "|" + record.get("name") + "|" + Arrays.stream((Object[])record.get("categ_id")).map(String::valueOf).collect(Collectors.joining(";")) + "|" + Optional.ofNullable(record.get("categ_id")).map(Object::getClass).map(Class::getName).orElse(Integer.class.getName()) +"|"+Object.class.getName());
+        String model = "room.booking";
+        for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{ new SearchFilter("employee_id", "=", "6")}, "id", null, null)) {
+            System.out.println(record.get("id") + "|" + record.get("name"));
         }
     }
 
     @org.junit.Test
     public void testRead() throws OdooCallMethodException {
 
-        String model = "product.template";
-        int recordId = rpc.search(model, null, null, null, 1)[0];
+        String model = "room.booking";
+        int recordId = rpc.search(model, new SearchFilter[]{new SearchFilter("employee_id", "=", 14)}, null, null, 1)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
                 .orElseThrow(() -> new OdooCallMethodException("record not found"));
 

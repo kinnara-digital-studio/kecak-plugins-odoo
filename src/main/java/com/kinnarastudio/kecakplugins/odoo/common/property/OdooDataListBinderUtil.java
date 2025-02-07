@@ -1,5 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import org.joget.plugin.base.ExtDefaultPlugin;
 
@@ -15,7 +16,8 @@ public final class OdooDataListBinderUtil {
                 .map(m -> {
                     final String field = m.get("field");
                     final String operator = m.get("operator");
-                    final String value = m.get("value");
+                    final IOdooFilter.DataType dataType = "integer".equalsIgnoreCase(m.get("dataType")) ? IOdooFilter.DataType.INTEGER : IOdooFilter.DataType.STRING;
+                    final Object value = dataType == IOdooFilter.DataType.INTEGER ? Integer.parseInt(String.valueOf(m.get("value"))) : String.valueOf(m.get("value"));
                     return new SearchFilter(field, operator, value);
                 })
                 .toArray(SearchFilter[]::new);

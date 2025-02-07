@@ -1,5 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist;
 
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooFilterQueryObject;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
@@ -53,7 +54,8 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
             operator = "=";
         }
 
-        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, OdooFilterQueryObject.DataType.STRING);
+        final IOdooFilter.DataType dataType = getDataType();
+        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, dataType);
         return filterQueryObject;
     }
 
@@ -96,6 +98,10 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
 
     protected String getMode() {
         return getPropertyString("mode");
+    }
+
+    protected IOdooFilter.DataType getDataType () {
+        return "integer".equalsIgnoreCase(getPropertyString("dataType")) ? IOdooFilter.DataType.INTEGER : IOdooFilter.DataType.STRING;
     }
 
     protected String getConditionField(String name) {

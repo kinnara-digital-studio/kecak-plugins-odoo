@@ -31,9 +31,8 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
         return value;
     }
 
-
-    public enum DataType {
-        STRING,
-        INTEGER
+    @Override
+    public DataType getDataType() {
+        return dataType;
     }
 }

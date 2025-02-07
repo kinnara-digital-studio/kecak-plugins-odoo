@@ -84,6 +84,21 @@
           {
             "key": "value",
             "label": "Value"
+          },
+          {
+            "key": "dataType",
+            "label": "Data Type",
+            "required": "true",
+            "options": [
+              {
+                "value": "string",
+                "label": "STRING"
+              },
+              {
+                "value": "integer",
+                "label": "INTEGER"
+              }
+            ]
           }
         ]
       }

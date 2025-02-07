@@ -162,13 +162,17 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     protected SearchFilter[] getFilters(DataListFilterQueryObject[] filterQueryObjects) {
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
+
         final Stream<SearchFilter> filterQueryObjectStream = Optional.ofNullable(filterQueryObjects)
                 .stream()
                 .flatMap(Arrays::stream)
                 .filter(f -> f instanceof IOdooFilter)
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
-                .map(f -> new SearchFilter(f.getField(), f.getOperator(), String.valueOf(f.getValue())));
+                .map(f -> {
+                    final Object value = f.getDataType() == IOdooFilter.DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                    return new SearchFilter(f.getField(), f.getOperator(), value);
+                });
 
         return Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
