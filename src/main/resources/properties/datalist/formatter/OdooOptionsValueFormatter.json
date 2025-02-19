@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Odoo Options Value Formatter",
+    "properties": [
+      {
+        "name": "optionsBinder",
+        "type": "elementselect",
+        "label": "Options Binder",
+        "required": "true",
+        "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=%s",
+        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
+        "value": "%s"
+      }
+    ]
+  }
+]

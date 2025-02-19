@@ -6,7 +6,8 @@ import java.util.Collection;
 import com.kinnarastudio.kecakplugins.odoo.app.OdooSearchReadHashVariable;
 import com.kinnarastudio.kecakplugins.odoo.datalist.OdooDataListBinder;
 import com.kinnarastudio.kecakplugins.odoo.datalist.OdooDataListFilter;
-import com.kinnarastudio.kecakplugins.odoo.datalist.OdooObjectDataListFormatter;
+import com.kinnarastudio.kecakplugins.odoo.datalist.formatter.OdooObjectDataListFormatter;
+import com.kinnarastudio.kecakplugins.odoo.datalist.formatter.OdooOptionsValueFormatter;
 import com.kinnarastudio.kecakplugins.odoo.form.*;
 import com.kinnarastudio.kecakplugins.odoo.process.OdooRpcTool;
 import org.osgi.framework.BundleActivator;
@@ -29,6 +30,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(OdooFormMultirowBinder.class.getName(), new OdooFormMultirowBinder(), null));
         registrationList.add(context.registerService(OdooRpcTool.class.getName(), new OdooRpcTool(), null));
         registrationList.add(context.registerService(OdooObjectDataListFormatter.class.getName(), new OdooObjectDataListFormatter(), null));
+        registrationList.add(context.registerService(OdooOptionsValueFormatter.class.getName(), new OdooOptionsValueFormatter(), null));
         registrationList.add(context.registerService(OdooSearchReadHashVariable.class.getName(), new OdooSearchReadHashVariable(), null));
     }
 

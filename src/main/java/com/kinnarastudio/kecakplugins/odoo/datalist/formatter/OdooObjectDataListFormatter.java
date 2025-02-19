@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.odoo.datalist;
+package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
@@ -64,7 +64,7 @@ public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/datalist/OdooObjectDataListFormatter.json");
+        return AppUtil.readPluginResource(getClassName(), "/properties/datalist/formatter/OdooObjectDataListFormatter.json");
     }
 
     protected String getFormattingType() {
