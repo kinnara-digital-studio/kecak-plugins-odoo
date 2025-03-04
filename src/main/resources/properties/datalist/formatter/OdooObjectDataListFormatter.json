@@ -6,12 +6,16 @@
         "name": "formattingType",
         "label": "Formatting Type",
         "type": "radio",
-        "value": "asOptions",
+        "value": "showId",
         "required": "true",
         "options": [
           {
+            "value": "showId",
+            "label": "Show ID"
+          },
+          {
             "value": "asOptions",
-            "label": "As Options"
+            "label": "As Label"
           },
           {
             "value": "joiningArrayOfObject",

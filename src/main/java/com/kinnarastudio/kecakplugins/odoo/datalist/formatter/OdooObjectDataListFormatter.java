@@ -17,7 +17,13 @@ public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
         if (value instanceof Object[]) {
             final Object[] values = (Object[]) value;
-            if (isAsOptions()) {
+            if(showId()) {
+                return Arrays.stream(values)
+                        .findFirst()
+                        .map(String::valueOf)
+                        .orElse("");
+
+            }else if (isAsOptions()) {
                 return Arrays.stream(values).skip(1)
                         .findFirst()
                         .map(String::valueOf)
@@ -69,6 +75,10 @@ public class OdooObjectDataListFormatter extends DataListColumnFormatDefault {
 
     protected String getFormattingType() {
         return getPropertyString("formattingType");
+    }
+
+    protected boolean showId() {
+        return "showId".equalsIgnoreCase(getFormattingType());
     }
 
     protected boolean isAsOptions() {

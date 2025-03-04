@@ -55,8 +55,7 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
         }
 
         final IOdooFilter.DataType dataType = getDataType();
-        final DataListFilterQueryObject filterQueryObject = new OdooFilterQueryObject(name, operator, value, dataType);
-        return filterQueryObject;
+        return new OdooFilterQueryObject(name, operator, value, dataType);
     }
 
     @Override
