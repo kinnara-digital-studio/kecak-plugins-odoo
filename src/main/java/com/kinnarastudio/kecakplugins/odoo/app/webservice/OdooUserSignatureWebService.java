@@ -97,7 +97,6 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
                     outputStream.flush();
                 }
             }
-
         } catch (ApiException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             servletResponse.sendError(e.getErrorCode(), e.getMessage());
