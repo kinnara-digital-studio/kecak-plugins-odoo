@@ -2,6 +2,7 @@ package com.kinnarastudio.kecakplugins.odoo.app.webservice;
 
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.dao.PluginDefaultPropertiesDao;
 import org.joget.apps.app.model.AppDefinition;
@@ -24,9 +25,22 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Load signature image form odoo's server model <i>res.users</i> field <i>sign_signature</i>
+ *
+ * <h3>Url<h3/>
+ * /web/json/app/[appId]/[appVersion]/plugin/com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooUserSignatureWebService/service
+ *
+ * <h3>Parameters</h3>
+ * <li>
+ *     <ul>appId - current app definition</ul>
+ *     <ul>appVersion - optional, default current published app</ul>
+ *     <ul>userId - search from model <b>res.users</b> using field <b>id</b></ul>
+ *     <ul>employeeId - search form model <b>hr.employee</b> field <b>id</b></ul>
+ *     <ul>barcode - search from model <b>hr.employee</b> field <b>barcode</b></ul>
+ * </li>
  */
 public class OdooUserSignatureWebService extends DefaultApplicationPlugin implements PluginWebSupport {
     public final static int BUFFER_LENGTH = 1024;
@@ -63,9 +77,6 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
                 throw new ApiException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method [" + method + "] is not supported");
             }
 
-            final int userId = optParameter(servletRequest, "userId")
-                    .map(Try.onFunction(Integer::parseInt))
-                    .orElseThrow(() -> new ApiException(HttpServletResponse.SC_BAD_REQUEST, "Parameter userId is not supplied"));
 
             final String baseUrl = getBaseUrl();
             final String database = getDatabase();
@@ -73,6 +84,41 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
             final String apiKey = getApiKey();
 
             final OdooRpc odooRpc = new OdooRpc(baseUrl, database, username, apiKey);
+
+
+            final Optional<Integer> optEmployeeId = optParameter(servletRequest, "employeeId")
+                    .map(Integer::parseInt);
+
+            final Optional<String> optBarcode = optParameter(servletRequest, "barcode");
+
+            final int userId;
+            if (optEmployeeId.isPresent()) {
+                userId = odooRpc.read("hr.employee", optEmployeeId.get())
+                        .map(m -> m.get("user_id"))
+                        .filter(o -> o instanceof Object[])
+                        .map(o -> (Object[]) o)
+                        .map(o -> (int) o[0])
+                        .orElseThrow(() -> new ApiException(HttpServletResponse.SC_NOT_FOUND, "Employee ID [" + optEmployeeId.get() + "] is not available"));
+            } else if (optBarcode.isPresent()) {
+                final SearchFilter[] filter = new SearchFilter[]{
+                        new SearchFilter("barcode", optBarcode.get())
+                };
+
+                userId = Optional.of(odooRpc.searchRead("hr.employee", filter, null, null, 1))
+                        .stream()
+                        .flatMap(Arrays::stream)
+                        .findFirst()
+                        .map(m -> m.get("user_id"))
+                        .filter(o -> o instanceof Object[])
+                        .map(o -> (Object[]) o)
+                        .map(o -> (int) o[0])
+                        .orElseThrow(() -> new ApiException(HttpServletResponse.SC_NOT_FOUND, "Barcode [" + optBarcode.get() + "] is not available"));
+            } else {
+                userId = optParameter(servletRequest, "userId")
+                        .map(Try.onFunction(Integer::parseInt))
+                        .orElseThrow(() -> new ApiException(HttpServletResponse.SC_BAD_REQUEST, "Parameter userId is not supplied"));
+            }
+
             final Map<String, Object> userRecord = odooRpc.read("res.users", userId)
                     .orElseThrow(() -> new ApiException(HttpServletResponse.SC_NOT_FOUND, ""));
 
@@ -82,7 +128,7 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
                     .map("base64"::equalsIgnoreCase)
                     .orElse(false);
 
-            if(asBase64) {
+            if (asBase64) {
                 servletResponse.getWriter().write(base64Signature);
             } else {
                 servletResponse.setContentType("image/png");
@@ -123,6 +169,7 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
 
     protected Optional<String> optParameter(HttpServletRequest servletRequest, String name) {
         return Optional.of(name)
+                .filter(Predicate.not(String::isEmpty))
                 .map(servletRequest::getParameter);
     }
 

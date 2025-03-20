@@ -56,7 +56,7 @@ public class OdooTest {
     public void testRead() throws OdooCallMethodException {
 
         String model = "hr.employee";
-        int recordId = rpc.search(model, new SearchFilter[]{new SearchFilter("display_name", "=", "PESTAMAN")}, null, null, 4)[0];
+        int recordId = rpc.search(model, new SearchFilter[]{new SearchFilter("barcode", "=", "012105")}, null, null, 4)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
                 .orElseThrow(() -> new OdooCallMethodException("record not found"));
 
