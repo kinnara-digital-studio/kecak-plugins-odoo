@@ -42,9 +42,13 @@ public class OdooTest {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        String model = "room.booking";
-        for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{ new SearchFilter("employee_id", "=", "6")}, "id", null, null)) {
-            System.out.println(record.get("id") + "|" + record.get("name"));
+        String model = "res.users";
+        final SearchFilter[] filters = new SearchFilter[]{
+                new SearchFilter("id", "=", 2)
+        };
+
+        for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
+            System.out.println(record.get("id") + "|" + record.get("sign_signature") + "|" + record.get("marital_status"));
         }
     }
 
@@ -61,7 +65,7 @@ public class OdooTest {
 
     @org.junit.Test
     public void testFieldsGet() throws OdooCallMethodException {
-        final Map<String, Map<String, Object>> fields = rpc.fieldsGet("product.category");
+        final Map<String, Map<String, Object>> fields = rpc.fieldsGet("res.users");
 
         assert !fields.isEmpty();
 
