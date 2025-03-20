@@ -18,6 +18,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Odoo Search Read Hash Variable
+ *
+ * Syntax : odooSearchRead.READ_FIELD.MODEL[FIELD OPERATOR VALUE][FIELD OPERATOR VALUE]...
+ */
 public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
     public final static String LABEL = "Odoo Search Read Hash Variable";
 
