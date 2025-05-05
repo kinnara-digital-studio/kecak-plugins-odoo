@@ -17,6 +17,7 @@ import org.joget.plugin.property.service.PropertyUtil;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Odoo Search Read Hash Variable
@@ -88,10 +89,16 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
             return Optional.of(rpc.searchRead(model, filters.toArray(new SearchFilter[0]), null, null, 1))
                     .stream()
                     .flatMap(Arrays::stream)
-                    .findFirst()
                     .map(m -> m.get(field))
+                    .map(o -> {
+                        if(o instanceof Object[]) {
+                            return ((Object[])o)[0];
+                        } else {
+                            return o;
+                        }
+                    })
                     .map(String::valueOf)
-                    .orElse("");
+                    .collect(Collectors.joining(";"));
         } catch (OdooCallMethodException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             return "";
