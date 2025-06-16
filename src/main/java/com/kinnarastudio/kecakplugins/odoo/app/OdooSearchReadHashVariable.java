@@ -42,7 +42,7 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getDescription() {
-        return getClass().getPackage().getName();
+        return getClass().getPackage().getImplementationTitle();
     }
 
     @Override

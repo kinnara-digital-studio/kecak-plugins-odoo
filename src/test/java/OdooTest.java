@@ -40,9 +40,11 @@ public class OdooTest {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        String model = "hr.contract.type";
-        for (Map<String, Object> record : rpc.searchRead(model, null, "id", null, null)) {
-            System.out.println(record);
+        String model = "res.users";
+        for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{
+                new SearchFilter("login", "admin")
+        }, "id", null, null)) {
+            System.out.println(record.get("login"));
         }
     }
 
