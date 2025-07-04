@@ -1,6 +1,12 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
-import com.kinnarastudio.commons.Try;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.joget.apps.app.dao.FormDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.FormDefinition;
@@ -10,17 +16,15 @@ import org.joget.apps.form.service.FormService;
 import org.joget.plugin.base.ExtDefaultPlugin;
 import org.springframework.context.ApplicationContext;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.kinnarastudio.commons.Try;
 
 /**
  *
  */
 public final class OdooRpcToolUtil {
-    private OdooRpcToolUtil() {}
+
+    private OdooRpcToolUtil() {
+    }
 
     public static String getMethod(ExtDefaultPlugin plugin) {
         return plugin.getPropertyString("method");
@@ -36,7 +40,12 @@ public final class OdooRpcToolUtil {
         return Optional.of(plugin.getPropertyGrid("record"))
                 .map(Arrays::stream)
                 .orElseGet(Stream::empty)
-                .collect(Collectors.toMap(m -> String.valueOf(m.get("field")), m -> m.get("value")));
+                .collect(Collectors.toMap(m -> String.valueOf(m.get("field")), m -> {
+                    Map<String, Object> valueMap = new HashMap<>();
+                    valueMap.put("value", m.get("value"));
+                    valueMap.put("dataType", m.get("dataType"));
+                    return valueMap;
+                }));
     }
 
     public static Map<String, String> getResultRecord(ExtDefaultPlugin plugin) {
@@ -55,7 +64,7 @@ public final class OdooRpcToolUtil {
 
         final ApplicationContext appContext = AppUtil.getApplicationContext();
         final FormService formService = (FormService) appContext.getBean("formService");
-        final FormDefinitionDao formDefinitionDao = (FormDefinitionDao)appContext.getBean("formDefinitionDao");
+        final FormDefinitionDao formDefinitionDao = (FormDefinitionDao) appContext.getBean("formDefinitionDao");
 
         final AppDefinition appDef = AppUtil.getCurrentAppDefinition();
         if (appDef != null && formDefId != null && !formDefId.isEmpty()) {

@@ -1,12 +1,11 @@
 package com.kinnarastudio.kecakplugins.odoo.process;
 
-import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.commons.jsonstream.JSONCollectors;
-import com.kinnarastudio.commons.jsonstream.JSONStream;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
@@ -15,15 +14,19 @@ import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import com.kinnarastudio.commons.Try;
+import com.kinnarastudio.commons.jsonstream.JSONCollectors;
+import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
+import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 
 /**
  * Execute Odoo RPC
  */
 public class OdooRpcTool extends DefaultApplicationPlugin {
+
     public final static String LABEL = "Odoo RPC Tool";
 
     @Override
@@ -57,10 +60,49 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         final Optional<Integer> optRecordId = OdooRpcToolUtil.optRecordId(this);
         final Map<String, Object> record = OdooRpcToolUtil.getRecord(this);
 
+        LogUtil.info(getClassName(), "---Record---");
+        for (Map.Entry<String, Object> entry : record.entrySet()) {
+            LogUtil.info(getClassName(), "Key: [" + entry.getKey() + "], Value: [" + entry.getValue() + "]");
+        }
+
+        final Map<String, Object> parsedRecord = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : record.entrySet()) {
+            String key = entry.getKey();
+            Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
+
+            String dataType = (String) valueMap.get("dataType");
+            Object rawValue = valueMap.get("value");
+
+            if (dataType != null && rawValue != null) {
+                switch (dataType.toLowerCase()) {
+                    case "string":
+                        parsedRecord.put(key, String.valueOf(rawValue));
+                        break;
+                    case "integer":
+                        parsedRecord.put(key, Integer.valueOf(rawValue.toString()));
+                        break;
+                    case "float":
+                        parsedRecord.put(key, Float.valueOf(rawValue.toString()));
+                        break;
+                    case "boolean":
+                        parsedRecord.put(key, Boolean.valueOf(rawValue.toString().toLowerCase()));
+                        break;
+                    default:
+                        parsedRecord.put(key, rawValue.toString());
+                }
+            }
+        }
+
+        LogUtil.info(getClassName(), "---Parsed Record---");
+        for (Map.Entry<String, Object> entry : parsedRecord.entrySet()) {
+            LogUtil.info(getClassName(), "Key: [" + entry.getKey() + "], Value: [" + entry.getValue() + "]");
+        }
+
         try {
             switch (method) {
                 case "create": {
-                    final int resultValue = rpc.create(model, record);
+                    final int resultValue = rpc.create(model, parsedRecord);
 
                     final String resultWorkflowVariable = OdooRpcToolUtil.getResultWorkflowVariable(this);
 
@@ -72,7 +114,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                 }
 
                 case "write":
-                    rpc.write(model, optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method")), record);
+                    rpc.write(model, optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method")), parsedRecord);
                     break;
 
                 case "unlink":
@@ -101,8 +143,8 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
     @Override
     public String getPropertyOptions() {
         final String[] resources = new String[]{
-                "/properties/common/OdooAuthorization.json",
-                "/properties/process/OdooRpcTool.json"
+            "/properties/common/OdooAuthorization.json",
+            "/properties/process/OdooRpcTool.json"
         };
 
         return Arrays.stream(resources)

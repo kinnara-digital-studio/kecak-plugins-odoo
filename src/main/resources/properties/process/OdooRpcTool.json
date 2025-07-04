@@ -10,7 +10,7 @@
       },
       {
         "name": "method",
-        "type":"selectbox",
+        "type": "selectbox",
         "required": "true",
         "label": "Method",
         "options": [
@@ -37,21 +37,44 @@
         "type": "textfield",
         "label": "Record ID",
         "required": "true",
-        "control_field" : "method",
-        "control_value_regex" : "read|write"
+        "control_field": "method",
+        "control_value_regex": "read|write"
       },
       {
         "name": "record",
         "type": "grid",
         "label": "Record",
-        "control_field" : "method",
-        "control_value" : "create|write",
+        "control_field": "method",
+        "control_value": "create|write",
         "control_use_regex": "true",
         "columns": [
           {
             "key": "field",
             "label": "Field",
             "required": "true"
+          },
+          {
+            "key": "dataType",
+            "label": "Data Type",
+            "required": "true",
+            "options": [
+              {
+                "value": "string",
+                "label": "String"
+              },
+              {
+                "value": "integer",
+                "label": "Integer"
+              },
+              {
+                "value": "float",
+                "label": "Float"
+              },
+              {
+                "value": "boolean",
+                "label": "Boolean"
+              }
+            ]
           },
           {
             "key": "value",
@@ -73,16 +96,16 @@
         "name": "resultWfVariable",
         "type": "textfield",
         "label": "Workflow Variable",
-        "control_field" : "method",
-        "control_value" : "create|write",
+        "control_field": "method",
+        "control_value": "create|write",
         "control_use_regex": "true"
       },
       {
         "name": "resultRecord",
         "type": "grid",
         "label": "Record",
-        "control_field" : "method",
-        "control_value" : "read",
+        "control_field": "method",
+        "control_value": "read",
         "columns": [
           {
             "key": "field",
@@ -99,17 +122,17 @@
       {
         "type": "header",
         "label": "Store in Form",
-        "control_field" : "method",
-        "control_value" : "read"
+        "control_field": "method",
+        "control_value": "read"
       },
       {
-        "name" : "resultFormDefId",
-        "label" : "Form",
-        "type" : "selectbox",
-        "options_ajax":"[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options",
-        "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
-        "control_field" : "method",
-        "control_value" : "read"
+        "name": "resultFormDefId",
+        "label": "Form",
+        "type": "selectbox",
+        "options_ajax": "[CONTEXT_PATH]/web/json/console/app[APP_PATH]/forms/options",
+        "url": "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
+        "control_field": "method",
+        "control_value": "read"
       }
     ]
   }
