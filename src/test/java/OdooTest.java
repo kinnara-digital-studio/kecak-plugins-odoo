@@ -51,8 +51,8 @@ public class OdooTest {
     @org.junit.Test
     public void testRead() throws OdooCallMethodException {
 
-        String model = "hr.employee";
-        int recordId = rpc.search(model, new SearchFilter[]{new SearchFilter("barcode", "=", "040744")}, null, null, 4)[0];
+        String model = "fleet.vehicle";
+        int recordId = rpc.search(model, null, null, null, 4)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
                 .orElseThrow(() -> new OdooCallMethodException("record not found"));
 
@@ -95,13 +95,12 @@ public class OdooTest {
 
     @org.junit.Test
     public void testWrite() throws OdooCallMethodException {
+        String model = "fleet.vehicle";
+        int recordId = rpc.search(model, null, null, null, 4)[0];
 
-        String model = "product.template";
-        final Map<String, Object> record = new HashMap<String, Object>() {{
-            put("city", "Bandung");
-        }};
-
-        rpc.write(model, 47, record);
+        rpc.write(model, recordId, new HashMap<String, Object>() {{
+            put("state_id", "4");
+        }});
     }
 
     @org.junit.Test
