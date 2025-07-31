@@ -6,6 +6,7 @@ import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class OdooTest {
     public final static String PROPERTIES_FILE = "test.properties";
@@ -40,12 +41,43 @@ public class OdooTest {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        String model = "res.users";
-        for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{
-                new SearchFilter("login", "admin")
-        }, "id", null, null)) {
-            System.out.println(record.get("login"));
+        final Collection<Integer> categList = new HashSet<>();
+        {
+            String model = "product.category";
+
+//        SearchFilter[] filters = null;
+            SearchFilter[] filters = new SearchFilter[]{
+                    new SearchFilter("name", "Alat Tulis Kantor")
+            };
+            for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
+                categList.add((Integer) record.get("id"));
+                System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
+            }
         }
+
+        {
+            String model = "product.category";
+
+//        SearchFilter[] filters = null;
+            SearchFilter[] filters = new SearchFilter[]{
+                    new SearchFilter("name", "Item Service GA")
+            };
+            for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
+                categList.add((Integer) record.get("id"));
+                System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
+            }
+        }
+
+        {
+            String model = "product.template";
+            SearchFilter[] filters = new SearchFilter[]{
+                    new SearchFilter("categ_id", categList.stream().toArray(Integer[]::new))
+            };
+            for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
+                System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
+            }
+        }
+
     }
 
     @org.junit.Test
