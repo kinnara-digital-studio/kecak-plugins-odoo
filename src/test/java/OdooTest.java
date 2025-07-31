@@ -2,14 +2,10 @@ import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class OdooTest {
     public final static String PROPERTIES_FILE = "test.properties";
@@ -44,62 +40,45 @@ public class OdooTest {
     public void testSearch() throws OdooCallMethodException {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        {
-            String model = "product.category";
-
-//        SearchFilter[] filters = null;
-            SearchFilter[] filters = new SearchFilter[]{
-                    new SearchFilter("name", "Alat Tulis Kantor")
-            };
-            for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
-                System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
-            }
+        String model = "res.users";
+        for (Map<String, Object> record : rpc.searchRead(model, new SearchFilter[]{
+                new SearchFilter("login", "admin")
+        }, "id", null, null)) {
+            System.out.println(record.get("login"));
         }
-
-        {
-            String model = "product.category";
-
-//        SearchFilter[] filters = null;
-            SearchFilter[] filters = new SearchFilter[]{
-                    new SearchFilter("name", "Item Service GA")
-            };
-            for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
-                System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
-            }
-        }
-
-        {
-            String model = "product.template";
-            SearchFilter[] filters = new SearchFilter[]{
-                    new SearchFilter("categ_id", 343, 33)
-            };
-            for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, 10)) {
-                System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
-            }
-        }
-
-    }
-
-    @Test
-    public void testCount() throws OdooCallMethodException {
-        String model = "hr.contract.type";
-        int recordId = rpc.searchCount(model, null);
-        System.out.println(recordId);
     }
 
     @org.junit.Test
     public void testRead() throws OdooCallMethodException {
-        String model = "hr.contract.type";
-//        SearchFilter[] filters = new SearchFilter[] {
-//                new SearchFilter("start_datetime", SearchFilter.GREATER_EQUAL, "2025-07-17 00:00:00"),
-//                new SearchFilter("start_datetime", SearchFilter.LESS_EQUAL, "2025-07-17 23:59:59")
-//        };
-        SearchFilter[] filters = null;
-        int recordId = rpc.search(model, filters, null, null, 4)[0];
+
+        String model = "fleet.vehicle";
+        int recordId = rpc.search(model, null, null, null, 4)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
                 .orElseThrow(() -> new OdooCallMethodException("record not found"));
 
-        record.forEach((k, v) -> System.out.println(k + "->" + v));
+        int jobId = Optional.ofNullable((Object[]) record.get("job_id"))
+                .stream()
+                .flatMap(Arrays::stream)
+                .findFirst()
+                .map(o -> (int)o)
+                .orElseThrow();
+
+        final Map<String, Object> jobRecord = rpc.read("hr.job", jobId)
+                .orElseThrow(() -> new OdooCallMethodException("record not found"));
+
+        System.out.println("jobRecord " + jobRecord);
+
+        int contractTypeId = Optional.ofNullable((Object[]) jobRecord.get("contract_type_id"))
+                .stream()
+                .flatMap(Arrays::stream)
+                .findFirst()
+                .map(o -> (int)o)
+                .orElseThrow();
+
+        final Map<String, Object> contractTypeRecord = rpc.read("hr.contract.type", contractTypeId)
+                .orElseThrow(() -> new OdooCallMethodException("record not found"));
+
+        contractTypeRecord.forEach((k, v) -> System.out.println(k + "->" + v));
     }
 
     @org.junit.Test
