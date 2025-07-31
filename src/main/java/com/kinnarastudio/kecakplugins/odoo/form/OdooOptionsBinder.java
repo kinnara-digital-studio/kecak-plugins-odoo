@@ -53,7 +53,13 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                 .stream()
                 .flatMap(Arrays::stream)
                 .filter(Predicate.not(String::isEmpty))
-                .map(s -> new SearchFilter(groupingField, s));
+                .map(s -> {
+                    try {
+                        return new SearchFilter(groupingField, Integer.parseInt(s));
+                    } catch (NumberFormatException e) {
+                        return new SearchFilter(groupingField, s);
+                    }
+                });
 
         final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
@@ -65,6 +71,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
                         final String label = String.valueOf(m.get(labelField));
+                        final String grouping = String.valueOf(m.get(groupingField));
 
                         if(hideEmptyValue && value.isEmpty())
                             return null;
@@ -72,6 +79,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         return new FormRow() {{
                             setProperty(FormUtil.PROPERTY_VALUE, value);
                             setProperty(FormUtil.PROPERTY_LABEL, label);
+                            setProperty(FormUtil.PROPERTY_GROUPING, grouping);
                         }};
                     })
                     .filter(Objects::nonNull)

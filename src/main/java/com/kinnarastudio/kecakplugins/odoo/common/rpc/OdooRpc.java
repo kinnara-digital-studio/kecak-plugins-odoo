@@ -112,7 +112,7 @@ public class OdooRpc {
             final Object[] objectFilters = Optional.ofNullable(filters)
                     .stream()
                     .flatMap(Arrays::stream)
-                    .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValue()})
+                    .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValues()})
                     .toArray(Object[]::new);
 
             final Object[] params = new Object[]{
@@ -160,7 +160,7 @@ public class OdooRpc {
             final Object[] objectFilters = Optional.ofNullable(filters)
                     .stream()
                     .flatMap(Arrays::stream)
-                    .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValue()})
+                    .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValues()})
                     .toArray(Object[]::new);
 
 
@@ -207,9 +207,9 @@ public class OdooRpc {
             final int uid = login();
 
             final Object[] objectFilters = Optional.ofNullable(filters)
-                    .map(Arrays::stream)
-                    .orElseGet(Stream::empty)
-                    .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValue()})
+                    .stream()
+                    .flatMap(Arrays::stream)
+                    .map(f -> new Object[]{f.getField(), f.getOperator(), f.getValues()})
                     .toArray(Object[]::new);
 
             final Object[] params = new Object[]{
