@@ -93,12 +93,12 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                     Iterator it = row.stringPropertyNames().iterator();
                     String value = row.getProperty("value");
                     if (value == null) {
-                        String key = (String) it.next();
-                        value = row.getProperty(key);
+                        Object key = it.next();
+                        value = row.getProperty(String.valueOf(key));
                     }
                     if ((label = row.getProperty("label")) == null) {
-                        String key = (String) it.next();
-                        label = row.getProperty(key);
+                        Object key = it.next();
+                        label = row.getProperty(String.valueOf(key));
                     }
                     this.optionMap.put(value, label);
                 }

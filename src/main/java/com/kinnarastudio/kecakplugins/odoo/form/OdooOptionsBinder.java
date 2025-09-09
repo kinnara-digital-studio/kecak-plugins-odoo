@@ -73,19 +73,19 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         final String label = String.valueOf(m.get(labelField));
                         final String grouping = String.valueOf(m.get(groupingField));
 
-                        if(hideEmptyValue && value.isEmpty())
+                        if (hideEmptyValue && value.isEmpty())
                             return null;
 
                         return new FormRow() {{
                             setProperty(FormUtil.PROPERTY_VALUE, value);
-                            setProperty(FormUtil.PROPERTY_LABEL, label);
+                            setProperty(FormUtil.PROPERTY_LABEL, label + " (" + value + ")");
                             setProperty(FormUtil.PROPERTY_GROUPING, grouping);
                         }};
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);
-                        if(!hideEmptyValue) {
+                        if (!hideEmptyValue) {
                             add(new FormRow() {{
                                 setProperty(FormUtil.PROPERTY_VALUE, "");
                                 setProperty(FormUtil.PROPERTY_LABEL, getEmptyLabel());

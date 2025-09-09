@@ -208,7 +208,7 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
     @Override
     public String getPropertyString(String property) {
         Map<String, Object> properties = getProperties();
-        String value = properties != null && properties.get(property) != null ? (String) properties.get(property) : "";
+        String value = properties != null && properties.get(property) != null ? String.valueOf(properties.get(property)) : "";
         return value;
     }
 }

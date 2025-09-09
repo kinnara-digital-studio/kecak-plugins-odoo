@@ -39,4 +39,8 @@ public class SearchFilter {
     public Object getValue() {
         return value;
     }
+
+    public static SearchFilter[] single(String field, Object value) {
+        return new SearchFilter[]{new SearchFilter(field, value)};
+    }
 }

@@ -71,7 +71,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
             String key = entry.getKey();
             Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
 
-            String dataType = (String) valueMap.get("dataType");
+            String dataType = String.valueOf(valueMap.get("dataType"));
             Object rawValue = valueMap.get("value");
 
             if (dataType != null && rawValue != null) {

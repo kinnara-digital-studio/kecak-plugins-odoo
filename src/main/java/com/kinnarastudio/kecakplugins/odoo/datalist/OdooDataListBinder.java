@@ -56,7 +56,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
                         final String field = e.getKey();
                         final Map<String, Object> metadata = e.getValue();
 
-                        final String label = (String) metadata.getOrDefault("string", field);
+                        final String label = String.valueOf(metadata.getOrDefault("string", field));
 
                         final boolean sortable = "true".equals(metadata.getOrDefault("sortable", true));
 

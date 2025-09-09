@@ -149,7 +149,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
         String variableName = element.getPropertyString(AppUtil.PROPERTY_WORKFLOW_VARIABLE);
         if (variableName != null && !variableName.trim().isEmpty()) {
             String id = element.getPropertyString(FormUtil.PROPERTY_ID);
-            String value = (String) row.get(id);
+            String value = String.valueOf(row.get(id));
             if (value != null) {
                 variableMap.put(variableName, value);
             }

@@ -71,7 +71,6 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final String model = OdooAuthorizationUtil.getModel(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-
         try {
             final Set<String> fields = rpc.fieldsGet(model).keySet();
 
@@ -97,7 +96,6 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
                     }))
                     .filter(e -> fields.contains(String.valueOf(e.getKey())) && Objects.nonNull(e.getValue()))
                     .collect(Collectors.toMap(e -> String.valueOf(e.getKey()), Map.Entry::getValue));
-
 
             final int recordId = Optional.ofNullable(record.get("id"))
                     .map(String::valueOf)
