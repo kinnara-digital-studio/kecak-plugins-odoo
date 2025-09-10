@@ -81,8 +81,15 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         while (matcher.find()) {
             final String filterField = matcher.group(1);
             final String operator = matcher.group(2);
-            final String value = matcher.group(3).replaceAll("^'|'$", "");
-            filters.add(new SearchFilter(filterField, operator, value));
+            final String value = matcher.group(3);
+
+            if(value.matches("\\d+")) {
+                // numeric filter, most likely IDs
+                filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
+            } else {
+                // string filter
+                filters.add(new SearchFilter(filterField, operator, value.replaceAll("^'|'$", "")));
+            }
         }
 
         try {

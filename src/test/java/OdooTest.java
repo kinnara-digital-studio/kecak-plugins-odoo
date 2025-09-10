@@ -65,7 +65,7 @@ public class OdooTest {
 
     @org.junit.Test
     public void testFieldsGet() throws OdooCallMethodException {
-        final Map<String, Map<String, Object>> fields = rpc.fieldsGet("hr.department");
+        final Map<String, Map<String, Object>> fields = rpc.fieldsGet("hr.employee");
 
         assert !fields.isEmpty();
 
