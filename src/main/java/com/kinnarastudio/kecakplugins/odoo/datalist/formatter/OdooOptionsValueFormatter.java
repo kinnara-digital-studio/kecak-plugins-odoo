@@ -1,15 +1,25 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 
-import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListColumn;
 import org.joget.apps.datalist.model.DataListColumnFormatDefault;
-import org.joget.apps.form.model.*;
+import org.joget.apps.form.model.FormBinder;
+import org.joget.apps.form.model.FormLoadBinder;
+import org.joget.apps.form.model.FormLoadOptionsBinder;
+import org.joget.apps.form.model.FormRow;
+import org.joget.apps.form.model.FormRowSet;
 import org.joget.plugin.base.PluginManager;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
 
 public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
     public final static String LABEL = "Odoo Options Value Formatter";
@@ -20,7 +30,9 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
         final Map<String, String> options = getOptionMap();
-        return Optional.ofNullable(value)
+
+        if (value instanceof Object[]) {
+            return Optional.ofNullable(value)
                 .filter(v -> v instanceof Object[])
                 .map(v -> (Object[]) v)
                 .stream()
@@ -35,6 +47,14 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                         .map(options::get)
                         .collect(Collectors.joining(", ")))
                 .orElseGet(() -> String.valueOf(value));
+        }
+        
+        String val = String.valueOf(value);
+        if (options.containsKey(val)) {
+            return options.get(val);
+        }
+
+        return val;
     }
 
     @Override
