@@ -10,18 +10,6 @@
         "options_ajax" : "[CONTEXT_PATH]/web/property/json/getElements?classname=%s",
         "url" : "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
         "value": "%s"
-      },
-      {
-        "name": "showEmployeeId",
-        "label": "Show Employee ID",
-        "type": "checkbox",
-        "value": "false",
-        "options": [
-          {
-            "value": "true",
-            "label": ""
-          }
-        ]
       }
     ]
   }

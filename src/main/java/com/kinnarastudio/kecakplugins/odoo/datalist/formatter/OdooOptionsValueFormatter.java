@@ -48,16 +48,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                         .flatMap(Arrays::stream)
                         .filter(options::containsKey)
                         .map(options::get)
-                        .map(s -> {
-                            LogUtil.info(getClassName(), "Result S: [" + s + "]");
-
-                            if (getPropertyString("showEmployeeId").equalsIgnoreCase("true")) {
-                                return s;
-                            } else {    
-                                s = s.substring(0, s.indexOf(" ")).trim();
-                                return s;
-                            }
-                        })
                         .collect(Collectors.joining(", ")))
                 .orElseGet(() -> String.valueOf(value));
         }
