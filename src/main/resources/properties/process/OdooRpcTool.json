@@ -38,7 +38,8 @@
         "label": "Record ID",
         "required": "true",
         "control_field": "method",
-        "control_value_regex": "read|write"
+        "control_value": "read|write|unlink",
+        "control_use_regex": "true"
       },
       {
         "name": "record",
@@ -133,6 +134,18 @@
         "url": "[CONTEXT_PATH]/web/property/json[APP_PATH]/getPropertyOptions",
         "control_field": "method",
         "control_value": "read"
+      }
+    ]
+  },
+  {
+    "title": "Advanced",
+    "properties": [
+      {
+        "name": "delay",
+        "type": "textfield",
+        "label": "Delay execution (in seconds)",
+        "regex_validation": "^[0-9]*$",
+        "description": "Delayed execution will be executed in secondary thread, so the process will continue without waiting for the result."
       }
     ]
   }

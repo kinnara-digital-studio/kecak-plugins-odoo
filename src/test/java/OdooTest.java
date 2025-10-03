@@ -93,10 +93,10 @@ public class OdooTest {
         int organizerId = 2;
         final Map<String, Object> record = new HashMap<>() {{
             put("name", "Training Kecak");
-            put("room_id", roomId);
-            put("organizer_id", organizerId);
-            put("start_datetime", "2024-01-27 01:30");
-            put("stop_datetime", "2024-01-27 02:30");
+            put("room_id", 8);
+            put("organizer_id", 2);
+            put("start_datetime", "2025-09-12T08:00:00+07:00");
+            put("stop_datetime", "2025-09-12T09:00:00+07:00");
         }};
 
         int recordId = rpc.create(model, record);

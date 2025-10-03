@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
 
+import org.apache.logging.log4j.core.parser.ParseException;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
@@ -60,11 +62,6 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         final Optional<Integer> optRecordId = OdooRpcToolUtil.optRecordId(this);
         final Map<String, Object> record = OdooRpcToolUtil.getRecord(this);
 
-        LogUtil.info(getClassName(), "---Record---");
-        for (Map.Entry<String, Object> entry : record.entrySet()) {
-            LogUtil.info(getClassName(), "Key: [" + entry.getKey() + "], Value: [" + entry.getValue() + "]");
-        }
-
         final Map<String, Object> parsedRecord = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : record.entrySet()) {
@@ -94,12 +91,8 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
             }
         }
 
-        LogUtil.info(getClassName(), "---Parsed Record---");
-        for (Map.Entry<String, Object> entry : parsedRecord.entrySet()) {
-            LogUtil.info(getClassName(), "Key: [" + entry.getKey() + "], Value: [" + entry.getValue() + "]");
-        }
-
-        try {
+        long delayInSeconds = getDelayedExecutionTime();
+        runDelayed(Try.onRunnable(()-> {
             switch (method) {
                 case "create": {
                     final int resultValue = rpc.create(model, parsedRecord);
@@ -124,9 +117,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                 default:
                     throw new OdooCallMethodException("Method [" + method + "] is not understood");
             }
-        } catch (OdooCallMethodException e) {
-            LogUtil.error(getClass().getName(), e, e.getMessage());
-        }
+        }), delayInSeconds);
         return null;
     }
 
@@ -153,5 +144,37 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())
                 .toString();
+    }
+
+    /**
+     * Get delayed execution time in seconds
+     * @return
+     */
+    protected long getDelayedExecutionTime() {
+        return Optional.of("delay")
+                .map(this::getPropertyString)
+                .filter(Predicate.not(String::isEmpty))
+                .map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> 0))
+                .orElse(0);
+    }
+
+    /**
+     * Run runnable after delay time
+     * @param runnable
+     * @param delayInSeconds
+     */
+    protected void runDelayed(Runnable runnable, long delayInSeconds) {
+        if(delayInSeconds > 0) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(delayInSeconds * 1000);
+                    runnable.run();
+                } catch (InterruptedException e) {
+                    LogUtil.error(getClassName(), e, e.getMessage());
+                }
+            }).start();
+        } else {
+            runnable.run();
+        }
     }
 }
