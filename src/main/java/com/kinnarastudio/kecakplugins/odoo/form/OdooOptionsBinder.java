@@ -1,5 +1,28 @@
 package com.kinnarastudio.kecakplugins.odoo.form;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
+import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.form.model.Element;
+import org.joget.apps.form.model.FormAjaxOptionsBinder;
+import org.joget.apps.form.model.FormBinder;
+import org.joget.apps.form.model.FormData;
+import org.joget.apps.form.model.FormLoadOptionsBinder;
+import org.joget.apps.form.model.FormRow;
+import org.joget.apps.form.model.FormRowSet;
+import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
+import org.json.JSONArray;
+
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
@@ -8,21 +31,6 @@ import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUti
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
-import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.form.model.*;
-import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
-import org.joget.plugin.base.PluginManager;
-import org.json.JSONArray;
-
-import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
     final public static String LABEL = "Odoo Options Binder";
@@ -76,11 +84,19 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         if (hideEmptyValue && value.isEmpty())
                             return null;
 
-                        return new FormRow() {{
-                            setProperty(FormUtil.PROPERTY_VALUE, value);
-                            setProperty(FormUtil.PROPERTY_LABEL, label + " (" + value + ")");
-                            setProperty(FormUtil.PROPERTY_GROUPING, grouping);
-                        }};
+                        if (getPropertyString("showLabelOnly").equalsIgnoreCase("true")) {
+                            return new FormRow() {{
+                                setProperty(FormUtil.PROPERTY_VALUE, value);
+                                setProperty(FormUtil.PROPERTY_LABEL, label);
+                                setProperty(FormUtil.PROPERTY_GROUPING, grouping);
+                            }};
+                        } else {
+                            return new FormRow() {{
+                                setProperty(FormUtil.PROPERTY_VALUE, value);
+                                setProperty(FormUtil.PROPERTY_LABEL, label + " (" + value + ")");
+                                setProperty(FormUtil.PROPERTY_GROUPING, grouping);
+                            }};
+                        }
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{

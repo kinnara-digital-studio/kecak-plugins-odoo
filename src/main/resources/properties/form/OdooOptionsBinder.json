@@ -101,6 +101,18 @@
             ]
           }
         ]
+      },
+      {
+        "name": "showLabelOnly",
+        "label": "Show Label Only",
+        "type": "checkbox",
+        "value": "false",
+        "options": [
+          {
+            "value": "true",
+            "label": ""
+          }
+        ]
       }
     ]
   }
