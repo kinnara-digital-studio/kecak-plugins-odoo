@@ -37,7 +37,7 @@ public class CacheUtil {
 
     public static <T> T putCache(String key, T value) {
         final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("formOptionsCache");
-        cache.put(new Element(key, value));
+        if(cache != null && value != null) cache.put(new Element(key, value));
         return value;
     }
 }
