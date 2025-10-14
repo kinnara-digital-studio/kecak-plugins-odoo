@@ -1,9 +1,12 @@
 package com.kinnarastudio.kecakplugins.odoo.app;
 
+import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.Element;
 import org.joget.apps.app.dao.PluginDefaultPropertiesDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
@@ -73,6 +76,14 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
+        final String cacheKey = CacheUtil.getCacheKey(this.getClass(), database, user, key);
+        final String cached = (String) CacheUtil.getCached(cacheKey);
+        if(cached != null) {
+            LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
+            LogUtil.info(getClassName(), "Cache hit for key " + cacheKey);
+            return cached;
+        }
+
         final String[] split = key.replaceAll("\\[.+]", "").split("\\.", 2);
         final String field = Arrays.stream(split).findFirst().orElse("");
         final String model = Arrays.stream(split).skip(1).findFirst().orElse("");
@@ -93,19 +104,22 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         }
 
         try {
-            return Optional.of(rpc.searchRead(model, filters.toArray(new SearchFilter[0]), null, null, 1))
+            final String ret = Optional.of(rpc.searchRead(model, filters.toArray(new SearchFilter[0]), null, null, 1))
                     .stream()
                     .flatMap(Arrays::stream)
                     .map(m -> m.get(field))
                     .map(o -> {
-                        if(o instanceof Object[]) {
-                            return ((Object[])o)[0];
+                        if (o instanceof Object[]) {
+                            return ((Object[]) o)[0];
                         } else {
                             return o;
                         }
                     })
                     .map(String::valueOf)
                     .collect(Collectors.joining(";"));
+
+            return CacheUtil.putCache(cacheKey, ret);
+
         } catch (OdooCallMethodException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             return "";

@@ -9,7 +9,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
 
+import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
+import net.sf.ehcache.Cache;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Element;
 import org.joget.apps.form.model.FormAjaxOptionsBinder;
@@ -21,6 +24,7 @@ import org.joget.apps.form.model.FormRowSet;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
+import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONArray;
 
 import com.kinnarastudio.commons.Try;
@@ -56,6 +60,13 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String labelField = getLabelField();
         final String groupingField = getGroupingField();
 
+        final String cacheKey = CacheUtil.getCacheKey(this.getClass(), database, user, model, valueField, labelField, groupingField);
+        final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
+        if(cached != null) {
+            LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
+            return cached;
+        }
+
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
         final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Optional.ofNullable(dependencyValues)
                 .stream()
@@ -75,7 +86,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         try {
             final boolean hideEmptyValue = hideEmptyValue();
 
-            return Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
+            FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
                         final String label = String.valueOf(m.get(labelField));
@@ -108,6 +119,8 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                             }});
                         }
                     }}));
+
+            return CacheUtil.putCache(cacheKey, ret);
 
         } catch (OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
