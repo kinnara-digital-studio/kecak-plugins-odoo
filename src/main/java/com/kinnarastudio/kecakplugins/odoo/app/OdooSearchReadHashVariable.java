@@ -23,11 +23,13 @@ import java.util.stream.Collectors;
 
 /**
  * Odoo Search Read Hash Variable
- *
+ * <p>
  * Syntax : odooSearchRead.READ_FIELD.MODEL[FIELD OPERATOR VALUE][FIELD OPERATOR VALUE]...
  */
 public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
     public final static String LABEL = "Odoo Search Read Hash Variable";
+    private final static Pattern filterPattern = Pattern.compile("(?<=\\()(\\w+)\\s(\\S+)\\s(.+?)(?=\\))");
+    private final static Pattern indexPattern = Pattern.compile("(?<=\\[)(\\d+)(-(\\d+))?(?=])");
 
     @Override
     public String getName() {
@@ -77,9 +79,9 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(), database, user, key);
         final String cached = (String) CacheUtil.getCached(cacheKey);
-        if(cached != null && !cached.isEmpty()) {
+
+        if (cached != null && !cached.isEmpty()) {
             LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
-            LogUtil.info(getClassName(), "Cache hit for key " + cacheKey);
             return cached;
         }
 
@@ -140,9 +142,6 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
                 .orElseGet(Collections::emptyMap);
     }
 
-    private final static Pattern filterPattern = Pattern.compile("(?<=\\()(\\w+)\\s(\\S+)\\s(.+?)(?=\\))");
-    private final static Pattern indexPattern = Pattern.compile("(?<=\\[)(\\d+)(-(\\d+))?(?=])");
-
     /**
      *
      * @param key
@@ -161,7 +160,7 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
             final String operator = filterMatcher.group(2);
             final String value = filterMatcher.group(3);
 
-            if(value.matches("\\d+")) {
+            if (value.matches("\\d+")) {
                 // numeric filter, most likely IDs
                 filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
             } else {
@@ -180,7 +179,7 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
             final String operator = filterMatcher.group(2);
             final String value = filterMatcher.group(3);
 
-            if(value.matches("\\d+")) {
+            if (value.matches("\\d+")) {
                 // numeric filter, most likely IDs
                 filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
             } else {
@@ -194,7 +193,7 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
     protected int getOffset(String input) {
         assert indexPattern.matcher(input).find();
 
-        if(input.contains("-")) {
+        if (input.contains("-")) {
             final String[] split = input.split("-");
             return Arrays.stream(split).findFirst()
                     .map(Integer::parseInt)
@@ -207,7 +206,7 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
     protected int getLimit(String input) {
         assert indexPattern.matcher(input).find();
 
-        if(input.contains("-")) {
+        if (input.contains("-")) {
             final String[] split = input.split("-");
             return Arrays.stream(split)
                     .skip(1)
