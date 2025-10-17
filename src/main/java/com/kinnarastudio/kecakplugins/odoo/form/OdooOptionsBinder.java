@@ -1,5 +1,22 @@
 package com.kinnarastudio.kecakplugins.odoo.form;
 
+import com.kinnarastudio.commons.Try;
+import com.kinnarastudio.commons.jsonstream.JSONCollectors;
+import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
+import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.form.model.*;
+import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
+import org.json.JSONArray;
+
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -7,34 +24,6 @@ import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
-
-import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
-import net.sf.ehcache.Cache;
-import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.form.model.Element;
-import org.joget.apps.form.model.FormAjaxOptionsBinder;
-import org.joget.apps.form.model.FormBinder;
-import org.joget.apps.form.model.FormData;
-import org.joget.apps.form.model.FormLoadOptionsBinder;
-import org.joget.apps.form.model.FormRow;
-import org.joget.apps.form.model.FormRowSet;
-import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.LogUtil;
-import org.joget.plugin.base.PluginManager;
-import org.joget.workflow.util.WorkflowUtil;
-import org.json.JSONArray;
-
-import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.commons.jsonstream.JSONCollectors;
-import com.kinnarastudio.commons.jsonstream.JSONStream;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
     final public static String LABEL = "Odoo Options Binder";
@@ -60,13 +49,6 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String labelField = getLabelField();
         final String groupingField = getGroupingField();
 
-        final String cacheKey = CacheUtil.getCacheKey(this.getClass(), database, user, model, valueField, labelField, groupingField);
-        final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
-        if(cached != null) {
-            LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
-            return cached;
-        }
-
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
         final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Optional.ofNullable(dependencyValues)
                 .stream()
@@ -82,6 +64,15 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
         final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
+
+        final String cacheKey = CacheUtil.getCacheKey(this.getClass(),
+                database, user, model, valueField, labelField, groupingField, Arrays.stream(filters).map(SearchFilter::getValue).map(String::valueOf).collect(Collectors.joining()));
+        final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
+        if (cached != null && cached.size() > 1) {
+            LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
+            LogUtil.info(getClassName(), "Cache hit for key " + cacheKey);
+            return cached;
+        }
 
         try {
             final boolean hideEmptyValue = hideEmptyValue();

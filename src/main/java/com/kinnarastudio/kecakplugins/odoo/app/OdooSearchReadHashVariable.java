@@ -5,8 +5,7 @@ import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.Element;
+import org.apache.commons.lang3.tuple.Triple;
 import org.joget.apps.app.dao.PluginDefaultPropertiesDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.DefaultHashVariablePlugin;
@@ -78,33 +77,28 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(), database, user, key);
         final String cached = (String) CacheUtil.getCached(cacheKey);
-        if(cached != null) {
+        if(cached != null && !cached.isEmpty()) {
             LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
             LogUtil.info(getClassName(), "Cache hit for key " + cacheKey);
             return cached;
         }
 
-        final String[] split = key.replaceAll("\\[.+]", "").split("\\.", 2);
+        final String[] split = key.replaceAll("\\[.+]|\\(.+\\)", "").split("\\.", 2);
         final String field = Arrays.stream(split).findFirst().orElse("");
         final String model = Arrays.stream(split).skip(1).findFirst().orElse("");
-        final Matcher matcher = Pattern.compile("(?<=\\[)(\\w+)\\s([^\\s]+)\\s(.+)(?=])").matcher(key);
-        final List<SearchFilter> filters = new ArrayList<>();
-        while (matcher.find()) {
-            final String filterField = matcher.group(1);
-            final String operator = matcher.group(2);
-            final String value = matcher.group(3);
 
-            if(value.matches("\\d+")) {
-                // numeric filter, most likely IDs
-                filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
-            } else {
-                // string filter
-                filters.add(new SearchFilter(filterField, operator, value.replaceAll("^'|'$", "")));
-            }
+        // [filter, offset, limit]
+        final Triple<List<SearchFilter>, Integer, Integer> filters;
+
+        if (key.contains("(")) {
+            filters = getReadParameters(key);
+        } else {
+            // Legacy support for filters using []
+            filters = getLegacyReadParameters(key);
         }
 
         try {
-            final String ret = Optional.of(rpc.searchRead(model, filters.toArray(new SearchFilter[0]), null, null, 1))
+            final String ret = Optional.of(rpc.searchRead(model, filters.getLeft().toArray(new SearchFilter[0]), null, filters.getMiddle(), filters.getRight()))
                     .stream()
                     .flatMap(Arrays::stream)
                     .map(m -> m.get(field))
@@ -129,8 +123,10 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
     @Override
     public Collection<String> availableSyntax() {
         return new ArrayList<>() {{
-            add(getPrefix() + ".READ_FIELD.MODEL[FIELD OPERATOR VALUE]");
             add(getPrefix() + ".READ_FIELD.MODEL[FIELD OPERATOR VALUE][FIELD OPERATOR VALUE]...");
+            add(getPrefix() + ".READ_FIELD.MODEL(FIELD OPERATOR VALUE)(FIELD OPERATOR VALUE)...");
+            add(getPrefix() + ".READ_FIELD.MODEL(FIELD OPERATOR VALUE)(FIELD OPERATOR VALUE)...[INDEX]");
+            add(getPrefix() + ".READ_FIELD.MODEL(FIELD OPERATOR VALUE)(FIELD OPERATOR VALUE)...[INDEX_FROM-INDEX_TO]");
         }};
     }
 
@@ -142,5 +138,84 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
                 .map(s -> AppUtil.processHashVariable(s, null, StringUtil.TYPE_JSON, null))
                 .map(PropertyUtil::getPropertiesValueFromJson)
                 .orElseGet(Collections::emptyMap);
+    }
+
+    private final static Pattern filterPattern = Pattern.compile("(?<=\\()(\\w+)\\s(\\S+)\\s(.+?)(?=\\))");
+    private final static Pattern indexPattern = Pattern.compile("(?<=\\[)(\\d+)(-(\\d+))?(?=])");
+
+    /**
+     *
+     * @param key
+     * @return [filder, offset, limit]
+     */
+    protected Triple<List<SearchFilter>, Integer, Integer> getReadParameters(String key) {
+        final Matcher indexMatcher = indexPattern.matcher(key);
+        final String strIndex = indexMatcher.find() ? indexMatcher.group() : "";
+        final int offset = getOffset(strIndex);
+        final int limit = getLimit(strIndex);
+
+        final Matcher filterMatcher = filterPattern.matcher(key);
+        final List<SearchFilter> filters = new ArrayList<>();
+        while (filterMatcher.find()) {
+            final String filterField = filterMatcher.group(1);
+            final String operator = filterMatcher.group(2);
+            final String value = filterMatcher.group(3);
+
+            if(value.matches("\\d+")) {
+                // numeric filter, most likely IDs
+                filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
+            } else {
+                // string filter
+                filters.add(new SearchFilter(filterField, operator, value.replaceAll("^'|'$", "")));
+            }
+        }
+        return Triple.of(filters, offset, limit);
+    }
+
+    protected Triple<List<SearchFilter>, Integer, Integer> getLegacyReadParameters(String key) {
+        final Matcher filterMatcher = Pattern.compile("(?<=\\[)(\\w+)\\s(\\S+)\\s(.+)(?=])").matcher(key);
+        final List<SearchFilter> filters = new ArrayList<>();
+        while (filterMatcher.find()) {
+            final String filterField = filterMatcher.group(1);
+            final String operator = filterMatcher.group(2);
+            final String value = filterMatcher.group(3);
+
+            if(value.matches("\\d+")) {
+                // numeric filter, most likely IDs
+                filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
+            } else {
+                // string filter
+                filters.add(new SearchFilter(filterField, operator, value.replaceAll("^'|'$", "")));
+            }
+        }
+        return Triple.of(filters, 0, 1);
+    }
+
+    protected int getOffset(String input) {
+        assert indexPattern.matcher(input).find();
+
+        if(input.contains("-")) {
+            final String[] split = input.split("-");
+            return Arrays.stream(split).findFirst()
+                    .map(Integer::parseInt)
+                    .orElse(0);
+        } else {
+            return Integer.parseInt(input);
+        }
+    }
+
+    protected int getLimit(String input) {
+        assert indexPattern.matcher(input).find();
+
+        if(input.contains("-")) {
+            final String[] split = input.split("-");
+            return Arrays.stream(split)
+                    .skip(1)
+                    .findFirst()
+                    .map(Integer::parseInt)
+                    .orElse(0);
+        } else {
+            return 0;
+        }
     }
 }

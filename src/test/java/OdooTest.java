@@ -44,9 +44,9 @@ public class OdooTest {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final Collection<Integer> records = new HashSet<>();
-        String model = "purchase.request";
+        String model = "product.template";
 
-        SearchFilter[] filters = SearchFilter.single("id", "117");
+        SearchFilter[] filters = SearchFilter.single("purchase_ok", 1);
         for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
             System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
         }
