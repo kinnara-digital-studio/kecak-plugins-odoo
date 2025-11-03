@@ -389,4 +389,41 @@ public class OdooRpc {
             throw new OdooCallMethodException(e);
         }
     }
+
+    /**
+     *
+     * @param model
+     * @param recordId
+     * @param body
+     */
+    public int messagePost(String model, int recordId, String body) throws OdooCallMethodException {
+        return messagePost(model, new Integer[]{ recordId }, MessageType.COMMENT, body);
+    }
+
+    public int messagePost(String model, Integer[] recordIds, MessageType messageType, String body) throws OdooCallMethodException {
+        try {
+            final int uid = login();
+            final Object[] params = new Object[]{
+                    database,
+                    uid,
+                    apiKey,
+                    model,
+                    "message_post",
+                    recordIds,
+                    new HashMap<String, Object>() {{
+                        put("body", body);
+                        put("message_type", messageType.name().toLowerCase());
+                        put("subtype_xmlid", "mail.mt_comment");
+                    }}
+            };
+
+            int messageId = (int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
+
+            LogUtil.info(getClass().getName(), "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
+
+            return messageId;
+        } catch (OdooAuthorizationException | MalformedURLException | XmlRpcException e) {
+            throw new OdooCallMethodException(e);
+        }
+    }
 }

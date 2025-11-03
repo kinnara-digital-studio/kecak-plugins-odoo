@@ -125,4 +125,11 @@ public class OdooTest {
     public void test() {
         System.out.println(new BigDecimal("11_095_704_500_000_000"));
     }
+
+
+    @Test
+    public void testBus() throws OdooCallMethodException {
+        int messageId = rpc.messagePost("purchase.order", 54, "Sending from kecak [" + new Date() + "]");
+        System.out.println(messageId);
+    }
 }

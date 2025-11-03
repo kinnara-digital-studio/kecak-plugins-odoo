@@ -1,13 +1,12 @@
 package com.kinnarastudio.kecakplugins.odoo.process;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.function.Predicate;
-
-import org.apache.logging.log4j.core.parser.ParseException;
+import com.kinnarastudio.commons.Try;
+import com.kinnarastudio.commons.jsonstream.JSONCollectors;
+import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
+import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
@@ -16,16 +15,16 @@ import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
 
-import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.commons.jsonstream.JSONCollectors;
-import com.kinnarastudio.commons.jsonstream.JSONStream;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Execute Odoo RPC
+ *
+ * @author aristo
+ * Implementing {@link OdooRpc#messagePost(String, int, String)}
+ * @since 2025-11-03
+ *
  */
 public class OdooRpcTool extends DefaultApplicationPlugin {
 
@@ -43,6 +42,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         String buildNumber = resourceBundle.getString("buildNumber");
         return buildNumber;
     }
+
 
     @Override
     public String getDescription() {
@@ -92,31 +92,62 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         }
 
         long delayInSeconds = getDelayedExecutionTime();
-        runDelayed(Try.onRunnable(()-> {
+        runDelayed(Try.onRunnable(() -> {
+            final int recordId;
+            final String postErrorMessage = getPostErrorMessage();
+
             switch (method) {
                 case "create": {
-                    final int resultValue = rpc.create(model, parsedRecord);
+                    recordId = rpc.create(model, parsedRecord);
 
                     final String resultWorkflowVariable = OdooRpcToolUtil.getResultWorkflowVariable(this);
 
                     final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
                     final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
-                    workflowManager.activityVariable(workflowAssignment.getActivityId(), resultWorkflowVariable, String.valueOf(resultValue));
+                    workflowManager.activityVariable(workflowAssignment.getActivityId(), resultWorkflowVariable, String.valueOf(recordId));
 
                     break;
                 }
 
                 case "write":
-                    rpc.write(model, optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method")), parsedRecord);
+                    recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+
+                    try {
+                        rpc.write(model, recordId, parsedRecord);
+                    } catch (OdooCallMethodException e) {
+                        if (!postErrorMessage.isEmpty()) {
+                            rpc.messagePost(model, recordId, postErrorMessage);
+                        }
+
+                        throw e;
+                    }
+
                     break;
 
                 case "unlink":
-                    rpc.unlink(model, optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method")));
+                    recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+
+                    try {
+                        rpc.unlink(model, recordId);
+                    } catch (OdooCallMethodException e) {
+                        if (!postErrorMessage.isEmpty()) {
+                            rpc.messagePost(model, recordId, postErrorMessage);
+                        }
+
+                        throw e;
+                    }
+
                     break;
 
                 default:
                     throw new OdooCallMethodException("Method [" + method + "] is not understood");
             }
+
+            String postSuccessMessage = getPostSuccessMessage();
+            if (!postSuccessMessage.isEmpty()) {
+                rpc.messagePost(model, recordId, postSuccessMessage);
+            }
+
         }), delayInSeconds);
         return null;
     }
@@ -133,38 +164,28 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{
-            "/properties/common/OdooAuthorization.json",
-            "/properties/process/OdooRpcTool.json"
-        };
+        final String[] resources = new String[]{"/properties/common/OdooAuthorization.json", "/properties/process/OdooRpcTool.json"};
 
-        return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere"))
-                .map(Try.onFunction(JSONArray::new))
-                .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
-                .collect(JSONCollectors.toJSONArray())
-                .toString();
+        return Arrays.stream(resources).map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere")).map(Try.onFunction(JSONArray::new)).flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject))).collect(JSONCollectors.toJSONArray()).toString();
     }
 
     /**
      * Get delayed execution time in seconds
+     *
      * @return
      */
     protected long getDelayedExecutionTime() {
-        return Optional.of("delay")
-                .map(this::getPropertyString)
-                .filter(Predicate.not(String::isEmpty))
-                .map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> 0))
-                .orElse(0);
+        return Optional.of("delay").map(this::getPropertyString).filter(Predicate.not(String::isEmpty)).map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> 0)).orElse(0);
     }
 
     /**
      * Run runnable after delay time
+     *
      * @param runnable
      * @param delayInSeconds
      */
     protected void runDelayed(Runnable runnable, long delayInSeconds) {
-        if(delayInSeconds > 0) {
+        if (delayInSeconds > 0) {
             new Thread(() -> {
                 try {
                     Thread.sleep(delayInSeconds * 1000);
@@ -176,5 +197,13 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         } else {
             runnable.run();
         }
+    }
+
+    protected String getPostSuccessMessage() {
+        return getPropertyString("postSuccessMessage");
+    }
+
+    protected String getPostErrorMessage() {
+        return getPropertyString("postErrorMessage");
     }
 }

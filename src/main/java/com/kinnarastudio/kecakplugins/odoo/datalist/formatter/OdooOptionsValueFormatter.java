@@ -25,24 +25,22 @@ import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
 /**
  * @since 2025-11-03
  * @author aristo
- * Set as deprecated since the functionality overlaps OptionsValueFormatter
  */
-@Deprecated
 public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
-    public final static String LABEL = "(Deprecated) Odoo Options Value Formatter";
+    public final static String LABEL = "Odoo Options Value Formatter";
 
     Map<String, String> optionMap = null;
-
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
         final Map<String, String> options = getOptionMap();
 
         if (value instanceof Object[]) {
-            Object[] arr = (Object[]) value;
-            LogUtil.info(getClassName(), "Object Val: " + Arrays.toString(arr));
-            return Optional.ofNullable(value)
-                .filter(v -> v instanceof Object[])
+            Object[] arrValue = (Object[]) value;
+
+            LogUtil.info(getClassName(), "Object Val: " + Arrays.toString(arrValue));
+
+            return Optional.of(value)
                 .map(v -> (Object[]) v)
                 .stream()
                 .flatMap(Arrays::stream)
@@ -106,33 +104,34 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
     protected Map<String, String> getOptionMap() {
         FormBinder optionBinder;
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
-        if (this.optionMap != null) {
-            return this.optionMap;
+        if (optionMap != null) {
+            return optionMap;
         }
-        this.optionMap = new HashMap();
+
+        optionMap = new HashMap<>();
 
         Map<String, Object> optionsBinderProperties = (Map<String, Object>) this.getProperty("optionsBinder");
         if (optionsBinderProperties != null && optionsBinderProperties.get("className") != null && !optionsBinderProperties.get("className").toString().isEmpty() && (optionBinder = (FormBinder) pluginManager.getPlugin(optionsBinderProperties.get("className").toString())) != null) {
             optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
             FormRowSet rowSet = ((FormLoadBinder) optionBinder).load(null, null, null);
             if (rowSet != null) {
-                this.optionMap = new HashMap();
+                optionMap = new HashMap<>();
                 for (FormRow row : rowSet) {
                     String label;
-                    Iterator it = row.stringPropertyNames().iterator();
+                    Iterator<String> i = row.stringPropertyNames().iterator();
                     String value = row.getProperty("value");
                     if (value == null) {
-                        Object key = it.next();
-                        value = row.getProperty(String.valueOf(key));
+                        String key = i.next();
+                        value = row.getProperty(key);
                     }
                     if ((label = row.getProperty("label")) == null) {
-                        Object key = it.next();
-                        label = row.getProperty(String.valueOf(key));
+                        String key = i.next();
+                        label = row.getProperty(key);
                     }
-                    this.optionMap.put(value, label);
+                    optionMap.put(value, label);
                 }
             }
         }
-        return this.optionMap;
+        return optionMap;
     }
 }

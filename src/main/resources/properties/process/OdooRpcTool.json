@@ -146,6 +146,18 @@
         "label": "Delay execution (in seconds)",
         "regex_validation": "^[0-9]*$|^#[^#]+#$",
         "description": "Delayed execution will be executed in secondary thread, so the process will continue without waiting for the result."
+      },
+      {
+        "name": "postSuccessMessage",
+        "type": "textfield",
+        "label": "Send message when success",
+        "description": "Send message to current record using Odoo message_post XmlRpc when success"
+      },
+      {
+        "name": "postErrorMessage",
+        "type": "textfield",
+        "label": "Send message when error",
+        "description": "Send message to current record using Odoo message_post XmlRpc when error"
       }
     ]
   }
