@@ -1,6 +1,6 @@
 [
   {
-    "title": "Odoo Options Value Formatter",
+    "title": "(Deprecated) Odoo Options Value Formatter",
     "properties": [
       {
         "name": "optionsBinder",

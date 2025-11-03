@@ -22,8 +22,14 @@ import org.joget.plugin.base.PluginManager;
 
 import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
 
+/**
+ * @since 2025-11-03
+ * @author aristo
+ * Set as deprecated since the functionality overlaps OptionsValueFormatter
+ */
+@Deprecated
 public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
-    public final static String LABEL = "Odoo Options Value Formatter";
+    public final static String LABEL = "(Deprecated) Odoo Options Value Formatter";
 
     Map<String, String> optionMap = null;
 
