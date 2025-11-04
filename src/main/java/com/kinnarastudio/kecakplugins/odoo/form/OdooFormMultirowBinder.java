@@ -48,7 +48,15 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                         m.entrySet()
                                 .stream()
                                 .filter(e -> fields.contains(e.getKey()) && e.getValue() != null)
-                                .forEach(e -> setProperty(e.getKey(), String.valueOf(e.getValue())));
+                                .forEach(e -> {
+                                    String key = e.getKey();
+                                    Object value = e.getValue();
+                                    if(value instanceof Object[] && ((Object[])value).length > 0) {
+                                        setProperty(key, String.valueOf(((Object[])value)[0]));
+                                    } else {
+                                        setProperty(key, String.valueOf(e.getValue()));
+                                    }
+                                });
                     }})
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);

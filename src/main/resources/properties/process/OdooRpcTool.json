@@ -29,6 +29,10 @@
           {
             "value": "unlink",
             "label": "Delete"
+          },
+          {
+            "value": "messagePost",
+            "label": "Message"
           }
         ]
       },
@@ -38,7 +42,7 @@
         "label": "Record ID",
         "required": "true",
         "control_field": "method",
-        "control_value": "read|write|unlink",
+        "control_value": "read|write|unlink|messagePost",
         "control_use_regex": "true"
       },
       {
@@ -83,6 +87,14 @@
             "required": "true"
           }
         ]
+      },
+      {
+        "name": "messagePost",
+        "type": "textarea",
+        "label": "Message Post",
+        "description": "Send message to current record using Odoo message_post XmlRpc",
+        "control_field": "method",
+        "control_value": "messagePost"
       }
     ]
   },

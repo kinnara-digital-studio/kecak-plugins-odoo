@@ -94,7 +94,6 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         long delayInSeconds = getDelayedExecutionTime();
         runDelayed(Try.onRunnable(() -> {
             final int recordId;
-            final String postErrorMessage = getPostErrorMessage();
 
             switch (method) {
                 case "create": {
@@ -115,6 +114,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                     try {
                         rpc.write(model, recordId, parsedRecord);
                     } catch (OdooCallMethodException e) {
+                        final String postErrorMessage = getPostErrorMessage();
                         if (!postErrorMessage.isEmpty()) {
                             rpc.messagePost(model, recordId, postErrorMessage);
                         }
@@ -130,6 +130,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                     try {
                         rpc.unlink(model, recordId);
                     } catch (OdooCallMethodException e) {
+                        final String postErrorMessage = getPostErrorMessage();
                         if (!postErrorMessage.isEmpty()) {
                             rpc.messagePost(model, recordId, postErrorMessage);
                         }
@@ -139,13 +140,12 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
                     break;
 
+                case "messagePost":
+                    recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+                    rpc.messagePost(model, recordId, getMessagePost());
+
                 default:
                     throw new OdooCallMethodException("Method [" + method + "] is not understood");
-            }
-
-            String postSuccessMessage = getPostSuccessMessage();
-            if (!postSuccessMessage.isEmpty()) {
-                rpc.messagePost(model, recordId, postSuccessMessage);
             }
 
         }), delayInSeconds);
@@ -197,6 +197,10 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         } else {
             runnable.run();
         }
+    }
+
+    protected String getMessagePost() {
+        return getPropertyString("messagePost");
     }
 
     protected String getPostSuccessMessage() {
