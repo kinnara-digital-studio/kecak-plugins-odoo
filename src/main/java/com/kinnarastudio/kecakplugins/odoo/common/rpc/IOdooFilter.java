@@ -9,8 +9,5 @@ public interface IOdooFilter {
 
     DataType getDataType();
 
-    enum DataType {
-        STRING,
-        INTEGER
-    }
+
 }

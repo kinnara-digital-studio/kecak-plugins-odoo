@@ -67,9 +67,11 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(),
                 database, user, model, valueField, labelField, groupingField, Arrays.stream(filters).map(SearchFilter::getValue).map(String::valueOf).collect(Collectors.joining()));
+
         final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
         if (cached != null && cached.size() > 1) {
             LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
+            LogUtil.info(getClassName(), "Cache hit for key " + cacheKey);
             return cached;
         }
 
@@ -109,6 +111,8 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                             }});
                         }
                     }}));
+
+            LogUtil.info(getClassName(), "Creating Cache for key " + cacheKey);
 
             return CacheUtil.putCache(cacheKey, ret);
 

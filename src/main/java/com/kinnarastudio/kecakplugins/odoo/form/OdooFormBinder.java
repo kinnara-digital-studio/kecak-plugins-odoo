@@ -4,6 +4,7 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
@@ -72,7 +73,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
-            final Set<String> fields = rpc.fieldsGet(model).keySet();
+            final Collection<Field> fields = rpc.fieldsGet(model);
 
             final Map<String, Object> record = Optional.ofNullable(rowSet)
                     .stream()

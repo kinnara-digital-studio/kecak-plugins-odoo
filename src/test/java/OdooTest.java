@@ -1,3 +1,4 @@
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
@@ -44,9 +45,10 @@ public class OdooTest {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final Collection<Integer> records = new HashSet<>();
-        String model = "product.template";
+        String model = "stock.movements.line";
 
-        SearchFilter[] filters = SearchFilter.single("purchase_ok", 1);
+//        SearchFilter[] filters = SearchFilter.single("movement_id", 9);
+        SearchFilter[] filters = null;
         for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
             System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
         }
@@ -65,13 +67,13 @@ public class OdooTest {
 
     @org.junit.Test
     public void testFieldsGet() throws OdooCallMethodException {
-        final Map<String, Map<String, Object>> fields = rpc.fieldsGet("hr.employee");
+        final Collection<Field> fields = rpc.fieldsGet("hr.employee");
 
         assert !fields.isEmpty();
 
-        fields.forEach((k, v) -> {
-            System.out.println("[" + k + "]");
-            v.forEach((k2, v2) -> System.out.println(k2 + "->" + v2));
+        fields.forEach((f) -> {
+            System.out.println("[" + f + "]");
+            f.getMetadata().forEach((k2, v2) -> System.out.println(k2 + "->" + v2));
         });
     }
 
@@ -123,13 +125,12 @@ public class OdooTest {
 
     @Test
     public void test() {
-        System.out.println(new BigDecimal("11_095_704_500_000_000"));
+        System.out.println(new BigDecimal("11"));
     }
 
 
     @Test
     public void testBus() throws OdooCallMethodException {
         int messageId = rpc.messagePost("purchase.order", 54, "Sending from kecak [" + new Date() + "]");
-        System.out.println(messageId);
     }
 }

@@ -5,10 +5,14 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooFormMultirowLoadBinderUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
@@ -41,22 +45,22 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     new SearchFilter(foreignKeyField, Integer.parseInt(primaryKey))
             };
 
-            final Set<String> fields = rpc.fieldsGet(model).keySet();
-
             return Arrays.stream(rpc.searchRead(model, searchFilters, null, null, null))
                     .map(m -> new FormRow() {{
-                        m.entrySet()
-                                .stream()
-                                .filter(e -> fields.contains(e.getKey()) && e.getValue() != null)
-                                .forEach(e -> {
-                                    String key = e.getKey();
-                                    Object value = e.getValue();
-                                    if(value instanceof Object[] && ((Object[])value).length > 0) {
-                                        setProperty(key, String.valueOf(((Object[])value)[0]));
-                                    } else {
-                                        setProperty(key, String.valueOf(e.getValue()));
-                                    }
-                                });
+                        m.forEach((key, value) -> {
+                            if (value instanceof Object[] && ((Object[]) value).length > 0) {
+                                String strValue = Optional.of((Object[]) value)
+                                        .stream()
+                                        .flatMap(Arrays::stream)
+                                        .findFirst()
+                                        .map(String::valueOf)
+                                        .orElse("");
+
+                                setProperty(key, strValue);
+                            } else {
+                                setProperty(key, String.valueOf(value));
+                            }
+                        });
                     }})
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);
@@ -69,64 +73,93 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
     @Override
     public FormRowSet store(Element element, FormRowSet rowSet, FormData formData) {
+
         if (rowSet == null) return null;
 
-        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
-        final String database = OdooAuthorizationUtil.getDatabase(this);
-        final String user = OdooAuthorizationUtil.getUsername(this);
-        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
-        final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+        try {
+            final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+            final String database = OdooAuthorizationUtil.getDatabase(this);
+            final String user = OdooAuthorizationUtil.getUsername(this);
+            final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+            final String model = OdooAuthorizationUtil.getModel(this);
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final String foreignKeyField = OdooFormMultirowLoadBinderUtil.getForeignKeyField(this);
+            final Collection<Field> fields = rpc.fieldsGet(model);
 
-        final Form parentForm = FormUtil.findRootForm(element);
-        final String recordId = parentForm.getPrimaryKeyValue(formData);
+            final String foreignKeyField = OdooFormMultirowLoadBinderUtil.getForeignKeyField(this);
 
-        final FormRowSet originalRowSet = Optional.ofNullable(load(element, recordId, formData))
-                .orElseGet(FormRowSet::new);
-        originalRowSet.sort(Comparator.comparing(FormRow::getId));
+            final Form parentForm = FormUtil.findRootForm(element);
+            final int parentRecordId = Optional.ofNullable(parentForm.getPrimaryKeyValue(formData))
+                    .map(Try.onFunction(Integer::parseInt, (NumberFormatException e) -> 0))
+                    .orElse(0);
 
-        final FormRowSet storedRowSet = rowSet.stream()
-                .peek(r -> r.setProperty(foreignKeyField, recordId))
-                .map(Try.onFunction(row -> {
-                    final int foreignKey = Optional.ofNullable(row.getId())
-                            .map(Try.onFunction(Integer::parseInt, (NumberFormatException ignored) -> null))
-                            .orElseGet(() -> Optional.ofNullable(formData.getPrimaryKeyValue())
-                                    .map(Try.onFunction(Integer::parseInt, (NumberFormatException ignored) -> null))
-                                    .orElse(0));
+            final FormRowSet originalRowSet = Optional.ofNullable(load(element, String.valueOf(parentRecordId), formData))
+                    .orElseGet(FormRowSet::new);
+            originalRowSet.sort(Comparator.comparing(FormRow::getId));
 
-                    final Map<String, Object> record = row.getCustomProperties();
-                    if (foreignKey != 0) {
-                        rpc.write(model, foreignKey, record);
-                    } else {
-                        final int primaryKey = rpc.create(model, record);
-                        row.setId(String.valueOf(primaryKey));
-                    }
+            final FormRowSet storedRowSet = rowSet.stream()
+                    .map(Try.onFunction(row -> {
+                        row.setProperty(foreignKeyField, String.valueOf(parentRecordId));
 
-                    int index = Collections.binarySearch(originalRowSet, row, Comparator.comparing(FormRow::getId));
-                    if (index >= 0) {
-                        // exclude from to be deleted row
-                        originalRowSet.remove(index);
-                    }
+                        final int foreignKey = Optional.ofNullable(row.getId())
+                                .map(Try.onFunction(Integer::parseInt, (NumberFormatException ignored) -> null))
+                                .orElse(0);
 
-                    return row;
-                }))
+                        final Map<String, Object> record = fields.stream()
+                                .map(Try.onFunction(f -> {
+                                    final DataType type = f.getType();
+                                    final String strValue = row.getProperty(f.getKey());
 
-                .collect(Collectors.toCollection(() -> new FormRowSet() {{
-                    setMultiRow(true);
-                }}));
+                                    if(strValue == null) return null;
 
-        // delete old data
-        Optional.of(originalRowSet).stream()
-                .flatMap(Collection::stream)
-                .map(FormRow::getId)
-                .filter(Objects::nonNull)
-                .map(Try.onFunction(Integer::parseInt))
-                .filter(Objects::nonNull)
-                .forEach(Try.onConsumer(id -> rpc.unlink(model, id)));
+                                    final Object value;
+                                    if (type == DataType.INTEGER) {
+                                        value = Integer.parseInt(strValue);
+                                    } else {
+                                        value = strValue;
+                                    }
 
-        return storedRowSet;
+                                    return Pair.of(f.getKey(), value);
+                                }, (Exception e) -> null))
+                                .filter(p -> Objects.nonNull(p) && Objects.nonNull(p.getRight()))
+                                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+                        if (foreignKey != 0) {
+                            rpc.write(model, foreignKey, record);
+                        } else {
+                            final int primaryKey = rpc.create(model, record);
+                            row.setId(String.valueOf(primaryKey));
+                        }
+
+                        int index = Collections.binarySearch(originalRowSet, row, Comparator.comparing(FormRow::getId));
+                        if (index >= 0) {
+                            // exclude from to be deleted row
+                            originalRowSet.remove(index);
+                        }
+
+                        return row;
+                    }))
+
+                    .collect(Collectors.toCollection(() -> new FormRowSet() {{
+                        setMultiRow(true);
+                    }}));
+
+            // delete old data
+            final int[] ids = Optional.of(originalRowSet).stream()
+                    .flatMap(Collection::stream)
+                    .map(FormRow::getId)
+                    .filter(Objects::nonNull)
+                    .map(Try.onFunction(Integer::parseInt))
+                    .filter(Objects::nonNull)
+                    .mapToInt(i -> i)
+                    .toArray();
+
+            rpc.unlink(model, ids);
+
+            return storedRowSet;
+        } catch (OdooCallMethodException e) {
+            LogUtil.error(getClassName(), e, e.getMessage());
+            return null;
+        }
     }
 
     @Override

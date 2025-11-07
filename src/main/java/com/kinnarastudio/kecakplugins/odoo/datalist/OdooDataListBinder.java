@@ -5,6 +5,7 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
@@ -45,21 +46,11 @@ public class OdooDataListBinder extends DataListBinderDefault {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
-            return rpc.fieldsGet(model).entrySet().stream()
-//                    .filter(e -> {
-//                        final Map<String, Object> metadata = e.getValue();
-//                        final String type = (String) metadata.get("type");
-//                        return VALID_COLUMN_TYPES.contains(type);
-//                    })
-
+            return rpc.fieldsGet(model).stream()
                     .map(e -> {
                         final String field = e.getKey();
-                        final Map<String, Object> metadata = e.getValue();
-
-                        final String label = String.valueOf(metadata.getOrDefault("string", field));
-
-                        final boolean sortable = "true".equals(metadata.getOrDefault("sortable", true));
-
+                        final String label = e.getString();
+                        final boolean sortable = e.isSortable(); //;
                         return new DataListColumn(field, label, sortable);
                     })
                     .toArray(DataListColumn[]::new);
@@ -170,7 +161,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
                 .map(Try.onFunction(f -> {
-                    final Object value = f.getDataType() == IOdooFilter.DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                    final Object value = f.getDataType() == DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
                     return new SearchFilter(f.getField(), f.getOperator(), value);
                 }, (NumberFormatException ignored) -> null))
                 .filter(Objects::nonNull);
