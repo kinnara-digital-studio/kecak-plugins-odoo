@@ -1,6 +1,7 @@
 package com.kinnarastudio.kecakplugins.odoo.form;
 
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
@@ -60,6 +61,7 @@ public class OdooWorkflowFormBinder extends OdooFormBinder implements FormLoadEl
 
     @Override
     public FormRowSet store(Element element, FormRowSet rows, FormData formData) {
+
         FormRowSet result = rows;
         if (rows != null && !rows.isEmpty()) {
             // store form data to DB

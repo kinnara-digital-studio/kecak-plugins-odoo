@@ -71,7 +71,6 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
         if (cached != null && cached.size() > 1) {
             LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
-            LogUtil.info(getClassName(), "Cache hit for key " + cacheKey);
             return cached;
         }
 

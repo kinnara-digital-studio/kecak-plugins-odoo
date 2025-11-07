@@ -82,7 +82,7 @@ public class OdooTest {
         String model = "fleet.vehicle";
         int recordId = rpc.search(model, null, null, null, 4)[0];
 
-        rpc.write(model, recordId, new HashMap<String, Object>() {{
+        rpc.write(model, recordId, new HashMap<>() {{
             put("state_id", "4");
         }});
     }
@@ -109,8 +109,9 @@ public class OdooTest {
     @org.junit.Test
     public void testDelete() throws OdooCallMethodException {
 
-        String model = "product.template";
-        rpc.unlink(model, 62);
+        String model = "stock.movements.lines";
+
+        rpc.unlink(model, 27);
     }
 
     protected Properties getProperties(String file) {
@@ -125,7 +126,7 @@ public class OdooTest {
 
     @Test
     public void test() {
-        System.out.println(new BigDecimal("11"));
+        System.out.println(Arrays.stream(new String[0]).anyMatch(String::isEmpty));
     }
 
 

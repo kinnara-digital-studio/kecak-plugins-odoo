@@ -5,15 +5,13 @@ import com.kinnarastudio.kecakplugins.odoo.common.XmlRpcUtil;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.apache.xmlrpc.XmlRpcException;
-import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
-import org.joget.commons.util.LogUtil;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Odoo RPC
@@ -28,11 +26,19 @@ public class OdooRpc {
     private final String user;
     private final String apiKey;
 
+    @Nullable
+    private final AuditTrailManager auditTrailManager;
+
     public OdooRpc(String baseUrl, String database, String user, String apiKey) {
+        this(baseUrl, database, user, apiKey, null);
+    }
+
+    public OdooRpc(String baseUrl, String database, String user, String apiKey, AuditTrailManager auditTrailManager) {
         this.baseUrl = baseUrl;
         this.database = database;
         this.user = user;
         this.apiKey = apiKey;
+        this.auditTrailManager = auditTrailManager;
     }
 
     /**
@@ -297,8 +303,9 @@ public class OdooRpc {
 
             int recordId = (int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
-            AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
-            auditTrailManager.addAuditTrail(getClass().getName(), "create", "rpc create : model [" + model + "] new record has been created with id [" + recordId + "]");
+            if (auditTrailManager != null) {
+                auditTrailManager.addAuditTrail(getClass().getName(), "create", "rpc create : model [" + model + "] new record has been created with id [" + recordId + "]");
+            }
 
             return recordId;
 
@@ -333,8 +340,9 @@ public class OdooRpc {
 
             XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
-            AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
-            auditTrailManager.addAuditTrail(getClass().getName(), "write", "rpc write : model [" + model + "] record id [" + recordId + "] has been update");
+            if (auditTrailManager != null) {
+                auditTrailManager.addAuditTrail(getClass().getName(), "write", "rpc write : model [" + model + "] record id [" + recordId + "] has been update");
+            }
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);
@@ -367,35 +375,9 @@ public class OdooRpc {
 
             XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
-            AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
-            auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + recordId + "] has been deleted");
-
-        } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
-            throw new OdooCallMethodException(e);
-        }
-    }
-
-    public void unlink(String model, int[] recordIds) throws OdooCallMethodException {
-        try {
-            final int uid = login();
-
-            final Object[] objectFilters = Arrays.stream(recordIds)
-                    .mapToObj(i -> new Object[]{"id", "=", i})
-                    .toArray(Object[]::new);
-
-            final Object[] params = new Object[]{
-                    database,
-                    uid,
-                    apiKey,
-                    model,
-                    "unlink",
-                    new Object[]{objectFilters},
-            };
-
-            XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
-
-            AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
-            auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + Arrays.stream(recordIds).mapToObj(String::valueOf).collect(Collectors.joining(",")) + "] have been deleted");
+            if (auditTrailManager != null) {
+                auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + recordId + "] has been deleted");
+            }
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);
@@ -409,7 +391,7 @@ public class OdooRpc {
      * @param body
      */
     public int messagePost(String model, int recordId, String body) throws OdooCallMethodException {
-        return messagePost(model, new int[]{ recordId }, MessageType.COMMENT, body);
+        return messagePost(model, new int[]{recordId}, MessageType.COMMENT, body);
     }
 
     public int messagePost(String model, int[] recordIds, MessageType messageType, String body) throws OdooCallMethodException {
@@ -431,8 +413,9 @@ public class OdooRpc {
 
             int messageId = (int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
-//            AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
-//            auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
+            if (auditTrailManager != null) {
+                auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
+            }
 
             return messageId;
         } catch (OdooAuthorizationException | MalformedURLException | XmlRpcException e) {

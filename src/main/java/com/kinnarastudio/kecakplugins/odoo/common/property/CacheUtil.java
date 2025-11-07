@@ -28,7 +28,7 @@ public class CacheUtil {
     }
 
     public static Object getCached(String key) {
-        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("formOptionsCache");
+        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("externalDataCache");
         return Optional.ofNullable(cache)
                 .map(c -> c.get(key))
                 .map(Element::getObjectValue)
@@ -36,7 +36,7 @@ public class CacheUtil {
     }
 
     public static <T> T putCache(String key, T value) {
-        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("formOptionsCache");
+        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("externalDataCache");
         if(cache != null && value != null) cache.put(new Element(key, value));
         return value;
     }

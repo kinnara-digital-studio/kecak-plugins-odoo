@@ -77,12 +77,14 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
         if (rowSet == null) return null;
 
         try {
+            AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
+
             final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
             final String database = OdooAuthorizationUtil.getDatabase(this);
             final String user = OdooAuthorizationUtil.getUsername(this);
             final String apiKey = OdooAuthorizationUtil.getApiKey(this);
             final String model = OdooAuthorizationUtil.getModel(this);
-            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
 
             final Collection<Field> fields = rpc.fieldsGet(model);
 
@@ -153,7 +155,15 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     .mapToInt(i -> i)
                     .toArray();
 
-            rpc.unlink(model, ids);
+            Arrays.stream(ids)
+                    .boxed()
+                    .forEach(i -> {
+                        try {
+                            rpc.unlink(model, i);
+                        } catch (OdooCallMethodException e) {
+                            LogUtil.error(getClassName(), e, "Error unlinking model [" + model + "] record [" + i + "]");
+                        }
+                    });
 
             return storedRowSet;
         } catch (OdooCallMethodException e) {
