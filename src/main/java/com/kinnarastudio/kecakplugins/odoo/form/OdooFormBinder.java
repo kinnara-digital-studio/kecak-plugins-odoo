@@ -67,6 +67,16 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
 
     @Override
     public FormRowSet store(Element element, FormRowSet rowSet, FormData formData) {
+        final Boolean isStored = (Boolean) element.getProperty("_stored");
+        if (isStored != null && isStored) {
+            return Optional.of(element)
+                    .map(Element::getStoreBinder)
+                    .map(formData::getStoreBinderData)
+                    .orElse(rowSet);
+        }
+
+        element.setProperty("_stored", true);
+
         AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
 
         final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
@@ -116,6 +126,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
             } else {
                 final int primaryKey = rpc.create(model, record);
                 if (rowSet != null) rowSet.forEach(row -> row.setId(String.valueOf(primaryKey)));
+                formData.setPrimaryKeyValue(String.valueOf(primaryKey));
             }
 
             return rowSet;

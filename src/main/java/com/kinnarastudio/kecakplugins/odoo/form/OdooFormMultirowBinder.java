@@ -16,6 +16,7 @@ import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.ExtDefaultPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 
@@ -40,7 +41,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
-            final String foreignKeyField = OdooFormMultirowLoadBinderUtil.getForeignKeyField(this);
+            final String foreignKeyField = getForeignKeyField();
             final SearchFilter[] searchFilters = new SearchFilter[]{
                     new SearchFilter(foreignKeyField, Integer.parseInt(primaryKey))
             };
@@ -88,9 +89,25 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
             final Collection<Field> fields = rpc.fieldsGet(model);
 
-            final String foreignKeyField = OdooFormMultirowLoadBinderUtil.getForeignKeyField(this);
+            final String foreignKeyField = getForeignKeyField();
 
             final Form parentForm = FormUtil.findRootForm(element);
+            FormStoreBinder parentStoreBinder = parentForm.getStoreBinder();
+            FormRowSet storeBinderData = formData.getStoreBinderData(parentStoreBinder);
+            FormRowSet parentRowSet = parentStoreBinder.store(parentForm, storeBinderData, formData);
+
+            final Map<String, String> formErrors = formData.getFormErrors();
+            if (formErrors != null && !formErrors.isEmpty()) {
+                return null;
+            }
+
+            Optional.ofNullable(parentRowSet)
+                    .stream()
+                    .flatMap(Collection::stream)
+                    .findFirst()
+                    .map(FormRow::getId)
+                    .ifPresent(formData::setPrimaryKeyValue);
+
             final int parentRecordId = Optional.ofNullable(parentForm.getPrimaryKeyValue(formData))
                     .map(Try.onFunction(Integer::parseInt, (NumberFormatException e) -> 0))
                     .orElse(0);
@@ -213,5 +230,9 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())
                 .toString();
+    }
+
+    protected String getForeignKeyField() {
+        return getPropertyString("foreignKeyField");
     }
 }
