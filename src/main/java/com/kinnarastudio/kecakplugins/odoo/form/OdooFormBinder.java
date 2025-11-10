@@ -77,7 +77,9 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
 
         try {
-            final Collection<Field> fields = rpc.fieldsGet(model);
+            final Collection<String> fields = rpc.fieldsGet(model).stream()
+                    .map(Field::getKey)
+                    .collect(Collectors.toSet());
 
             final Map<String, Object> record = Optional.ofNullable(rowSet)
                     .stream()
