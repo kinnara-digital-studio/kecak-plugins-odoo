@@ -111,8 +111,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         }
                     }}));
 
-            LogUtil.info(getClassName(), "Creating Cache for key " + cacheKey);
-
+            LogUtil.debug(getClassName(), "Creating Cache for key " + cacheKey);
             return CacheUtil.putCache(cacheKey, ret);
 
         } catch (OdooCallMethodException e) {

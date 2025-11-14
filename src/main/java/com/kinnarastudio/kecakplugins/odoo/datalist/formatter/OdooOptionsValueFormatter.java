@@ -17,7 +17,6 @@ import org.joget.apps.form.model.FormLoadBinder;
 import org.joget.apps.form.model.FormLoadOptionsBinder;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
-import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 
 import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
@@ -36,10 +35,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         final Map<String, String> options = getOptionMap();
 
         if (value instanceof Object[]) {
-            Object[] arrValue = (Object[]) value;
-
-            LogUtil.info(getClassName(), "Object Val: " + Arrays.toString(arrValue));
-
             return Optional.of(value)
                 .map(v -> (Object[]) v)
                 .stream()
