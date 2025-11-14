@@ -106,7 +106,7 @@
         "name": "showLabelOnly",
         "label": "Show Label Only",
         "type": "checkbox",
-        "value": "false",
+        "value": "true",
         "options": [
           {
             "value": "true",
