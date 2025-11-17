@@ -17,6 +17,7 @@ import org.joget.apps.form.model.FormLoadBinder;
 import org.joget.apps.form.model.FormLoadOptionsBinder;
 import org.joget.apps.form.model.FormRow;
 import org.joget.apps.form.model.FormRowSet;
+import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 
 import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
@@ -35,6 +36,22 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         final Map<String, String> options = getOptionMap();
 
         if (value instanceof Object[]) {
+            Object[] arrValue = (Object[]) value;
+
+            // LogUtil.info(getClassName(), "Object Val: " + Arrays.toString(arrValue));
+            if ("true".equals(getPropertyString("isMultiValue"))) {
+                String joined =  Arrays.stream(arrValue)
+                    .map(String::valueOf)
+                    .flatMap(v -> Arrays.stream(v.split(";")))
+                    .filter(options::containsKey)
+                    .map(options::get)
+                    .collect(Collectors.joining(";"));
+
+                LogUtil.info(getClassName(), "Joined Value: " + joined);
+
+                return joined;
+            }
+
             return Optional.of(value)
                 .map(v -> (Object[]) v)
                 .stream()
@@ -52,6 +69,9 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         }
         
         String val = String.valueOf(value);
+
+        LogUtil.info(getClassName(), "Val: [" + val + "]");
+
         if (options.containsKey(val)) {
             return options.get(val);
         }
