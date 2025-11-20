@@ -41,16 +41,7 @@
         "type": "selectbox",
         "value": "string",
         "required": "true",
-        "options": [
-          {
-            "value": "string",
-            "label": "STRING"
-          },
-          {
-            "value": "integer",
-            "label": "INTEGER"
-          }
-        ]
+        "options": %s
       },
       {
         "name": "conditionOperator",

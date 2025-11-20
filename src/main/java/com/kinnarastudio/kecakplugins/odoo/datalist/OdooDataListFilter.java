@@ -9,6 +9,9 @@ import org.joget.apps.datalist.model.DataListFilterQueryObject;
 import org.joget.apps.datalist.model.DataListFilterType;
 import org.joget.apps.datalist.model.DataListFilterTypeDefault;
 import org.joget.plugin.base.PluginManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -89,7 +92,25 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/datalist/OdooDataListFilter.json");
+        final Object[] args = new Object[] {
+                new JSONArray() {{
+                    put(new JSONObject() {{
+                        try {
+                            put("value", DataType.INTEGER.name());
+                            put("label", DataType.INTEGER.name());
+                        } catch (JSONException ignored) {}
+                    }});
+
+                    put(new JSONObject() {{
+                        try {
+                            put("value", DataType.STRING.name());
+                            put("label", DataType.STRING.name());
+                        } catch (JSONException ignored) {}
+                    }});
+                }}.toString()
+        };
+
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/datalist/OdooDataListFilter.json", args, true);
     }
 
     protected Map<String, Object> getFilterPlugin() {
