@@ -61,10 +61,7 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                         .toArray(String[]::new);
 
                 String finalResult = String.join(";", stringArray);
-
-                LogUtil.info(getClassName(), "Final Result: " + finalResult);
-
-                LogUtil.info(getClassName(), "Updated Value: " + Arrays.toString(arrValue));
+                return finalResult;
             }
 
             return Optional.of(value)
