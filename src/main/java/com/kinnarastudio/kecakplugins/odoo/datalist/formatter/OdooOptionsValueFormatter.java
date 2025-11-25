@@ -38,18 +38,33 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         if (value instanceof Object[]) {
             Object[] arrValue = (Object[]) value;
 
-            // LogUtil.info(getClassName(), "Object Val: " + Arrays.toString(arrValue));
+            LogUtil.info(getClassName(), "Original Val: " + Arrays.toString(arrValue));
             if ("true".equals(getPropertyString("isMultiValue"))) {
-                String joined =  Arrays.stream(arrValue)
-                    .map(String::valueOf)
-                    .flatMap(v -> Arrays.stream(v.split(";")))
-                    .filter(options::containsKey)
-                    .map(options::get)
-                    .collect(Collectors.joining(";"));
+                for (int i = 0; i < arrValue.length; i++) {
+                    String current = String.valueOf(arrValue[i]);
 
-                LogUtil.info(getClassName(), "Joined Value: " + joined);
+                    if (options.containsKey(current)) {
+                        String mapOptionString = options.get(current);
 
-                return joined;
+                        if (mapOptionString != null && !mapOptionString.equalsIgnoreCase("null")) {
+                            arrValue[i] = options.get(current);
+                        } else {
+                            arrValue[i] = current;
+                        }
+                    } else {
+                        arrValue[i] = current;
+                    }
+                }
+
+                String[] stringArray = Arrays.stream(arrValue)
+                        .map(obj -> obj == null ? "null" : obj.toString())
+                        .toArray(String[]::new);
+
+                String finalResult = String.join(";", stringArray);
+
+                LogUtil.info(getClassName(), "Final Result: " + finalResult);
+
+                LogUtil.info(getClassName(), "Updated Value: " + Arrays.toString(arrValue));
             }
 
             return Optional.of(value)
