@@ -1,14 +1,16 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.Element;
-import org.joget.apps.app.service.AppUtil;
-import org.joget.workflow.util.WorkflowUtil;
+import java.util.Arrays;
+import java.util.Optional;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.Optional;
+
+import org.joget.apps.app.service.AppUtil;
+import org.joget.workflow.util.WorkflowUtil;
+
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.Element;
 
 public class CacheUtil {
     public static String getCacheKey(Class<?> caller, String... args) {
@@ -28,7 +30,7 @@ public class CacheUtil {
     }
 
     public static Object getCached(String key) {
-        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("externalDataCache");
+        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("formOptionsCache");
         return Optional.ofNullable(cache)
                 .map(c -> c.get(key))
                 .map(Element::getObjectValue)
@@ -36,8 +38,10 @@ public class CacheUtil {
     }
 
     public static <T> T putCache(String key, T value) {
-        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("externalDataCache");
-        if(cache != null && value != null) cache.put(new Element(key, value));
+        final Cache cache = (Cache) AppUtil.getApplicationContext().getBean("formOptionsCache");
+        if (cache != null && value != null) {
+            cache.put(new Element(key, value));
+        }
         return value;
     }
 }
