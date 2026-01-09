@@ -24,7 +24,6 @@ public class OdooTest {
 
     public OdooTest() {
         final Properties properties = getProperties(PROPERTIES_FILE);
-
         baseUrl = properties.get("baseUrl").toString();
         database = properties.get("database").toString();
         user = properties.get("user").toString();
@@ -56,8 +55,9 @@ public class OdooTest {
 
     @org.junit.Test
     public void testRead() throws OdooCallMethodException {
-        String model = "stock.movements";
-        SearchFilter[] filter = SearchFilter.single("name", "PB00010");
+
+        String model = "room.room";
+        SearchFilter[] filter = null;
         int recordId = rpc.search(model, filter, null, null, 4)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
                 .orElseThrow(() -> new OdooCallMethodException("record not found"));
