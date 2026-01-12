@@ -26,6 +26,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(OdooDataListBinder.class.getName(), new OdooDataListBinder(), null));
         registrationList.add(context.registerService(OdooDataListFilter.class.getName(), new OdooDataListFilter(), null));
         registrationList.add(context.registerService(OdooFormBinder.class.getName(), new OdooFormBinder(), null));
+        registrationList.add(context.registerService(OdooCustomKeyFormBinder.class.getName(), new OdooCustomKeyFormBinder(), null));
         registrationList.add(context.registerService(OdooWorkflowFormBinder.class.getName(), new OdooWorkflowFormBinder(), null));
         registrationList.add(context.registerService(OdooOptionsBinder.class.getName(), new OdooOptionsBinder(), null));
         registrationList.add(context.registerService(OdooFormMultirowBinder.class.getName(), new OdooFormMultirowBinder(), null));

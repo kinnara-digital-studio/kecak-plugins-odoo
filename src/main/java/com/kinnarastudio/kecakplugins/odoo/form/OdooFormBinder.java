@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
  */
 public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormStoreBinder, FormDeleteBinder {
     public final static String LABEL = "Odoo Form Binder";
+    public final static String PROP_STORED = "_stored";
 
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
@@ -67,7 +68,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
 
     @Override
     public FormRowSet store(Element element, FormRowSet rowSet, FormData formData) {
-        final Boolean isStored = (Boolean) element.getProperty("_stored");
+        final Boolean isStored = (Boolean) element.getProperty(PROP_STORED);
         if (isStored != null && isStored) {
             return Optional.of(element)
                     .map(Element::getStoreBinder)
@@ -75,7 +76,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
                     .orElse(rowSet);
         }
 
-        element.setProperty("_stored", true);
+        element.setProperty(PROP_STORED, true);
 
         AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
 

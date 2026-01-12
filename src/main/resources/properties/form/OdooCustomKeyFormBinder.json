@@ -1,0 +1,19 @@
+[
+  {
+    "title":"Odoo Custom Key Form Binder",
+    "properties":[
+      {
+        "name": "model",
+        "type": "textfield",
+        "label": "Model",
+        "required": "true"
+      },
+      {
+        "name": "keyField",
+        "type": "textfield",
+        "label": "Key Field",
+        "required": "true"
+      }
+    ]
+  }
+]
