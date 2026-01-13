@@ -38,7 +38,8 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         if (value instanceof Object[]) {
             Object[] arrValue = (Object[]) value;
 
-            LogUtil.info(getClassName(), "Original Val: " + Arrays.toString(arrValue));
+            LogUtil.debug(getClassName(), "Original Val: " + Arrays.toString(arrValue));
+
             if ("true".equals(getPropertyString("isMultiValue"))) {
                 for (int i = 0; i < arrValue.length; i++) {
                     String current = String.valueOf(arrValue[i]);
@@ -82,7 +83,7 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         
         String val = String.valueOf(value);
 
-        LogUtil.info(getClassName(), "Val: [" + val + "]");
+        LogUtil.debug(getClassName(), "Val: [" + val + "]");
 
         if (options.containsKey(val)) {
             return options.get(val);
