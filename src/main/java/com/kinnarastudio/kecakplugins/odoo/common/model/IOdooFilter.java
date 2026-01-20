@@ -1,4 +1,6 @@
-package com.kinnarastudio.kecakplugins.odoo.common.rpc;
+package com.kinnarastudio.kecakplugins.odoo.common.model;
+
+import com.kinnarastudio.odooxmlrpc.model.DataType;
 
 public interface IOdooFilter {
     String getField();
@@ -8,6 +10,4 @@ public interface IOdooFilter {
     String getValue();
 
     DataType getDataType();
-
-
 }

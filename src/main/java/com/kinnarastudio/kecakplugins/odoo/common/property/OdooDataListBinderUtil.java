@@ -1,8 +1,7 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
 import org.joget.plugin.base.ExtDefaultPlugin;
 
 import javax.annotation.Nonnull;

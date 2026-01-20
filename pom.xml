@@ -172,6 +172,11 @@
             <version>3.0-alpha-1</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.kinnarastudio</groupId>
+            <artifactId>kinnara-odoo-xmlrpc</artifactId>
+            <version>0.1.1-BETA</version>
+        </dependency>
         <!-- End change plugin specific dependencies here -->
     </dependencies>
 </project>

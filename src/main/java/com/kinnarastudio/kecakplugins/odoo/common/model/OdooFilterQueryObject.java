@@ -1,5 +1,6 @@
-package com.kinnarastudio.kecakplugins.odoo.common.rpc;
+package com.kinnarastudio.kecakplugins.odoo.common.model;
 
+import com.kinnarastudio.odooxmlrpc.model.DataType;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;
 
 public class OdooFilterQueryObject extends DataListFilterQueryObject implements IOdooFilter {

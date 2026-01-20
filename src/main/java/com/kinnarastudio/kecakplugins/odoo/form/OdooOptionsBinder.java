@@ -6,9 +6,10 @@ import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;

@@ -1,8 +1,7 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist;
 
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooFilterQueryObject;
+import com.kinnarastudio.kecakplugins.odoo.common.model.OdooFilterQueryObject;
+import com.kinnarastudio.odooxmlrpc.model.DataType;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;

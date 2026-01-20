@@ -5,8 +5,8 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.commons.util.LogUtil;
@@ -59,7 +59,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
+        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final String method = OdooRpcToolUtil.getMethod(this);
         final Optional<Integer> optRecordId = OdooRpcToolUtil.optRecordId(this);
@@ -101,6 +101,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
             switch (method) {
                 case "create": {
                     recordId = rpc.create(model, parsedRecord);
+                    auditTrailManager.addAuditTrail(getClass().getName(), "create", "rpc create : model [" + model + "] new record has been created with id [" + recordId + "]");
 
                     final String resultWorkflowVariable = OdooRpcToolUtil.getResultWorkflowVariable(this);
 
@@ -116,10 +117,13 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
                     try {
                         rpc.write(model, recordId, parsedRecord);
+                        auditTrailManager.addAuditTrail(getClass().getName(), "write", "rpc write : model [" + model + "] record id [" + recordId + "] has been update");
+
                     } catch (OdooCallMethodException e) {
                         final String postErrorMessage = getPostErrorMessage();
                         if (!postErrorMessage.isEmpty()) {
-                            rpc.messagePost(model, recordId, postErrorMessage);
+                            int messageId = rpc.messagePost(model, recordId, postErrorMessage);
+                            auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
                         }
 
                         throw e;
@@ -132,10 +136,12 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
                     try {
                         rpc.unlink(model, recordId);
+                        auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + recordId + "] has been deleted");
                     } catch (OdooCallMethodException e) {
                         final String postErrorMessage = getPostErrorMessage();
                         if (!postErrorMessage.isEmpty()) {
-                            rpc.messagePost(model, recordId, postErrorMessage);
+                            int messageId = rpc.messagePost(model, recordId, postErrorMessage);
+                            auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
                         }
 
                         throw e;
@@ -145,7 +151,9 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
                 case "messagePost":
                     recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
-                    rpc.messagePost(model, recordId, getMessagePost());
+                    int messageId = rpc.messagePost(model, recordId, getMessagePost());
+                    auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
+
 
                 default:
                     throw new OdooCallMethodException("Method [" + method + "] is not understood");

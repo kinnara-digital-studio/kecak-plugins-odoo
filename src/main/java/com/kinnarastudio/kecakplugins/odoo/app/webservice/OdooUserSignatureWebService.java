@@ -1,9 +1,9 @@
 package com.kinnarastudio.kecakplugins.odoo.app.webservice;
 
 import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.dao.PluginDefaultPropertiesDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.PluginDefaultProperties;

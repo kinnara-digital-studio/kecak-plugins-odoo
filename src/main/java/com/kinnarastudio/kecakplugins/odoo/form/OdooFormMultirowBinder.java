@@ -4,19 +4,17 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooFormMultirowLoadBinderUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import com.kinnarastudio.odooxmlrpc.model.Field;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
-import org.joget.plugin.base.ExtDefaultPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.json.JSONArray;
 
@@ -85,7 +83,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
             final String user = OdooAuthorizationUtil.getUsername(this);
             final String apiKey = OdooAuthorizationUtil.getApiKey(this);
             final String model = OdooAuthorizationUtil.getModel(this);
-            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
             final Collection<Field> fields = rpc.fieldsGet(model);
 
@@ -144,6 +142,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
                         if (foreignKey != 0) {
                             rpc.write(model, foreignKey, record);
+                            auditTrailManager.addAuditTrail(getClass().getName(), "write", "rpc write : model [" + model + "] record id [" + foreignKey + "] has been update");
                         } else {
                             final int primaryKey = rpc.create(model, record);
                             row.setId(String.valueOf(primaryKey));
@@ -177,6 +176,8 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     .forEach(i -> {
                         try {
                             rpc.unlink(model, i);
+                            auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + i + "] has been deleted");
+
                         } catch (OdooCallMethodException e) {
                             LogUtil.error(getClassName(), e, "Error unlinking model [" + model + "] record [" + i + "]");
                         }

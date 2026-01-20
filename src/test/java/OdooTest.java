@@ -1,13 +1,10 @@
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -4,9 +4,9 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.Field;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.model.*;
@@ -85,7 +85,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
+        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
             final Collection<String> fields = rpc.fieldsGet(model).stream()
@@ -124,8 +124,10 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
 
             if (recordId != 0) {
                 rpc.write(model, recordId, record);
+                auditTrailManager.addAuditTrail(getClass().getName(), "write", "rpc write : model [" + model + "] record id [" + recordId + "] has been update");
             } else {
                 final int primaryKey = rpc.create(model, record);
+                auditTrailManager.addAuditTrail(getClass().getName(), "create", "rpc create : model [" + model + "] new record has been created with id [" + recordId + "]");
                 if (rowSet != null) rowSet.forEach(row -> row.setId(String.valueOf(primaryKey)));
                 formData.setPrimaryKeyValue(String.valueOf(primaryKey));
             }
@@ -193,7 +195,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
+        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final int[] ids = Optional.ofNullable(rowSet).stream()
                 .flatMap(Collection::stream)
@@ -206,6 +208,7 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
         IntStream.of(ids).forEach(i -> {
             try {
                 rpc.unlink(model, i);
+                auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + i + "] has been deleted");
             } catch (OdooCallMethodException e) {
                 LogUtil.error(getClassName(), e, "Error unlinking model [" + model + "] record [" + i + "]");
             }
