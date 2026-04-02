@@ -1,5 +1,25 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.datalist.model.DataList;
+import org.joget.apps.datalist.model.DataListBinderDefault;
+import org.joget.apps.datalist.model.DataListCollection;
+import org.joget.apps.datalist.model.DataListColumn;
+import org.joget.apps.datalist.model.DataListFilterQueryObject;
+import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
+import org.json.JSONArray;
+
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
@@ -10,15 +30,6 @@ import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
-import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.datalist.model.*;
-import org.joget.commons.util.LogUtil;
-import org.joget.plugin.base.PluginManager;
-import org.json.JSONArray;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Odoo DataList Binder
@@ -50,7 +61,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
                     .map(e -> {
                         final String field = e.getKey();
                         final String label = e.getString();
-                        final boolean sortable = e.isSortable(); //;
+                        final boolean sortable = e.isSortable();
                         return new DataListColumn(field, label, sortable);
                     })
                     .toArray(DataListColumn[]::new);
@@ -117,8 +128,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
     public String getVersion() {
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
         ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
-        String buildNumber = resourceBundle.getString("buildNumber");
-        return buildNumber;
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override
@@ -161,7 +171,25 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
                 .map(Try.onFunction(f -> {
-                    final Object value = f.getDataType() == DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                    Object value;
+                    if (SearchFilter.IN.equalsIgnoreCase(f.getOperator())) {
+                        value = Arrays.stream(f.getValue().split(";"))
+                                .map(String::trim)
+                                .map(s -> {
+                                    if (f.getDataType() == DataType.INTEGER) {
+                                        try {
+                                            return Integer.parseInt(s);
+                                        } catch (NumberFormatException e) {
+                                            return null;
+                                        }
+                                    }
+                                    return s;
+                                })
+                                .filter(Objects::nonNull)
+                                .toArray();
+                    } else {
+                        value = f.getDataType() == DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                    }
                     return new SearchFilter(f.getField(), f.getOperator(), value);
                 }, (NumberFormatException ignored) -> null))
                 .filter(Objects::nonNull);

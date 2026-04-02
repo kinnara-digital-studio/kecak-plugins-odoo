@@ -1,12 +1,14 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import org.joget.plugin.base.ExtDefaultPlugin;
+import java.util.Arrays;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
+
+import org.joget.plugin.base.ExtDefaultPlugin;
+
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 
 public final class OdooDataListBinderUtil {
     private OdooDataListBinderUtil() {}
@@ -21,10 +23,27 @@ public final class OdooDataListBinderUtil {
                     final String strValue = String.valueOf(m.get("value"));
 
                     Object value;
-                    try {
-                        value = dataType == DataType.INTEGER ? Integer.parseInt(strValue) : strValue;
-                    } catch (NumberFormatException e) {
-                        value = strValue;
+                    if (SearchFilter.IN.equalsIgnoreCase(operator)) {
+                        value = Arrays.stream(strValue.split(";"))
+                                .map(String::trim)
+                                .map(s -> {
+                                    if (dataType == DataType.INTEGER) {
+                                        try {
+                                            return Integer.parseInt(s);
+                                        } catch (NumberFormatException e) {
+                                            return null;
+                                        }
+                                    }
+                                    return s;
+                                })
+                                .filter(Objects::nonNull)
+                                .toArray();
+                    } else {
+                        try {
+                            value = dataType == DataType.INTEGER ? Integer.parseInt(strValue) : strValue;
+                        } catch (NumberFormatException e) {
+                            value = strValue;
+                        }
                     }
 
                     return new SearchFilter(field, operator, value);
