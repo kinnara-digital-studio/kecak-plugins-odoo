@@ -37,15 +37,17 @@ import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 public class OdooDataListBinder extends DataListBinderDefault {
     public final static String LABEL = "Odoo DataList Binder";
 
-    public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<>() {{
-        add("string");
-        add("date");
-        add("datetime");
-        add("integer");
-        add("char");
-        add("monetery");
-        add("boolean");
-    }};
+    public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<>() {
+        {
+            add("string");
+            add("date");
+            add("datetime");
+            add("integer");
+            add("char");
+            add("monetery");
+            add("boolean");
+        }
+    };
 
     @Override
     public DataListColumn[] getColumns() {
@@ -79,7 +81,8 @@ public class OdooDataListBinder extends DataListBinderDefault {
     }
 
     @Override
-    public DataListCollection getData(DataList dataList, Map properties, DataListFilterQueryObject[] filterQueryObjects, String sort, Boolean desc, Integer start, Integer rows) {
+    public DataListCollection getData(DataList dataList, Map properties, DataListFilterQueryObject[] filterQueryObjects,
+            String sort, Boolean desc, Integer start, Integer rows) {
         final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
         final String database = OdooAuthorizationUtil.getDatabase(this);
         final String user = OdooAuthorizationUtil.getUsername(this);
@@ -148,7 +151,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{
+        final String[] resources = new String[] {
                 "/properties/common/OdooAuthorization.json",
                 "/properties/datalist/OdooDataListBinder.json"
         };

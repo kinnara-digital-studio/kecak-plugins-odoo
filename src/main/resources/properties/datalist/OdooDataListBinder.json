@@ -9,7 +9,7 @@
         "required": "true"
       },
       {
-        "name" : "method",
+        "name": "method",
         "type": "selectbox",
         "label": "Method",
         "required": "true",
@@ -21,7 +21,7 @@
         ]
       },
       {
-        "name" : "primaryKeyColumn",
+        "name": "primaryKeyColumn",
         "type": "textfield",
         "label": "Primary Key Column",
         "value": "id",
@@ -36,6 +36,21 @@
             "key": "field",
             "label": "Field",
             "required": "true"
+          },
+          {
+            "key": "join",
+            "label": "Join",
+            "required": "true",
+            "options": [
+              {
+                "value": "AND",
+                "label": "AND"
+              },
+              {
+                "value": "OR",
+                "label": "OR"
+              }
+            ]
           },
           {
             "key": "operator",

@@ -11,7 +11,8 @@ import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 
 public final class OdooDataListBinderUtil {
-    private OdooDataListBinderUtil() {}
+    private OdooDataListBinderUtil() {
+    }
 
     @Nonnull
     public static SearchFilter[] getFilter(ExtDefaultPlugin plugin) {
@@ -19,7 +20,8 @@ public final class OdooDataListBinderUtil {
                 .map(m -> {
                     final String field = m.get("field");
                     final String operator = m.get("operator");
-                    final DataType dataType = "integer".equalsIgnoreCase(m.get("dataType")) ? DataType.INTEGER : DataType.STRING;
+                    final DataType dataType = "integer".equalsIgnoreCase(m.get("dataType")) ? DataType.INTEGER
+                            : DataType.STRING;
                     final String strValue = String.valueOf(m.get("value"));
 
                     Object value;
@@ -46,7 +48,9 @@ public final class OdooDataListBinderUtil {
                         }
                     }
 
-                    return new SearchFilter(field, operator, value);
+                    final String join = m.getOrDefault("join", SearchFilter.AND);
+
+                    return new SearchFilter(field, operator, value, join);
                 })
                 .toArray(SearchFilter[]::new);
     }

@@ -46,10 +46,11 @@ public class OdooTest {
         final Collection<Integer> records = new HashSet<>();
         String model = "stock.movements.line";
 
-//        SearchFilter[] filters = SearchFilter.single("movement_id", 9);
+        // SearchFilter[] filters = SearchFilter.single("movement_id", 9);
         SearchFilter[] filters = null;
         for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
-            System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue()).collect(Collectors.joining(" | ")));
+            System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue())
+                    .collect(Collectors.joining(" | ")));
         }
     }
 
@@ -83,9 +84,11 @@ public class OdooTest {
         SearchFilter[] filter = SearchFilter.single("name", "PB00010");
         int recordId = rpc.search(model, filter, null, null, 4)[0];
 
-        rpc.write(model, recordId, new HashMap<>() {{
-            put("goods_withdrawal_categories", 1);
-        }});
+        rpc.write(model, recordId, new HashMap<>() {
+            {
+                put("goods_withdrawal_categories", 1);
+            }
+        });
     }
 
     @org.junit.Test
@@ -94,13 +97,15 @@ public class OdooTest {
         String model = "room.booking";
         int roomId = 2;
         int organizerId = 2;
-        final Map<String, Object> record = new HashMap<>() {{
-            put("name", "Training Kecak");
-            put("room_id", 8);
-            put("organizer_id", 2);
-            put("start_datetime", "2025-09-12T08:00:00+07:00");
-            put("stop_datetime", "2025-09-12T09:00:00+07:00");
-        }};
+        final Map<String, Object> record = new HashMap<>() {
+            {
+                put("name", "Training Kecak");
+                put("room_id", 8);
+                put("organizer_id", 2);
+                put("start_datetime", "2025-09-12T08:00:00+07:00");
+                put("stop_datetime", "2025-09-12T09:00:00+07:00");
+            }
+        };
 
         int recordId = rpc.create(model, record);
 
@@ -130,9 +135,30 @@ public class OdooTest {
         System.out.println(Arrays.stream(new String[0]).anyMatch(String::isEmpty));
     }
 
-
     @Test
     public void testBus() throws OdooCallMethodException {
         int messageId = rpc.messagePost("purchase.order", 54, "Sending from kecak [" + new Date() + "]");
+    }
+
+    @Test
+    public void testSearchReadWithComplexFilters() throws OdooCallMethodException {
+        // Here we test hitting the actual Odoo instance to ensure our generated
+        // Prefix Array works exactly as Odoo expects.
+        String model = "product.template"; // Feel free to change to any existing model in your DB
+
+        // Example: name = 'John' OR name = 'Jane'
+        SearchFilter[] filters = new SearchFilter[] {
+                new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.OR),
+                new SearchFilter("master_category_name", "=", "Raw Material")
+        };
+
+        System.out.println("Executing OdooRpc searchRead...");
+        Map<String, Object>[] result = rpc.searchRead(model, filters, "id", null, 10);
+        System.out.println(Arrays.deepToString(result));
+
+        System.out.println("Result Count: " + result.length);
+        for (Map<String, Object> r : result) {
+            System.out.println("ID: " + r.get("id") + ", Name: " + r.get("name"));
+        }
     }
 }
