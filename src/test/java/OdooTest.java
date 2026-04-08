@@ -1,6 +1,8 @@
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.Field;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -77,7 +79,7 @@ public class OdooTest {
     @org.junit.Test
     public void testWrite() throws OdooCallMethodException {
         String model = "stock.movements";
-        SearchFilter[] filter = SearchFilter.single("name", "PB00010");
+        SearchFilter[] filter = new SearchFilter[] { new SearchFilter("name", "PB00010")};
         int recordId = rpc.search(model, filter, null, null, 4)[0];
 
         rpc.write(model, recordId, new HashMap<>() {{

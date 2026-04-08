@@ -40,7 +40,7 @@ public class OdooCustomKeyFormBinder extends FormBinder implements FormLoadBinde
         try {
             String keyField = getKeyField();
 
-            return Optional.ofNullable(rpc.searchRead(model, SearchFilter.single(keyField, customKey), null, null, 1))
+            return Optional.ofNullable(rpc.searchRead(model, new SearchFilter[]{ new SearchFilter(keyField, customKey)}, null, null, 1))
                     .stream()
                     .flatMap(Arrays::stream)
                     .findFirst()

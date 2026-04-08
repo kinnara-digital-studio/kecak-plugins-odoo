@@ -20,6 +20,26 @@
         "required": "true"
       },
       {
+        "name": "formattingType",
+        "label": "Formatting Type",
+        "type": "radio",
+        "value": "",
+        "options": [
+          {
+            "value": "",
+            "label": "Without Formatting"
+          },
+          {
+            "value": "showId",
+            "label": "Show ID"
+          },
+          {
+            "value": "asOptions",
+            "label": "As Label"
+          }
+        ]
+      },
+      {
         "name": "groupingField",
         "label": "Grouping field",
         "type": "textfield"

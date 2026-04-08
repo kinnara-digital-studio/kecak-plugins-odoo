@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
-    final public static String LABEL = "Odoo Options Binder";
+    public static final String LABEL = "Odoo Options Binder";
 
     final private Predicate<String> isEmpty = String::isEmpty;
     final private Predicate<String> isNotEmpty = isEmpty.negate();
@@ -81,7 +81,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
-                        final String label = String.valueOf(m.get(labelField));
+                        final String label = formatOdooValue(m.get(labelField));
                         final String grouping = String.valueOf(m.get(groupingField));
 
                         if (hideEmptyValue && value.isEmpty())
@@ -137,8 +137,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
     public String getVersion() {
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
         ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
-        String buildNumber = resourceBundle.getString("buildNumber");
-        return buildNumber;
+        return resourceBundle.getString("buildNumber");
     }
 
     @Override
@@ -191,5 +190,39 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
     protected boolean hideEmptyValue() {
         return "true".equalsIgnoreCase(getPropertyString("hideEmptyValue"));
+    }
+
+    protected String getFormattingType() {
+        return getPropertyString("formattingType");
+    }
+
+    protected boolean showId() {
+        return "showId".equalsIgnoreCase(getFormattingType());
+    }
+
+    protected boolean isAsOptions() {
+        return "asOptions".equalsIgnoreCase(getFormattingType());
+    }
+
+    protected String formatOdooValue(Object value) {
+        if (value instanceof Object[]) {
+            final Object[] values = (Object[]) value;
+            if (showId()) {
+                return Arrays.stream(values)
+                        .findFirst()
+                        .map(String::valueOf)
+                        .orElse("");
+            } else if (isAsOptions()) {
+                return Arrays.stream(values).skip(1)
+                        .findFirst()
+                        .map(String::valueOf)
+                        .orElse("");
+            } else {
+                return Arrays.stream(values)
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(";"));
+            }
+        }
+        return value == null ? "" : String.valueOf(value);
     }
 }

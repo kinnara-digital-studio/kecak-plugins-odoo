@@ -125,10 +125,9 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
     @Override
     public Collection<String> availableSyntax() {
         return new ArrayList<>() {{
-            add(getPrefix() + ".READ_FIELD.MODEL[FIELD OPERATOR VALUE][FIELD OPERATOR VALUE]...");
-            add(getPrefix() + ".READ_FIELD.MODEL(FIELD OPERATOR VALUE)(FIELD OPERATOR VALUE)...");
-            add(getPrefix() + ".READ_FIELD.MODEL(FIELD OPERATOR VALUE)(FIELD OPERATOR VALUE)...[INDEX]");
-            add(getPrefix() + ".READ_FIELD.MODEL(FIELD OPERATOR VALUE)(FIELD OPERATOR VALUE)...[INDEX_FROM-INDEX_TO]");
+            add(getPrefix() + ".READ_FIELD.MODEL[FIELD CONDITION VALUE][FIELD OPERATOR VALUE]...");
+            add(getPrefix() + ".READ_FIELD.MODEL[FIELD CONDITION VALUE][OPERATOR FIELD OPERATOR VALUE]...");
+            add(getPrefix() + ".id.hr.employee[name =LIKE 'admin'][|| name =LIKE '']...");
         }};
     }
 

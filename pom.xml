@@ -164,6 +164,10 @@
                     <groupId>xml-apis</groupId>
                     <artifactId>xml-apis</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.kinnarastudio</groupId>
+                    <artifactId>kinnara-commons</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -175,7 +179,7 @@
         <dependency>
             <groupId>com.kinnarastudio</groupId>
             <artifactId>kinnara-odoo-xmlrpc</artifactId>
-            <version>0.1.1-BETA</version>
+            <version>0.2.1-BETA</version>
         </dependency>
         <!-- End change plugin specific dependencies here -->
     </dependencies>

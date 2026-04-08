@@ -50,7 +50,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
                     .map(e -> {
                         final String field = e.getKey();
                         final String label = e.getString();
-                        final boolean sortable = e.isSortable(); //;
+                        final boolean sortable = e.isSortable();
                         return new DataListColumn(field, label, sortable);
                     })
                     .toArray(DataListColumn[]::new);
@@ -161,7 +161,26 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
                 .map(Try.onFunction(f -> {
-                    final Object value = f.getDataType() == DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                    Object value;
+                    SearchFilter.Operator operator = SearchFilter.Operator.valueOf(f.getOperator());
+                    if (SearchFilter.Operator.IN == operator) {
+                        value = Arrays.stream(f.getValue().split(";"))
+                                .map(String::trim)
+                                .map(s -> {
+                                    if (f.getDataType() == DataType.INTEGER) {
+                                        try {
+                                            return Integer.parseInt(s);
+                                        } catch (NumberFormatException e) {
+                                            return null;
+                                        }
+                                    }
+                                    return s;
+                                })
+                                .filter(Objects::nonNull)
+                                .toArray();
+                    } else {
+                        value = f.getDataType() == DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                    }
                     return new SearchFilter(f.getField(), f.getOperator(), value);
                 }, (NumberFormatException ignored) -> null))
                 .filter(Objects::nonNull);
