@@ -38,21 +38,6 @@
             "required": "true"
           },
           {
-            "key": "join",
-            "label": "Join",
-            "required": "true",
-            "options": [
-              {
-                "value": "AND",
-                "label": "AND"
-              },
-              {
-                "value": "OR",
-                "label": "OR"
-              }
-            ]
-          },
-          {
             "key": "operator",
             "label": "Operator",
             "required": "true",
@@ -90,6 +75,21 @@
           {
             "key": "value",
             "label": "Value"
+          },
+          {
+            "key": "join",
+            "label": "Join",
+            "required": "true",
+            "options": [
+              {
+                "value": "AND",
+                "label": "AND"
+              },
+              {
+                "value": "OR",
+                "label": "OR"
+              }
+            ]
           },
           {
             "key": "dataType",
