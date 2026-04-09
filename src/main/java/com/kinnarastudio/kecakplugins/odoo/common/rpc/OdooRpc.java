@@ -133,6 +133,7 @@ public class OdooRpc {
             final int uid = login();
 
             final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            System.out.println("Odoo Domain: " + Arrays.deepToString(objectFilters));
 
             final Object[] params = new Object[] {
                     database,
@@ -185,6 +186,7 @@ public class OdooRpc {
             final int uid = login();
 
             final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            System.out.println("Odoo Domain: " + Arrays.deepToString(objectFilters));
 
             final Object[] params = new Object[] {
                     database,
@@ -236,6 +238,7 @@ public class OdooRpc {
             final int uid = login();
 
             final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            System.out.println("Odoo Domain: " + Arrays.deepToString(objectFilters));
 
             final Object[] params = new Object[] {
                     database,

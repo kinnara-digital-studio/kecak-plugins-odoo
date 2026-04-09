@@ -147,14 +147,39 @@ public class OdooTest {
         String model = "product.template"; // Feel free to change to any existing model in your DB
 
         // Example: name = 'John' OR name = 'Jane'
-        SearchFilter[] filters = new SearchFilter[] {
-                new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.OR),
-                new SearchFilter("master_category_name", "=", "Raw Material")
-        };
+//         SearchFilter[] filters = new SearchFilter[] {
+//         new SearchFilter("master_category_name", "=", "Finish Good",
+//         SearchFilter.OR),
+//         new SearchFilter("master_category_name", "=", "Raw Material"),
+//
+//         };
+
+//         SearchFilter[] filters = new SearchFilter[] {
+//             new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.AND),
+//             new SearchFilter("name", "ilike", "Perfume", SearchFilter.AND),
+//             new SearchFilter("id", ">", 20)
+//         };
+
+//        SearchFilter[] filters = new SearchFilter[] {
+//                new SearchFilter("name", "=", "Sprite", SearchFilter.OR),
+//                new SearchFilter("name", "=", "Le Minerale", SearchFilter.OR),
+//                new SearchFilter("name", "=", "Perfume RED")
+//        };
+
+        // SearchFilter[] filters = new SearchFilter[] {
+        // new SearchFilter("name", "=", "Sprite", null),
+        // new SearchFilter("master_category_name", "=", "Finish Good", null)
+        // };
+
+         SearchFilter[] filters = new SearchFilter[] {
+             new SearchFilter("master_category_name", "=", "Raw Material", SearchFilter.OR),
+             new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.AND),
+             new SearchFilter("id", "<", 30)
+         };
 
         System.out.println("Executing OdooRpc searchRead...");
-        Map<String, Object>[] result = rpc.searchRead(model, filters, "id", null, 10);
-        System.out.println(Arrays.deepToString(result));
+        Map<String, Object>[] result = rpc.searchRead(model, filters, "id", null, 100);
+        // System.out.println(Arrays.deepToString(result));
 
         System.out.println("Result Count: " + result.length);
         for (Map<String, Object> r : result) {
