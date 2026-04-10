@@ -42,7 +42,7 @@ public final class OdooDataListBinderUtil {
                         try {
                             value = dataType == DataType.INTEGER ? Integer.parseInt(strValue) : strValue;
                         } catch (NumberFormatException e) {
-                            value = strValue;
+                            value = "null".equalsIgnoreCase(strValue) ? null : strValue;
                         }
                     }
 
