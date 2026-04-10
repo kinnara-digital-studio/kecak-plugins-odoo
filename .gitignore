@@ -5,3 +5,4 @@ target/
 *.iml
 test.properties
 OdooFilterConverterTest.java
+OdooTest.java
