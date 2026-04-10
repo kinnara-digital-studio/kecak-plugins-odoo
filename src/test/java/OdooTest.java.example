@@ -11,6 +11,11 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Please copy and rename this file to test.properties
+ * Author: @aristosh
+ */
+
 public class OdooTest {
     public final static String PROPERTIES_FILE = "test.properties";
     private final String baseUrl;
