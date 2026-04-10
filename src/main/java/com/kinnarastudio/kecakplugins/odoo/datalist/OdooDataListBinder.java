@@ -162,7 +162,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
                 .map(Try.onFunction(f -> {
                     Object value;
-                    SearchFilter.Operator operator = SearchFilter.Operator.valueOf(f.getOperator());
+                    SearchFilter.Operator operator = SearchFilter.Operator.parse(f.getOperator());
                     if (SearchFilter.Operator.IN == operator) {
                         value = Arrays.stream(f.getValue().split(";"))
                                 .map(String::trim)

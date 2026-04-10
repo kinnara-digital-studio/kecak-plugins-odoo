@@ -16,7 +16,7 @@ public final class OdooDataListBinderUtil {
         return Arrays.stream(plugin.getPropertyGrid("filter"))
                 .map(m -> {
                     final String field = m.get("field");
-                    final SearchFilter.Operator operator = SearchFilter.Operator.valueOf(m.get("operator"));
+                    final SearchFilter.Operator operator = SearchFilter.Operator.parse(m.get("operator"));
                     final DataType dataType = "integer".equalsIgnoreCase(m.get("dataType")) ? DataType.INTEGER : DataType.STRING;
                     final String strValue = String.valueOf(m.get("value"));
 
