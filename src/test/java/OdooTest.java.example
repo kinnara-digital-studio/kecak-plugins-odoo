@@ -99,16 +99,25 @@ public class OdooTest {
     @org.junit.Test
     public void testCreate() throws OdooCallMethodException {
 
-        String model = "room.booking";
-        int roomId = 2;
-        int organizerId = 2;
+        String model = "product.template";
         final Map<String, Object> record = new HashMap<>() {
             {
-                put("name", "Training Kecak");
-                put("room_id", 8);
-                put("organizer_id", 2);
-                put("start_datetime", "2025-09-12T08:00:00+07:00");
-                put("stop_datetime", "2025-09-12T09:00:00+07:00");
+                put("name", "Testing Product Hqhr");
+                put("customer_id", 1416);
+                put("categ_id", 595);
+                put("list_price", 1.0);
+                put("size_fw", 80);
+                put("size_sw", 0.0);
+                put("size_pitch", 190);
+                put("spec_length", 1000);
+                put("spec_thickness", 35);
+                put("material_film_id", 6750);
+                put("uom_id", 27);
+                put("uom_po_id", 27);
+                put("purchase_line_warn", "no-message");
+                put("sale_line_warn", "no-message");
+                put("tracking", "none");
+                put("detailed_type", "product");
             }
         };
 
