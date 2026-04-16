@@ -16,9 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Odoo RPC
  *
- * @see <a href=
- *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#external-api">External
- *      API</a>
+ * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#external-api">External API</a>
  */
 public class OdooRpc {
     public final static String PATH_COMMON = "/xmlrpc/2/common";
@@ -50,20 +48,16 @@ public class OdooRpc {
      *
      * @return
      * @throws OdooAuthorizationException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#logging-in">Loggin
-     *      in</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#logging-in">Loggin in</a>
      */
     public int login() throws OdooAuthorizationException {
         try {
-            final Object ret = XmlRpcUtil.execute(baseUrl + "/" + PATH_COMMON, "login",
-                    new Object[] { database, user, apiKey });
+            final Object ret = XmlRpcUtil.execute(baseUrl + "/" + PATH_COMMON, "login", new Object[]{database, user, apiKey});
 
             if (ret instanceof Integer) {
                 return (int) ret;
             } else {
-                throw new OdooAuthorizationException("Invalid login authorization for user [" + user + "] database ["
-                        + database + "] apiKey [" + apiKey + "]");
+                throw new OdooAuthorizationException("Invalid login authorization for user [" + user + "] database [" + database + "] apiKey [" + apiKey + "]");
             }
 
         } catch (XmlRpcException | MalformedURLException e) {
@@ -79,16 +73,14 @@ public class OdooRpc {
      * @param model
      * @return
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-record-fields">List
-     *      record fields</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-record-fields">List record fields</a>
      */
     @Nonnull
     public Collection<Field> fieldsGet(String model) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
@@ -122,35 +114,31 @@ public class OdooRpc {
      * @param limit
      * @return
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-records">List
-     *      Records</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-records">List Records</a>
      */
     @Nonnull
-    public Integer[] search(String model, SearchFilter[] filters, String order, Integer offset, Integer limit)
-            throws OdooCallMethodException {
+    public Integer[] search(String model, SearchFilter[] filters, String order, Integer offset, Integer limit) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            final Object[] objectFilters = Optional.ofNullable(filters)
+                    .stream()
+                    .flatMap(Arrays::stream)
+                    .map(f -> new Object[]{f.getField(), f.getOperator(), Optional.ofNullable(f.getValue()).orElse(false)})
+                    .toArray(Object[]::new);
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "search",
-                    new Object[] { objectFilters },
-                    new HashMap<String, Object>() {
-                        {
-                            if (offset != null)
-                                put("offset", offset);
-                            if (limit != null)
-                                put("limit", limit);
-                            if (order != null)
-                                put("order", order);
-                        }
-                    }
+                    new Object[]{objectFilters},
+                    new HashMap<String, Object>() {{
+                        if (offset != null) put("offset", offset);
+                        if (limit != null) put("limit", limit);
+                        if (order != null) put("order", order);
+                    }}
             };
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
@@ -174,42 +162,38 @@ public class OdooRpc {
      * @param limit
      * @return
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#search-and-read">Search
-     *      and Read</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#search-and-read">Search and Read</a>
      */
     @Nonnull
-    public Map<String, Object>[] searchRead(String model, SearchFilter[] filters, String order, Integer offset,
-            Integer limit) throws OdooCallMethodException {
+    public Map<String, Object>[] searchRead(String model, SearchFilter[] filters, String order, Integer offset, Integer limit) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            final Object[] objectFilters = Optional.ofNullable(filters)
+                    .stream()
+                    .flatMap(Arrays::stream)
+                    .map(f -> new Object[]{f.getField(), f.getOperator(), Optional.ofNullable(f.getValue()).orElse(false)})
+                    .toArray(Object[]::new);
 
-            final Object[] params = new Object[] {
+
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "search_read",
-                    new Object[] { objectFilters },
-                    new HashMap<String, Object>() {
-                        {
-                            if (offset != null)
-                                put("offset", offset);
-                            if (limit != null)
-                                put("limit", limit);
-                            if (order != null)
-                                put("order", order);
-                        }
-                    }
+                    new Object[]{objectFilters},
+                    new HashMap<String, Object>() {{
+                        if (offset != null) put("offset", offset);
+                        if (limit != null) put("limit", limit);
+                        if (order != null) put("order", order);
+                    }}
             };
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
                     .map(o -> (Map<String, Object>) o)
                     .peek(m -> m.forEach((key, value) -> {
-                        if (value instanceof Boolean && !(boolean) value)
-                            m.replace(key, null);
+                        if (value instanceof Boolean && !(boolean) value) m.replace(key, null);
                     }))
                     .toArray(Map[]::new);
 
@@ -217,6 +201,7 @@ public class OdooRpc {
             throw new OdooCallMethodException(e);
         }
     }
+
 
     /**
      * Search Count
@@ -227,23 +212,25 @@ public class OdooRpc {
      * @param filters
      * @return
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#count-records">Count
-     *      records</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#count-records">Count records</a>
      */
     public int searchCount(String model, SearchFilter[] filters) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            final Object[] objectFilters = Optional.ofNullable(filters)
+                    .stream()
+                    .flatMap(Arrays::stream)
+                    .map(f -> new Object[]{f.getField(), f.getOperator(), Optional.ofNullable(f.getValue()).orElse(false)})
+                    .toArray(Object[]::new);
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "search_count",
-                    new Object[] { objectFilters }
+                    new Object[]{objectFilters}
             };
 
             return Optional.ofNullable((int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
@@ -263,29 +250,26 @@ public class OdooRpc {
      * @param recordId
      * @return
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#read-records">Read
-     *      records</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#read-records">Read records</a>
      */
     public Optional<Map<String, Object>> read(String model, int recordId) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "read",
-                    new Object[] { recordId },
+                    new Object[]{recordId},
             };
 
             return Arrays.stream((Object[]) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params))
                     .findFirst()
                     .map(o -> (Map<String, Object>) o)
                     .map(Try.toPeek(m -> m.forEach((key, value) -> {
-                        if (value instanceof Boolean && !(boolean) value)
-                            m.replace(key, null);
+                        if (value instanceof Boolean && !(boolean) value) m.replace(key, null);
                     })));
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
@@ -302,28 +286,25 @@ public class OdooRpc {
      * @param row
      * @return
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#create-records">Create
-     *      records</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#create-records">Create records</a>
      */
     public int create(String model, Map<String, Object> row) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "create",
-                    new Object[] { row },
+                    new Object[]{row},
             };
 
             int recordId = (int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
             if (auditTrailManager != null) {
-                auditTrailManager.addAuditTrail(getClass().getName(), "create",
-                        "rpc create : model [" + model + "] new record has been created with id [" + recordId + "]");
+                auditTrailManager.addAuditTrail(getClass().getName(), "create", "rpc create : model [" + model + "] new record has been created with id [" + recordId + "]");
             }
 
             return recordId;
@@ -342,34 +323,32 @@ public class OdooRpc {
      * @param recordId
      * @param row
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#update-records">Update
-     *      records</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#update-records">Update records</a>
      */
     public void write(String model, int recordId, Map<String, Object> row) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "write",
-                    new Object[] { recordId, row },
+                    new Object[]{recordId, row},
             };
 
             XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
             if (auditTrailManager != null) {
-                auditTrailManager.addAuditTrail(getClass().getName(), "write",
-                        "rpc write : model [" + model + "] record id [" + recordId + "] has been update");
+                auditTrailManager.addAuditTrail(getClass().getName(), "write", "rpc write : model [" + model + "] record id [" + recordId + "] has been update");
             }
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
             throw new OdooCallMethodException(e);
         }
     }
+
 
     /**
      * Unlink
@@ -379,28 +358,25 @@ public class OdooRpc {
      * @param model
      * @param recordId
      * @throws OdooCallMethodException
-     * @see <a href=
-     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#delete-records">Delete
-     *      records</a>
+     * @see <a href="https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#delete-records">Delete records</a>
      */
     public void unlink(String model, int recordId) throws OdooCallMethodException {
         try {
             final int uid = login();
 
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "unlink",
-                    new Object[] { recordId },
+                    new Object[]{recordId},
             };
 
             XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
             if (auditTrailManager != null) {
-                auditTrailManager.addAuditTrail(getClass().getName(), "unlink",
-                        "rpc unlink : model [" + model + "] record [" + recordId + "] has been deleted");
+                auditTrailManager.addAuditTrail(getClass().getName(), "unlink", "rpc unlink : model [" + model + "] record [" + recordId + "] has been deleted");
             }
 
         } catch (MalformedURLException | XmlRpcException | OdooAuthorizationException e) {
@@ -415,34 +391,30 @@ public class OdooRpc {
      * @param body
      */
     public int messagePost(String model, int recordId, String body) throws OdooCallMethodException {
-        return messagePost(model, new int[] { recordId }, MessageType.COMMENT, body);
+        return messagePost(model, new int[]{recordId}, MessageType.COMMENT, body);
     }
 
-    public int messagePost(String model, int[] recordIds, MessageType messageType, String body)
-            throws OdooCallMethodException {
+    public int messagePost(String model, int[] recordIds, MessageType messageType, String body) throws OdooCallMethodException {
         try {
             final int uid = login();
-            final Object[] params = new Object[] {
+            final Object[] params = new Object[]{
                     database,
                     uid,
                     apiKey,
                     model,
                     "message_post",
                     recordIds,
-                    new HashMap<String, Object>() {
-                        {
-                            put("body", body);
-                            put("message_type", messageType.name().toLowerCase());
-                            put("subtype_xmlid", "mail.mt_comment");
-                        }
-                    }
+                    new HashMap<String, Object>() {{
+                        put("body", body);
+                        put("message_type", messageType.name().toLowerCase());
+                        put("subtype_xmlid", "mail.mt_comment");
+                    }}
             };
 
             int messageId = (int) XmlRpcUtil.execute(baseUrl + "/" + PATH_OBJECT, "execute_kw", params);
 
             if (auditTrailManager != null) {
-                auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model ["
-                        + model + "] new record has been created with id [" + messageId + "]");
+                auditTrailManager.addAuditTrail(getClass().getName(), "messagePost", "rpc message_post : model [" + model + "] new record has been created with id [" + messageId + "]");
             }
 
             return messageId;
