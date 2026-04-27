@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -85,10 +87,24 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         try {
             final boolean hideEmptyValue = hideEmptyValue();
 
+            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
+
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
-                        final String label = formatOdooValue(m.get(labelField));
+
+                        Matcher matcher = fieldPattern.matcher(labelField);
+                        StringBuffer labelBuffer = new StringBuffer();
+                        
+                        while (matcher.find()) {
+                            String fieldName = matcher.group(1);
+                            String fieldValue = formatOdooValue(m.get(fieldName));
+                            matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
+                        }
+                        matcher.appendTail(labelBuffer);
+                        final String label = labelBuffer.toString();
+
+                        // final String label = formatOdooValue(m.get(labelField));
                         final String grouping = String.valueOf(m.get(groupingField));
 
                         if (hideEmptyValue && value.isEmpty())
