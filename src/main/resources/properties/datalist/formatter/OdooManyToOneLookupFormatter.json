@@ -1,0 +1,21 @@
+[
+  {
+    "title": "Odoo Many2one Lookup Formatter",
+    "properties": [
+      {
+        "name": "targetModel",
+        "type": "textfield",
+        "label": "Target Model",
+        "description": "The Odoo model to look up. E.g., hr.employee",
+        "required": "true"
+      },
+      {
+        "name": "targetField",
+        "type": "textfield",
+        "label": "Field to Fetch",
+        "description": "The field to fetch from the target model. E.g., barcode",
+        "required": "true"
+      }
+    ]
+  }
+]
