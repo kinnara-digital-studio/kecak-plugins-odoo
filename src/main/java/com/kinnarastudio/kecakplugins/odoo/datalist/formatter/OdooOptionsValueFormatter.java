@@ -1,22 +1,17 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
+import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListColumn;
 import org.joget.apps.datalist.model.DataListColumnFormatDefault;
-import org.joget.apps.form.model.FormBinder;
-import org.joget.apps.form.model.FormLoadBinder;
-import org.joget.apps.form.model.FormLoadOptionsBinder;
-import org.joget.apps.form.model.FormRow;
-import org.joget.apps.form.model.FormRowSet;
+import org.joget.apps.form.model.*;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 
@@ -33,7 +28,8 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
-        final Map<String, String> options = getOptionMap();
+        final String[] ids = getIds(dataList, column);
+        final Map<String, String> options = getOptionMap(ids);
 
         if (value instanceof Object[]) {
             Object[] arrValue = (Object[]) value;
@@ -129,9 +125,12 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         return AppUtil.readPluginResource(getClassName(), "/properties/datalist/formatter/OdooOptionsValueFormatter.json", args, true, null);
     }
 
-    protected Map<String, String> getOptionMap() {
+    protected Map<String, String> getOptionMap(String[] ids) {
         FormBinder optionBinder;
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        LogUtil.warn(getClassName(), "getOptionMap() called - instance: " + System.identityHashCode(this)
+                + " optionMap: " + (optionMap == null ? "NULL" : "size=" + optionMap.size()));
+
         if (optionMap != null) {
             return optionMap;
         }
@@ -141,7 +140,12 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         Map<String, Object> optionsBinderProperties = (Map<String, Object>) this.getProperty("optionsBinder");
         if (optionsBinderProperties != null && optionsBinderProperties.get("className") != null && !optionsBinderProperties.get("className").toString().isEmpty() && (optionBinder = (FormBinder) pluginManager.getPlugin(optionsBinderProperties.get("className").toString())) != null) {
             optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
-            FormRowSet rowSet = ((FormLoadBinder) optionBinder).load(null, null, null);
+
+            LogUtil.warn(getClassName(), "Calling load() - instance: " + System.identityHashCode(this));
+
+            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids);
+
+            LogUtil.warn(getClassName(), "load() returned - rowSet: " + (rowSet == null ? "NULL" : "size=" + rowSet.size()));
             if (rowSet != null) {
                 optionMap = new HashMap<>();
                 for (FormRow row : rowSet) {
@@ -158,8 +162,72 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                     }
                     optionMap.put(value, label);
                 }
+                LogUtil.warn(getClassName(), "optionMap filled - size: " + optionMap.size());
             }
         }
         return optionMap;
+    }
+
+    private String[] getIds(DataList dataList, DataListColumn column) {
+        final String columnName = column.getName();
+
+        // Step 1: Collect all unique IDs from the DataList rows
+        Set<Integer> ids = Set.of();
+        try {
+            @SuppressWarnings("unchecked")
+            Collection<Object> rows = dataList.getRows();
+            ids = rows.stream()
+                    .map(row -> {
+                        Object val;
+                        if (row instanceof Map) {
+                            val = ((Map<?, ?>) row).get(columnName);
+                        } else {
+                            return null;
+                        }
+                        return extractId(val);
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            LogUtil.warn(getClassName(), "Failed to collect IDs from DataList: " + e.getMessage());
+        }
+
+        if (ids.isEmpty()) {
+            LogUtil.debug(getClassName(), "No IDs to look up for column [" + columnName + "]");
+        }
+
+        return ids.stream()
+                .map(String::valueOf)
+                .toArray(String[]::new);
+    }
+
+    private Integer extractId(Object value) {
+        if (value == null)
+            return null;
+
+        if (value instanceof Object[]) {
+            Object[] arr = (Object[]) value;
+            if (arr.length >= 1 && arr[0] instanceof Integer) {
+                return (Integer) arr[0];
+            }
+            if (arr.length >= 1) {
+                try {
+                    return Integer.parseInt(String.valueOf(arr[0]));
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
