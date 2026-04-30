@@ -1,21 +1,15 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-
-import org.junit.Test;
-
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Please copy and rename this file to test.properties
@@ -55,10 +49,10 @@ public class OdooTest {
         final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final Collection<Integer> records = new HashSet<>();
-        String model = "uom.uom";
+        String model = "stock.movements.line";
 
         // SearchFilter[] filters = SearchFilter.single("movement_id", 9);
-        SearchFilter[] filters = SearchFilter.single("product_template_id", false);
+        SearchFilter[] filters = null;
         for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
             System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue())
                     .collect(Collectors.joining(" | ")));

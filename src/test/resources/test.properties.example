@@ -1,0 +1,6 @@
+baseUrl=https://example.com
+database=db-name
+user=user
+apiKey=abc12345
+
+# Please copy and rename this file to test.properties

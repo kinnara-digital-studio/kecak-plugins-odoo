@@ -169,12 +169,8 @@ public class OdooRpc {
         try {
             final int uid = login();
 
-            final Object[] objectFilters = Optional.ofNullable(filters)
-                    .stream()
-                    .flatMap(Arrays::stream)
-                    .map(f -> new Object[]{f.getField(), f.getOperator(), Optional.ofNullable(f.getValue()).orElse(false)})
-                    .toArray(Object[]::new);
-
+            final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            System.out.println("Odoo Domain: " + Arrays.deepToString(objectFilters));
 
             final Object[] params = new Object[]{
                     database,
@@ -203,6 +199,7 @@ public class OdooRpc {
     }
 
 
+
     /**
      * Search Count
      * <p>
@@ -218,11 +215,8 @@ public class OdooRpc {
         try {
             final int uid = login();
 
-            final Object[] objectFilters = Optional.ofNullable(filters)
-                    .stream()
-                    .flatMap(Arrays::stream)
-                    .map(f -> new Object[]{f.getField(), f.getOperator(), Optional.ofNullable(f.getValue()).orElse(false)})
-                    .toArray(Object[]::new);
+            final Object[] objectFilters = OdooFilterConverter.convert(filters);
+            System.out.println("Odoo Domain: " + Arrays.deepToString(objectFilters));
 
             final Object[] params = new Object[]{
                     database,
@@ -348,6 +342,7 @@ public class OdooRpc {
             throw new OdooCallMethodException(e);
         }
     }
+
 
 
     /**

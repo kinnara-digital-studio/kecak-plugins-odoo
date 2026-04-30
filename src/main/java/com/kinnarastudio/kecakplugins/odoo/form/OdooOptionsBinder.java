@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,19 +60,51 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String groupingField = getGroupingField();
 
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
-        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Optional.ofNullable(dependencyValues)
-                .stream()
-                .flatMap(Arrays::stream)
-                .filter(Predicate.not(String::isEmpty))
-                .map(s -> {
-                    try {
-                        return new SearchFilter(groupingField, Integer.parseInt(s));
-                    } catch (NumberFormatException e) {
-                        return new SearchFilter(groupingField, s);
-                    }
-                });
+        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty()
+                ? Stream.empty() : Optional.ofNullable(dependencyValues)
+                       .filter(arr -> arr.length > 0)
+                       .map(arr -> {
+                           Integer[] intIds = Arrays.stream(arr)
+                               .filter(Predicate.not(String::isEmpty))
+                               .map(s -> {
+                                   try { return Integer.parseInt(s); }
+                                   catch (NumberFormatException e) { return null; }
+                               })
+                               .filter(Objects::nonNull)
+                               .toArray(Integer[]::new);
 
-        final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
+                           if (intIds.length == arr.length) {
+                               return new SearchFilter(groupingField, SearchFilter.IN, (Object) intIds);
+                           }
+
+                           String[] strIds = Arrays.stream(arr)
+                                   .filter(Predicate.not(String::isEmpty))
+                                   .toArray(String[]::new);
+                           return new SearchFilter(groupingField, SearchFilter.IN, (Object) strIds);
+                       }).stream();
+
+        // Filter valueField in [ids] — NEW: kalau groupingField kosong, filter by valueField
+        final Stream<SearchFilter> valueFilterStream = !groupingField.isEmpty() ? Stream.empty()
+                : Optional.ofNullable(dependencyValues)
+                  .filter(arr -> arr.length > 0)
+                  .map(arr -> {
+                      Integer[] intIds = Arrays.stream(arr)
+                              .map(s -> {
+                                  try { return Integer.parseInt(s); }
+                                  catch (NumberFormatException e) { return null; }
+                              })
+                              .filter(Objects::nonNull)
+                              .toArray(Integer[]::new);
+                      return intIds.length > 0
+                             ? new SearchFilter(valueField, SearchFilter.IN, (Object) intIds)
+                             : null;
+                  })
+                  .filter(Objects::nonNull)
+                  .stream();
+
+        final SearchFilter[] filters = Stream.concat(
+                        Stream.concat(defaultFilterStream, filterQueryObjectStream),
+                        valueFilterStream)
                 .toArray(SearchFilter[]::new);
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(),
@@ -85,10 +119,24 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         try {
             final boolean hideEmptyValue = hideEmptyValue();
 
+            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
+
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
-                        final String label = formatOdooValue(m.get(labelField));
+
+                        Matcher matcher = fieldPattern.matcher(labelField);
+                        StringBuffer labelBuffer = new StringBuffer();
+                        
+                        while (matcher.find()) {
+                            String fieldName = matcher.group(1);
+                            String fieldValue = formatOdooValue(m.get(fieldName));
+                            matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
+                        }
+                        matcher.appendTail(labelBuffer);
+                        final String label = labelBuffer.toString();
+
+                        // final String label = formatOdooValue(m.get(labelField));
                         final String grouping = String.valueOf(m.get(groupingField));
 
                         if (hideEmptyValue && value.isEmpty())

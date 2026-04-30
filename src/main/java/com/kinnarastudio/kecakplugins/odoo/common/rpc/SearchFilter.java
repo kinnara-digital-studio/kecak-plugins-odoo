@@ -18,7 +18,7 @@ public class SearchFilter {
     public SearchFilter(String field, String operator, Object value, String join) {
         this.field = field;
         this.operator = operator;
-        this.value = value;
+        this.value = (value == null || "null".equals(value)) ? false : value;
         this.join = join;
     }
 
