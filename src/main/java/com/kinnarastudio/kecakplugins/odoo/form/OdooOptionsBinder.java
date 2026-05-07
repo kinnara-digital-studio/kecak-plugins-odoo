@@ -112,7 +112,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                 Arrays.stream(filters)
                         .map(SearchFilter::getValue)
                         .map(v -> {
-                            if (v instanceof Object[]) return Arrays.deepToString((Object[]) v);
+                            if (v instanceof Object[]) return Arrays.stream((Object[]) v).map(String::valueOf).collect(Collectors.joining("_"));
                             if (v instanceof int[]) return Arrays.toString((int[]) v);
                             return String.valueOf(v);
                         })
