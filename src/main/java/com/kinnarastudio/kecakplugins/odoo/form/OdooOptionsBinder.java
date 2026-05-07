@@ -116,26 +116,29 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             return cached;
         }
 
-        final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
-
-        Stream<String> labelFieldStream = fieldPattern.matcher(labelField)
-                .results()
-                .map(mr -> mr.group(1));
-
-        Stream<String> groupingFieldStream = fieldPattern.matcher(groupingField)
-                .results()
-                .map(mr -> mr.group(1));
-
-        String[] requiredFields = Stream.of(Stream.of(valueField), labelFieldStream, groupingFieldStream)
-                .flatMap(s -> s)
-                .filter(f -> f != null && !f.isEmpty())
-                .distinct()
-                .toArray(String[]::new);
-
-        //LogUtil.info(getClassName(), Arrays.toString(requiredFields));
+//        LogUtil.info(getClassName(), labelFieldStream.toString());
+//        LogUtil.info(getClassName(), groupingFieldStream.toString());
+//
+//        LogUtil.info(getClassName(), Arrays.toString(requiredFields));
 
         try {
             final boolean hideEmptyValue = hideEmptyValue();
+
+            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
+
+            Stream<String> labelFieldStream = fieldPattern.matcher(labelField)
+                    .results()
+                    .map(mr -> mr.group(1));
+
+            Stream<String> groupingFieldStream = fieldPattern.matcher(groupingField)
+                    .results()
+                    .map(mr -> mr.group(1));
+
+            String[] requiredFields = Stream.of(Stream.of(valueField), labelFieldStream, groupingFieldStream)
+                    .flatMap(s -> s)
+                    .filter(f -> f != null && !f.isEmpty())
+                    .distinct()
+                    .toArray(String[]::new);
 
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
                     .map(m -> {
