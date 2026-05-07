@@ -206,4 +206,65 @@ public class OdooTest {
             System.out.println("ID: " + r.get("id") + ", Name: " + r.get("name"));
         }
     }
+
+    @Test
+    public void testSearchReadEmployeeSuccess() throws OdooCallMethodException {
+        // Simulasi sukses untuk pemanggilan Util.getJobId()
+        // Memakai array fields supaya odoo tidak perlu menghitung "newly_hired"
+        String username = "061489"; // Data Hardcode yang dicoba USER
+        String model = "hr.employee";
+
+        // Kita coba mencari pegawai dengan barcode 061489
+        SearchFilter[] filters = new SearchFilter[] { new SearchFilter("barcode", username) };
+
+        // Membatasi request agar HANYA mengambil field "job_id"
+        String[] fields = new String[] { "job_id", "barcode", "name" };
+
+        // Memanggil overloaded method searchRead dengan parameter fields terbatas
+        Map<String, Object>[] records = rpc.searchRead(model, fields, filters , null, null, 1);
+
+        System.out.println("Cari barcode " + username + " -> Jumlah record yang ditemukan: " + records.length);
+
+        String jobId = Arrays.stream(records)
+                .findFirst()
+                .map(m -> m.get("job_id"))
+                .map(obj -> {
+                    if (obj instanceof Object[]) {
+                        Object[] arrayObj = (Object[]) obj;
+                        return arrayObj.length > 0 ? String.valueOf(arrayObj[0]) : "";
+                    }
+                    return obj != null ? String.valueOf(obj) : "";
+                })
+                .orElse("");
+
+        System.out.println("Job ID (Sukses): " + jobId);
+    }
+
+    @Test
+    public void testSearchEmployeeByJobId() throws OdooCallMethodException {
+        String model = "hr.employee";
+        Integer targetJobId = 588;
+
+        SearchFilter[] filters = new SearchFilter[] { new SearchFilter("job_id", targetJobId) };
+
+        String[] fields = new String[] { "job_id", "barcode", "name" };
+
+        Map<String, Object>[] records = rpc.searchRead(model, fields, filters, null, null, null);
+
+        System.out.println("Cari job_id " + targetJobId + " -> Jumlah employee ditemukan: " + records.length);
+
+        for (Map<String, Object> emp : records) {
+            Object jobIdRaw = emp.get("job_id");
+            String jobIdStr = "";
+            if (jobIdRaw instanceof Object[]) {
+                Object[] arr = (Object[]) jobIdRaw;
+                jobIdStr = arr.length > 0 ? String.valueOf(arr[0]) : "kosong";
+            }
+
+            System.out.println("  name   : " + emp.get("name"));
+            System.out.println("  barcode: " + emp.get("barcode")); // null = tidak ada barcode di Odoo
+            System.out.println("  job_id : " + jobIdStr);
+            System.out.println("  ---");
+        }
+    }
 }

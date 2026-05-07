@@ -126,8 +126,30 @@ public class OdooRpc {
      *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-records">List
      *      Records</a>
      */
-    @Nonnull
     public Integer[] search(String model, SearchFilter[] filters, String order, Integer offset, Integer limit)
+            throws OdooCallMethodException {
+        return search(model, null, filters, order, offset, limit);
+    }
+
+    /**
+     * Search
+     * <p>
+     * Implementation of odoo's xmlrpc <b>search()</b> method
+     *
+     * @param model
+     * @param fields
+     * @param filters
+     * @param order
+     * @param offset
+     * @param limit
+     * @return
+     * @throws OdooCallMethodException
+     * @see <a href=
+     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#list-records">List
+     *      Records</a>
+     */
+    @Nonnull
+    public Integer[] search(String model, String[] fields, SearchFilter[] filters, String order, Integer offset, Integer limit)
             throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -144,6 +166,8 @@ public class OdooRpc {
                     new Object[] { objectFilters },
                     new HashMap<String, Object>() {
                         {
+                            if (fields != null && fields.length > 0)
+                                put("fields", fields);
                             if (offset != null)
                                 put("offset", offset);
                             if (limit != null)
@@ -179,8 +203,30 @@ public class OdooRpc {
      *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#search-and-read">Search
      *      and Read</a>
      */
-    @Nonnull
     public Map<String, Object>[] searchRead(String model, SearchFilter[] filters, String order, Integer offset,
+            Integer limit) throws OdooCallMethodException {
+        return searchRead(model, null, filters, order, offset, limit);
+    }
+
+    /**
+     * Search Read
+     * <p>
+     * Implementation of odoo's xmlrpc <b>search_read()</b> method
+     *
+     * @param model
+     * @param fields
+     * @param filters
+     * @param order
+     * @param offset
+     * @param limit
+     * @return
+     * @throws OdooCallMethodException
+     * @see <a href=
+     *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#search-and-read">Search
+     *      and Read</a>
+     */
+    @Nonnull
+    public Map<String, Object>[] searchRead(String model, String[] fields, SearchFilter[] filters, String order, Integer offset,
             Integer limit) throws OdooCallMethodException {
         try {
             final int uid = login();
@@ -197,6 +243,8 @@ public class OdooRpc {
                     new Object[] { objectFilters },
                     new HashMap<String, Object>() {
                         {
+                            if (fields != null && fields.length > 0)
+                                put("fields", fields);
                             if (offset != null)
                                 put("offset", offset);
                             if (limit != null)
