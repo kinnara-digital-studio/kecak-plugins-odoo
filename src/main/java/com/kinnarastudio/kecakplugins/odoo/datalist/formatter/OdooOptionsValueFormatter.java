@@ -3,6 +3,7 @@ package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
@@ -24,12 +25,10 @@ import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
 public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
     public final static String LABEL = "Odoo Options Value Formatter";
 
-    Map<String, String> optionMap = null;
+    //Map<String, String> optionMap = null;
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
-        final String[] ids = getIds(dataList, column);
-        final Map<String, String> options = getOptionMap(ids);
 
         if (value instanceof Object[]) {
             Object[] arrValue = (Object[]) value;
@@ -38,19 +37,9 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 
             if ("true".equals(getPropertyString("isMultiValue"))) {
                 for (int i = 0; i < arrValue.length; i++) {
-                    String current = String.valueOf(arrValue[i]);
-
-                    if (options.containsKey(current)) {
-                        String mapOptionString = options.get(current);
-
-                        if (mapOptionString != null && !mapOptionString.equalsIgnoreCase("null")) {
-                            arrValue[i] = options.get(current);
-                        } else {
-                            arrValue[i] = current;
-                        }
-                    } else {
-                        arrValue[i] = current;
-                    }
+                    String current = extractIdAsString(arrValue[i]); // <-- ganti String.valueOf jadi extractIdAsString
+                    String mapped = getLabelById(current);
+                    arrValue[i] = (mapped != null && !mapped.equalsIgnoreCase("null")) ? mapped : current;
                 }
 
                 String[] stringArray = Arrays.stream(arrValue)
@@ -61,31 +50,15 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                 return finalResult;
             }
 
-            return Optional.of(value)
-                .map(v -> (Object[]) v)
-                .stream()
-                .flatMap(Arrays::stream)
-                .findFirst()
-                .map(val -> Optional.of(val)
-                        .map(String::valueOf)
-                        .map(s -> s.split(";"))
-                        .stream()
-                        .flatMap(Arrays::stream)
-                        .filter(options::containsKey)
-                        .map(options::get)
-                        .collect(Collectors.joining(", ")))
-                .orElseGet(() -> String.valueOf(value));
+            String id = extractIdAsString(value); // ambil ID dari [42, "John"]
+            String label = getLabelById(id);
+            return label != null ? label : id;
         }
-        
-        String val = String.valueOf(value);
 
+        String val = extractIdAsString(value);
         LogUtil.debug(getClassName(), "Val: [" + val + "]");
-
-        if (options.containsKey(val)) {
-            return options.get(val);
-        }
-
-        return val;
+        String label = getLabelById(val);
+        return label != null ? label : val;
     }
 
     @Override
@@ -125,109 +98,129 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         return AppUtil.readPluginResource(getClassName(), "/properties/datalist/formatter/OdooOptionsValueFormatter.json", args, true, null);
     }
 
-    protected Map<String, String> getOptionMap(String[] ids) {
-        FormBinder optionBinder;
+    /**
+     * Lookup label untuk satu ID.
+     * Cache per ID di CacheUtil — key: className + columnName + id
+     * Kalau belum ada di cache, fetch ke Odoo hanya untuk ID ini.
+     */
+    private String getLabelById(String id) {
+        if (id == null || id.isEmpty()) return null;
+
+        String cacheKey = getClassName() + "_label_" + id;
+        String cached = (String) CacheUtil.getCached(cacheKey);
+        if (cached != null) {
+            LogUtil.debug(getClassName(), "Cache hit ID: " + id + " → " + cached);
+            return cached;
+        }
+
+        // Fetch ke Odoo hanya untuk ID ini
+        Map<String, String> map = fetchOptionMap(new String[]{id});
+        String label = map.get(id);
+
+        if (label != null) {
+            CacheUtil.putCache(cacheKey, label);
+        }
+
+        return label;
+    }
+
+//    protected Map<String, String> getOptionMap(String[] ids) {
+//        FormBinder optionBinder;
+//        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+//        LogUtil.warn(getClassName(), "getOptionMap() called - instance: " + System.identityHashCode(this)
+//                + " optionMap: " + (optionMap == null ? "NULL" : "size=" + optionMap.size()));
+//
+//        if (optionMap != null) {
+//            return optionMap;
+//        }
+//
+//        optionMap = new HashMap<>();
+//
+//        Map<String, Object> optionsBinderProperties = (Map<String, Object>) this.getProperty("optionsBinder");
+//        if (optionsBinderProperties != null && optionsBinderProperties.get("className") != null && !optionsBinderProperties.get("className").toString().isEmpty() && (optionBinder = (FormBinder) pluginManager.getPlugin(optionsBinderProperties.get("className").toString())) != null) {
+//            optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
+//
+//            LogUtil.warn(getClassName(), "Calling load() - instance: " + System.identityHashCode(this));
+//
+//            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids);
+//
+//            LogUtil.warn(getClassName(), "load() returned - rowSet: " + (rowSet == null ? "NULL" : "size=" + rowSet.size()));
+//            if (rowSet != null) {
+//                optionMap = new HashMap<>();
+//                for (FormRow row : rowSet) {
+//                    String label;
+//                    Iterator<String> i = row.stringPropertyNames().iterator();
+//                    String value = row.getProperty("value");
+//                    if (value == null) {
+//                        String key = i.next();
+//                        value = row.getProperty(key);
+//                    }
+//                    if ((label = row.getProperty("label")) == null) {
+//                        String key = i.next();
+//                        label = row.getProperty(key);
+//                    }
+//                    optionMap.put(value, label);
+//                }
+//                LogUtil.warn(getClassName(), "optionMap filled - size: " + optionMap.size());
+//            }
+//        }
+//        return optionMap;
+//    }
+
+    private Map<String, String> fetchOptionMap(String[] ids) {
+        Map<String, String> result = new HashMap<>();
+
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
-        LogUtil.warn(getClassName(), "getOptionMap() called - instance: " + System.identityHashCode(this)
-                + " optionMap: " + (optionMap == null ? "NULL" : "size=" + optionMap.size()));
-
-        if (optionMap != null) {
-            return optionMap;
-        }
-
-        optionMap = new HashMap<>();
-
         Map<String, Object> optionsBinderProperties = (Map<String, Object>) this.getProperty("optionsBinder");
-        if (optionsBinderProperties != null && optionsBinderProperties.get("className") != null && !optionsBinderProperties.get("className").toString().isEmpty() && (optionBinder = (FormBinder) pluginManager.getPlugin(optionsBinderProperties.get("className").toString())) != null) {
-            optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
 
-            LogUtil.warn(getClassName(), "Calling load() - instance: " + System.identityHashCode(this));
-
-            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids);
-
-            LogUtil.warn(getClassName(), "load() returned - rowSet: " + (rowSet == null ? "NULL" : "size=" + rowSet.size()));
-            if (rowSet != null) {
-                optionMap = new HashMap<>();
-                for (FormRow row : rowSet) {
-                    String label;
-                    Iterator<String> i = row.stringPropertyNames().iterator();
-                    String value = row.getProperty("value");
-                    if (value == null) {
-                        String key = i.next();
-                        value = row.getProperty(key);
-                    }
-                    if ((label = row.getProperty("label")) == null) {
-                        String key = i.next();
-                        label = row.getProperty(key);
-                    }
-                    optionMap.put(value, label);
-                }
-                LogUtil.warn(getClassName(), "optionMap filled - size: " + optionMap.size());
-            }
+        if (optionsBinderProperties == null
+                || optionsBinderProperties.get("className") == null
+                || optionsBinderProperties.get("className").toString().isEmpty()) {
+            return result;
         }
-        return optionMap;
-    }
 
-    private String[] getIds(DataList dataList, DataListColumn column) {
-        final String columnName = column.getName();
+        FormBinder optionBinder = (FormBinder) pluginManager.getPlugin(
+                optionsBinderProperties.get("className").toString());
+        if (optionBinder == null || !(optionBinder instanceof FormAjaxOptionsBinder)) {
+            return result;
+        }
 
-        // Step 1: Collect all unique IDs from the DataList rows
-        Set<Integer> ids = Set.of();
+        optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
+
         try {
-            @SuppressWarnings("unchecked")
-            Collection<Object> rows = dataList.getRows();
-            ids = rows.stream()
-                    .map(row -> {
-                        Object val;
-                        if (row instanceof Map) {
-                            val = ((Map<?, ?>) row).get(columnName);
-                        } else {
-                            return null;
-                        }
-                        return extractId(val);
-                    })
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toSet());
+            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids);
+            if (rowSet != null) {
+                for (FormRow r : rowSet) {
+                    String value = r.getProperty("value");
+                    String label = r.getProperty("label");
+                    if (value != null && !value.isEmpty()) {
+                        result.put(normalizeKey(value), label != null ? label : value);
+                    }
+                }
+            }
         } catch (Exception e) {
-            LogUtil.warn(getClassName(), "Failed to collect IDs from DataList: " + e.getMessage());
+            LogUtil.warn(getClassName(), "fetchOptionMap gagal untuk IDs "
+                    + Arrays.toString(ids) + ": " + e.getMessage());
         }
 
-        if (ids.isEmpty()) {
-            LogUtil.debug(getClassName(), "No IDs to look up for column [" + columnName + "]");
-        }
-
-        return ids.stream()
-                .map(String::valueOf)
-                .toArray(String[]::new);
+        return result;
     }
 
-    private Integer extractId(Object value) {
-        if (value == null)
-            return null;
-
+    private String extractIdAsString(Object value) {
+        if (value == null) return null;
         if (value instanceof Object[]) {
             Object[] arr = (Object[]) value;
-            if (arr.length >= 1 && arr[0] instanceof Integer) {
-                return (Integer) arr[0];
-            }
-            if (arr.length >= 1) {
-                try {
-                    return Integer.parseInt(String.valueOf(arr[0]));
-                } catch (NumberFormatException e) {
-                    return null;
-                }
-            }
-            return null;
+            return arr.length > 0 ? normalizeKey(arr[0]) : null;
         }
+        return normalizeKey(value);
+    }
 
-        if (value instanceof Integer) {
-            return (Integer) value;
+    private String normalizeKey(Object val) {
+        if (val == null) return "";
+        if (val instanceof Double) {
+            double d = (Double) val;
+            if (d == Math.floor(d)) return String.valueOf((long) d);
         }
-
-        try {
-            return Integer.parseInt(String.valueOf(value));
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return String.valueOf(val);
     }
 }

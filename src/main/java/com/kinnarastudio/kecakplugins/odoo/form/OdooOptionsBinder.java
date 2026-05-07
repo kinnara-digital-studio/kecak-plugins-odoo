@@ -108,7 +108,15 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                 .toArray(SearchFilter[]::new);
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(),
-                database, user, model, valueField, labelField, groupingField, Arrays.stream(filters).map(SearchFilter::getValue).map(String::valueOf).collect(Collectors.joining()));
+                database, user, model, valueField, labelField, groupingField,
+                Arrays.stream(filters)
+                        .map(SearchFilter::getValue)
+                        .map(v -> {
+                            if (v instanceof Object[]) return Arrays.stream((Object[]) v).map(String::valueOf).collect(Collectors.joining("_"));
+                            if (v instanceof int[]) return Arrays.toString((int[]) v);
+                            return String.valueOf(v);
+                        })
+                        .collect(Collectors.joining()));
 
         final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
         if (cached != null && cached.size() > 1) {
@@ -116,18 +124,37 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             return cached;
         }
 
+//        LogUtil.info(getClassName(), labelFieldStream.toString());
+//        LogUtil.info(getClassName(), groupingFieldStream.toString());
+//
+//        LogUtil.info(getClassName(), Arrays.toString(requiredFields));
+
         try {
             final boolean hideEmptyValue = hideEmptyValue();
 
             final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
 
-            FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
+            Stream<String> labelFieldStream = fieldPattern.matcher(labelField)
+                    .results()
+                    .map(mr -> mr.group(1));
+
+            Stream<String> groupingFieldStream = fieldPattern.matcher(groupingField)
+                    .results()
+                    .map(mr -> mr.group(1));
+
+            String[] requiredFields = Stream.of(Stream.of(valueField), labelFieldStream, groupingFieldStream)
+                    .flatMap(s -> s)
+                    .filter(f -> f != null && !f.isEmpty())
+                    .distinct()
+                    .toArray(String[]::new);
+
+            FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
 
                         Matcher matcher = fieldPattern.matcher(labelField);
                         StringBuffer labelBuffer = new StringBuffer();
-                        
+
                         while (matcher.find()) {
                             String fieldName = matcher.group(1);
                             String fieldValue = formatOdooValue(m.get(fieldName));
