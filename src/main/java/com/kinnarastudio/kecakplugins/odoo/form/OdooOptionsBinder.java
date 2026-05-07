@@ -108,7 +108,15 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                 .toArray(SearchFilter[]::new);
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(),
-                database, user, model, valueField, labelField, groupingField, Arrays.stream(filters).map(SearchFilter::getValue).map(String::valueOf).collect(Collectors.joining()));
+                database, user, model, valueField, labelField, groupingField,
+                Arrays.stream(filters)
+                        .map(SearchFilter::getValue)
+                        .map(v -> {
+                            if (v instanceof Object[]) return Arrays.deepToString((Object[]) v);
+                            if (v instanceof int[]) return Arrays.toString((int[]) v);
+                            return String.valueOf(v);
+                        })
+                        .collect(Collectors.joining()));
 
         final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
         if (cached != null && cached.size() > 1) {
