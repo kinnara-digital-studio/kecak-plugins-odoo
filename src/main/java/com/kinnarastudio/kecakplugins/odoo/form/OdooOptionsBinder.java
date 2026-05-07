@@ -116,18 +116,23 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             return cached;
         }
 
+        String[] requiredFields = Stream.of(valueField, labelField, groupingField)
+                .filter(f -> f != null && !f.isEmpty())
+                .distinct()
+                .toArray(String[]::new);
+
         try {
             final boolean hideEmptyValue = hideEmptyValue();
 
             final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
 
-            FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
+            FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
 
                         Matcher matcher = fieldPattern.matcher(labelField);
                         StringBuffer labelBuffer = new StringBuffer();
-                        
+
                         while (matcher.find()) {
                             String fieldName = matcher.group(1);
                             String fieldValue = formatOdooValue(m.get(fieldName));
