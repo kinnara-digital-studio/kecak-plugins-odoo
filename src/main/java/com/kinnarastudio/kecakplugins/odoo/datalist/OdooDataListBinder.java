@@ -92,9 +92,25 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
         final SearchFilter[] filters = getFilters(filterQueryObjects);
 
+        final String primaryKey = getPrimaryKeyColumnName();
+        final String[] fields = Optional.ofNullable(dataList.getColumns())
+                .map(cols -> Arrays.stream(cols)
+                        .map(DataListColumn::getName)
+                        .filter(name -> name != null && !name.isEmpty())
+                        .distinct()
+                        .toArray(String[]::new))
+                .filter(arr -> arr.length > 0)
+                .map(arr -> {
+                    boolean hasPrimaryKey = Arrays.asList(arr).contains(primaryKey);
+                    if (hasPrimaryKey) return arr;
+                    return Stream.concat(Stream.of(primaryKey), Arrays.stream(arr))
+                            .toArray(String[]::new);
+                })
+                .orElse(null);
+
         try {
             final String order = sort == null ? null : String.join(" ", sort, desc != null && desc ? "desc" : "");
-            return Arrays.stream(rpc.searchRead(model, filters, order, start, rows))
+            return Arrays.stream(rpc.searchRead(model, fields, filters, order, start, rows))
                     .collect(Collectors.toCollection(DataListCollection<Map>::new));
 
         } catch (OdooCallMethodException e) {
