@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 
 public class CacheUtil {
     public static String getCacheKey(Class<?> caller, String... args) {
-        return String.join("_", caller.getName(), getSessionId(), String.join("_", args));
+        return String.join("_", caller.getName(), String.join("_", args));
     }
 
     public static String getSessionId() {
