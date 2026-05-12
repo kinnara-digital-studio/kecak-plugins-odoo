@@ -68,7 +68,19 @@
               },
               {
                 "value": "in",
-                "label": "IN"
+                "label": "In"
+              },
+              {
+                "value": "not in",
+                "label": "Not In"
+              },
+              {
+                "value": "=ilike",
+                "label": "Like"
+              },
+              {
+                "value": "not =ilike",
+                "label": "Not Like"
               }
             ]
           },

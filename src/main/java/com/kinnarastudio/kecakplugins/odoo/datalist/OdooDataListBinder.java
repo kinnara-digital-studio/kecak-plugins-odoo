@@ -206,9 +206,12 @@ public class OdooDataListBinder extends DataListBinderDefault {
                                 })
                                 .filter(Objects::nonNull)
                                 .toArray();
+                    } else if(f.getDataType() == DataType.INTEGER) {
+                        value = Integer.parseInt(f.getValue());
                     } else {
-                        value = f.getDataType() == DataType.INTEGER ? Integer.parseInt(f.getValue()) : f.getValue();
+                        value = f.getValue();
                     }
+
                     return new SearchFilter(f.getField(), f.getOperator(), value);
                 }, (NumberFormatException ignored) -> null))
                 .filter(Objects::nonNull);

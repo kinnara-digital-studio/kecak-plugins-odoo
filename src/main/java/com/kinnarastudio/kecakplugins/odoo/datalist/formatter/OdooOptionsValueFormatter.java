@@ -1,13 +1,8 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListColumn;
