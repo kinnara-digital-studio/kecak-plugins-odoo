@@ -75,12 +75,20 @@
                 "label": "Not In"
               },
               {
-                "value": "=ilike",
+                "value": "=like",
                 "label": "Like"
               },
               {
-                "value": "not =ilike",
+                "value": "not =like",
                 "label": "Not Like"
+              },
+              {
+                "value": "=ilike",
+                "label": "ILike"
+              },
+              {
+                "value": "not =ilike",
+                "label": "Not ILike"
               }
             ]
           },

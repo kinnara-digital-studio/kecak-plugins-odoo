@@ -62,24 +62,7 @@
             "key": "dataType",
             "label": "Data Type",
             "required": "true",
-            "options": [
-              {
-                "value": "string",
-                "label": "String"
-              },
-              {
-                "value": "integer",
-                "label": "Integer"
-              },
-              {
-                "value": "float",
-                "label": "Float"
-              },
-              {
-                "value": "boolean",
-                "label": "Boolean"
-              }
-            ]
+            "options": %s
           },
           {
             "key": "value",

@@ -5,6 +5,7 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 import org.joget.apps.app.service.AppUtil;
@@ -15,6 +16,8 @@ import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -71,23 +74,40 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
             String key = entry.getKey();
             Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
 
-            String dataType = String.valueOf(valueMap.get("dataType"));
+            DataType dataType = DataType.parse(String.valueOf(valueMap.get("dataType")));
             Object rawValue = valueMap.get("value");
 
             if (dataType != null && rawValue != null) {
-                switch (dataType.toLowerCase()) {
-                    case "string":
+                switch (dataType) {
+                    case STRING:
                         parsedRecord.put(key, String.valueOf(rawValue));
                         break;
-                    case "integer":
+                    case MANY2ONE:
+                    case INTEGER:
                         parsedRecord.put(key, Integer.valueOf(rawValue.toString()));
                         break;
-                    case "float":
+                    case FLOAT:
                         parsedRecord.put(key, Float.valueOf(rawValue.toString()));
                         break;
-                    case "boolean":
+                    case BOOLEAN:
                         parsedRecord.put(key, Boolean.valueOf(rawValue.toString().toLowerCase()));
                         break;
+                    case MANY2MANY:
+                        int[] intValues = Optional.of(rawValue)
+                                .map(String::valueOf)
+                                .filter(Predicate.not(String::isEmpty))
+                                .map(s -> s.split(";"))
+                                .stream()
+                                .flatMap(Arrays::stream)
+                                .map(String::trim)
+                                .filter(Predicate.not(String::isEmpty))
+                                .map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> null))
+                                .filter(Objects::nonNull)
+                                .mapToInt(Integer::intValue)
+                                .toArray();
+                        parsedRecord.put(key, intValues);
+                        break;
+
                     default:
                         parsedRecord.put(key, rawValue.toString());
                 }
@@ -169,7 +189,26 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
     public String getPropertyOptions() {
         final String[] resources = new String[]{"/properties/common/OdooAuthorization.json", "/properties/process/OdooRpcTool.json"};
 
-        return Arrays.stream(resources).map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere")).map(Try.onFunction(JSONArray::new)).flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject))).collect(JSONCollectors.toJSONArray()).toString();
+        final JSONArray jsonDataType = Arrays.stream(DataType.values())
+                .map(val -> new JSONObject() {{
+                    try {
+                        put("name", val.name());
+                        put("label", val.name());
+                    } catch (JSONException ignored) {
+                    }
+                }})
+                .collect(JSONCollectors.toJSONArray());
+
+        final Object[] args = new Object[] {
+                jsonDataType.toString()
+        };
+
+        return Arrays.stream(resources)
+                .map(s -> AppUtil.readPluginResource(getClassName(), s, args, true, "/messages/Idempiere"))
+                .map(Try.onFunction(JSONArray::new))
+                .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
+                .collect(JSONCollectors.toJSONArray())
+                .toString();
     }
 
     /**
@@ -178,7 +217,11 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
      * @return
      */
     protected long getDelayedExecutionTime() {
-        return Optional.of("delay").map(this::getPropertyString).filter(Predicate.not(String::isEmpty)).map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> 0)).orElse(0);
+        return Optional.of("delay")
+                .map(this::getPropertyString)
+                .filter(Predicate.not(String::isEmpty))
+                .map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> 0))
+                .orElse(0);
     }
 
     /**
