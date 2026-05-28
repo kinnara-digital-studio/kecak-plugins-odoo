@@ -91,15 +91,12 @@ public class OdooTest {
 
     @org.junit.Test
     public void testWrite() throws OdooCallMethodException {
-        String model = "stock.movements";
-        SearchFilter[] filter = SearchFilter.single("name", "PB00010");
-        int recordId = rpc.search(model, filter, null, null, 4)[0];
+        String model = "item.request";
+        int recordId = 429;
 
-        rpc.write(model, recordId, new HashMap<>() {
-            {
-                put("goods_withdrawal_categories", 1);
-            }
-        });
+        rpc.write(model, recordId, new HashMap<>() {{
+            put("api_approver_ids", new Integer[]{313});
+        }});
     }
 
     @org.junit.Test

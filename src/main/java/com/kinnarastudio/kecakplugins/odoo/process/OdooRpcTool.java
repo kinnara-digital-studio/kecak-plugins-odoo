@@ -93,7 +93,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                         parsedRecord.put(key, Boolean.valueOf(rawValue.toString().toLowerCase()));
                         break;
                     case MANY2MANY:
-                        int[] intValues = Optional.of(rawValue)
+                        Integer[] intValues = Optional.of(rawValue)
                                 .map(String::valueOf)
                                 .filter(Predicate.not(String::isEmpty))
                                 .map(s -> s.split(";"))
@@ -103,8 +103,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                                 .filter(Predicate.not(String::isEmpty))
                                 .map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> null))
                                 .filter(Objects::nonNull)
-                                .mapToInt(Integer::intValue)
-                                .toArray();
+                                .toArray(Integer[]::new);
                         parsedRecord.put(key, intValues);
                         break;
 
@@ -192,14 +191,14 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         final JSONArray jsonDataType = Arrays.stream(DataType.values())
                 .map(val -> new JSONObject() {{
                     try {
-                        put("name", val.name());
+                        put("value", val.name());
                         put("label", val.name());
                     } catch (JSONException ignored) {
                     }
                 }})
                 .collect(JSONCollectors.toJSONArray());
 
-        final Object[] args = new Object[] {
+        final Object[] args = new Object[]{
                 jsonDataType.toString()
         };
 
