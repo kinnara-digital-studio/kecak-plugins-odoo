@@ -99,7 +99,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                 String[] requiredFields = fieldsSet.toArray(new String[0]);
 
                 // Safety limit to optimize cross-network XML-RPC payload parsing sizes
-                Object[] results = rpc.searchRead(model, requiredFields, filtersList.toArray(new SearchFilter[0]), "id", 0, 200);
+                Object[] results = rpc.searchRead(model, requiredFields, filtersList.toArray(new SearchFilter[0]), "id", null, null);
 
                 final Set<String> seenValues = new HashSet<>();
                 final FormRowSet ret = new FormRowSet();
