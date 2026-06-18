@@ -57,17 +57,13 @@ public class OdooTestConnectionWebService extends DefaultApplicationPlugin imple
             String user = getParameter(servletRequest, "user");
             String apiKey = getParameter(servletRequest, "apiKey");
 
-            LogUtil.info(getClassName(), "webService baseUrl: " + baseUrl);
-            LogUtil.info(getClassName(), "webService database: " + database);
-            LogUtil.info(getClassName(), "webService user: " + user);
-            LogUtil.info(getClassName(), "webService apiKey: " + apiKey);
-
             OdooRpc odooRpc = new OdooRpc(baseUrl, database, user, apiKey);
 
             boolean success =  odooRpc.login() > 0;
             message = success ? "Connection successful" : "Connection failed";
 
         } catch (ApiException | OdooAuthorizationException e) {
+            LogUtil.error(getClassName(), e, e.getMessage());
             message = e.getMessage();
         }
 
@@ -76,6 +72,7 @@ public class OdooTestConnectionWebService extends DefaultApplicationPlugin imple
             jsonObject.put("message", message);
             servletResponse.getWriter().write(jsonObject.toString());
         } catch (JSONException e) {
+            LogUtil.error(getClassName(), e, e.getMessage());
             throw new ServletException(e);
         }
     }
