@@ -10,6 +10,8 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListBinderDefault;
@@ -167,13 +169,15 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[] {
-                "/properties/common/OdooAuthorization.json",
-                "/properties/datalist/OdooDataListBinder.json"
+        final Object[] args =  new Object[]{OdooTestConnectionWebService.class.getName() };
+
+        final Pair<String, Object[]>[] resources = new Pair[] {
+                Pair.of("/properties/common/OdooAuthorization.json", args),
+                Pair.of("/properties/datalist/OdooDataListBinder.json", null)
         };
 
         return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere"))
+                .map(pair -> AppUtil.readPluginResource(getClassName(), pair.getLeft(), pair.getRight(), true, ""))
                 .map(Try.onFunction(JSONArray::new))
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())

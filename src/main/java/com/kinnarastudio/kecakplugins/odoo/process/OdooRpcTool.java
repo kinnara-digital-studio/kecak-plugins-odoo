@@ -3,11 +3,13 @@ package com.kinnarastudio.kecakplugins.odoo.process;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.commons.util.LogUtil;
@@ -186,8 +188,6 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{"/properties/common/OdooAuthorization.json", "/properties/process/OdooRpcTool.json"};
-
         final JSONArray jsonDataType = Arrays.stream(DataType.values())
                 .map(val -> new JSONObject() {{
                     try {
@@ -198,12 +198,16 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                 }})
                 .collect(JSONCollectors.toJSONArray());
 
-        final Object[] args = new Object[]{
-                jsonDataType.toString()
+        final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
+        final Object[] odooRpc = new Object[]{jsonDataType.toString()};
+
+        final Pair<String, Object[]>[] resources = new Pair[]{
+                Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
+                Pair.of("/properties/process/OdooRpcTool.json", odooRpc)
         };
 
         return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, args, true, "/messages/Idempiere"))
+                .map(pair -> AppUtil.readPluginResource(getClassName(), pair.getLeft(), pair.getRight(), true, ""))
                 .map(Try.onFunction(JSONArray::new))
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())

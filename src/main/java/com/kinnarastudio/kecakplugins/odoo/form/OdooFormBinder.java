@@ -3,10 +3,12 @@ package com.kinnarastudio.kecakplugins.odoo.form;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.model.*;
@@ -171,13 +173,16 @@ public class OdooFormBinder extends FormBinder implements FormLoadBinder, FormSt
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{
-                "/properties/common/OdooAuthorization.json",
-                "/properties/form/OdooFormBinder.json"
+        final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
+        final Object[] argsOdooBinder = null;
+
+        final Pair<String, Object[]>[] resources = new Pair[]{
+                Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
+                Pair.of("/properties/form/OdooFormBinder.json", argsOdooBinder)
         };
 
         return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere"))
+                .map(pair -> AppUtil.readPluginResource(getClassName(), pair.getLeft(), pair.getRight(), true, "/messages/Idempiere"))
                 .map(Try.onFunction(JSONArray::new))
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())

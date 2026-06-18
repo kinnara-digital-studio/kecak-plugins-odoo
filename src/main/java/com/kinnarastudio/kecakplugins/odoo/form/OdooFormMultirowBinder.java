@@ -3,6 +3,7 @@ package com.kinnarastudio.kecakplugins.odoo.form;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
@@ -217,13 +218,16 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{
-                "/properties/common/OdooAuthorization.json",
-                "/properties/form/OdooFormMultirowBinder.json"
+        final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
+        final Object[] argsOdooBinder = null;
+
+        final Pair<String, Object[]>[] resources = new Pair[]{
+                Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
+                Pair.of("/properties/form/OdooFormMultirowBinder.json", argsOdooBinder)
         };
 
         return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Odoo"))
+                .map(pair -> AppUtil.readPluginResource(getClassName(), pair.getLeft(), pair.getRight(), true, "/messages/Odoo"))
                 .map(Try.onFunction(JSONArray::new))
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())
