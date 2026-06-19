@@ -58,9 +58,9 @@ public class OdooTestConnectionWebService extends DefaultApplicationPlugin imple
             String apiKey = getParameter(servletRequest, "apiKey");
 
             OdooRpc odooRpc = new OdooRpc(baseUrl, database, user, apiKey);
-
-            boolean success =  odooRpc.login() > 0;
-            message = success ? "Connection successful" : "Connection failed";
+            int uid = odooRpc.login();
+            boolean success = uid > 0;
+            message = success ? "Connection successful [uid=" + uid + "]" : "Connection failed";
 
         } catch (ApiException | OdooAuthorizationException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
@@ -111,7 +111,7 @@ public class OdooTestConnectionWebService extends DefaultApplicationPlugin imple
                         s = AppUtil.processHashVariable(s, null, null, null);
                         counter--;
 
-                        if(counter <= 0) break;
+                        if (counter <= 0) break;
                     }
 
                     return s;
