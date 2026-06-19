@@ -7,6 +7,7 @@ import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.plugin.base.PluginWebSupport;
+import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kecak.apps.exception.ApiException;
@@ -50,6 +51,10 @@ public class OdooTestConnectionWebService extends DefaultApplicationPlugin imple
 
     @Override
     public void webService(HttpServletRequest servletRequest, HttpServletResponse servletResponse) throws ServletException, IOException {
+        if(!WorkflowUtil.isCurrentUserInRole(WorkflowUtil.ROLE_ADMIN)) {
+            throw new ServletException("Only Administrator is allowed to perform this action");
+        }
+
         String message;
         try {
             String baseUrl = getParameter(servletRequest, "baseUrl");
