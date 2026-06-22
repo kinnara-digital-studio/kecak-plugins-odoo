@@ -66,8 +66,7 @@
           },
           {
             "key": "value",
-            "label": "Value",
-            "required": "true"
+            "label": "Value"
           }
         ]
       },

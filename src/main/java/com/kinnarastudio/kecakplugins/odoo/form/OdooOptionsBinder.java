@@ -1,10 +1,14 @@
 package com.kinnarastudio.kecakplugins.odoo.form;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -49,101 +53,109 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
+        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final String valueField = getValueField();
         final String labelField = getLabelField();
         final String groupingField = getGroupingField();
 
-        final List<SearchFilter> filtersList = new ArrayList<>(Arrays.asList(OdooDataListBinderUtil.getFilter(this)));
-        String dependencyKeyPart = "none";
+        final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
+        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Optional.ofNullable(dependencyValues)
+                .stream()
+                .flatMap(Arrays::stream)
+                .filter(Predicate.not(String::isEmpty))
+                .map(s -> {
+                    try {
+                        return new SearchFilter(groupingField, Integer.parseInt(s));
+                    } catch (NumberFormatException e) {
+                        return new SearchFilter(groupingField, s);
+                    }
+                });
 
-        if (dependencyValues != null && dependencyValues.length > 0) {
-            Object[] sanitizedIds = Arrays.stream(dependencyValues)
-                    .filter(s -> s != null && !s.isEmpty() && !"null".equalsIgnoreCase(s))
-                    .map(s -> {
-                        try { return Integer.parseInt(s); }
-                        catch (NumberFormatException e) { return s; }
-                    })
-                    .toArray();
+        final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
+                .toArray(SearchFilter[]::new);
 
-            if (sanitizedIds.length > 0) {
-                dependencyKeyPart = Arrays.toString(sanitizedIds);
-                String targetField = groupingField.isEmpty() ? valueField : groupingField;
-                filtersList.add(new SearchFilter(targetField, SearchFilter.IN, sanitizedIds));
-            } else {
-                return new FormRowSet();
-            }
+        final String cacheKey = CacheUtil.getCacheKey(this.getClass(),
+                database, user, model, valueField, labelField, groupingField, Arrays.stream(filters).map(SearchFilter::getValue).map(String::valueOf).collect(Collectors.joining()));
+
+        final FormRowSet cached = (FormRowSet) CacheUtil.getCached(cacheKey);
+        if (cached != null && cached.size() > 1) {
+            LogUtil.debug(getClassName(), "Cache hit for key " + cacheKey);
+            return cached;
         }
 
-        // Generate a completely isolated unique memory key
-        final String cacheKey = database + "_" + model + "_" + valueField + "_" + labelField + "_" + groupingField + "_" + dependencyKeyPart;
+        try {
+            final boolean hideEmptyValue = hideEmptyValue();
 
-        // Capture configuration securely before handing off context to the background worker
-        final boolean hideEmpty = hideEmptyValue();
-        final String emptyLabelStr = getEmptyLabel();
-        final String showLabelOnlyStr = getPropertyString("showLabelOnly");
+            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)\\])?(?!\\w)");
 
-        OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+            FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
+                    .map(m -> {
+                        final String value = String.valueOf(m.get(valueField));
 
-        final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)\\b");
+                        Matcher matcher = fieldPattern.matcher(labelField);
+                        StringBuffer labelBuffer = new StringBuffer();
+                        
+                        while (matcher.find()) {
+                            String fieldName = matcher.group(1);
+                            String indexStr = matcher.group(2);
+                            Object rawValue = m.get(fieldName);
+                            
+                            String fieldValue;
+                            if (indexStr != null && rawValue instanceof Object[]) {
+                                Object[] arr = (Object[]) rawValue;
+                                int index = Integer.parseInt(indexStr);
+                                if (index >= 0 && index < arr.length) {
+                                    fieldValue = String.valueOf(arr[index]);
+                                } else {
+                                    fieldValue = "";
+                                }
+                            } else {
+                                fieldValue = formatOdooValue(rawValue);
+                            }
+                            
+                            matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
+                        }
+                        matcher.appendTail(labelBuffer);
+                        final String label = labelBuffer.toString();
 
-        return CacheUtil.getFromCache(cacheKey, () -> {
-            try {
-                Set<String> fieldsSet = new HashSet<>();
-                fieldsSet.add(valueField);
-                if (!groupingField.isEmpty()) fieldsSet.add(groupingField);
-                Matcher mFields = fieldPattern.matcher(labelField);
-                while (mFields.find()) {
-                    fieldsSet.add(mFields.group(1));
-                }
-                String[] requiredFields = fieldsSet.toArray(new String[0]);
+                        final String grouping = String.valueOf(m.get(groupingField));
 
-                // Safety limit to optimize cross-network XML-RPC payload parsing sizes
-                Object[] results = rpc.searchRead(model, requiredFields, filtersList.toArray(new SearchFilter[0]), "id", 0, 200);
+                        if (hideEmptyValue && value.isEmpty())
+                            return null;
 
-                final Set<String> seenValues = new HashSet<>();
-                final FormRowSet ret = new FormRowSet();
-                ret.setMultiRow(true);
+                        if (getPropertyString("showLabelOnly").equalsIgnoreCase("true")) {
+                            return new FormRow() {{
+                                setProperty(FormUtil.PROPERTY_VALUE, value);
+                                setProperty(FormUtil.PROPERTY_LABEL, label);
+                                setProperty(FormUtil.PROPERTY_GROUPING, grouping);
+                            }};
+                        } else {
+                            return new FormRow() {{
+                                setProperty(FormUtil.PROPERTY_VALUE, value);
+                                setProperty(FormUtil.PROPERTY_LABEL, label + " (" + value + ")");
+                                setProperty(FormUtil.PROPERTY_GROUPING, grouping);
+                            }};
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toCollection(() -> new FormRowSet() {{
+                        setMultiRow(true);
+                        if (!hideEmptyValue) {
+                            add(new FormRow() {{
+                                setProperty(FormUtil.PROPERTY_VALUE, "");
+                                setProperty(FormUtil.PROPERTY_LABEL, getEmptyLabel());
+                            }});
+                        }
+                    }}));
 
-                if (!hideEmpty) {
-                    FormRow emptyRow = new FormRow();
-                    emptyRow.setProperty(FormUtil.PROPERTY_VALUE, "");
-                    emptyRow.setProperty(FormUtil.PROPERTY_LABEL, emptyLabelStr);
-                    ret.add(emptyRow);
-                }
+            LogUtil.debug(getClassName(), "Creating Cache for key " + cacheKey);
+            return CacheUtil.putCache(cacheKey, ret);
 
-                for (Object obj : results) {
-                    Map<String, Object> record = (Map<String, Object>) obj;
-                    String value = String.valueOf(record.getOrDefault(valueField, ""));
-                    if (value.isEmpty() || seenValues.contains(value)) continue;
-                    seenValues.add(value);
-
-                    Matcher matcher = fieldPattern.matcher(labelField);
-                    StringBuilder labelBuffer = new StringBuilder();
-                    while (matcher.find()) {
-                        String fieldName = matcher.group(1);
-                        String fieldValue = formatOdooValue(record.get(fieldName));
-                        matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
-                    }
-                    matcher.appendTail(labelBuffer);
-
-                    final String label = labelBuffer.toString();
-                    final String grouping = String.valueOf(record.getOrDefault(groupingField, ""));
-
-                    FormRow row = new FormRow();
-                    row.setId(value);
-                    row.setProperty(FormUtil.PROPERTY_VALUE, value);
-                    row.setProperty(FormUtil.PROPERTY_LABEL, "true".equalsIgnoreCase(showLabelOnlyStr) ? label : label + " (" + value + ")");
-                    row.setProperty(FormUtil.PROPERTY_GROUPING, grouping);
-                    ret.add(row);
-                }
-
-                return ret;
-            } catch (OdooCallMethodException e) {
-                LogUtil.error(getClassName(), e, "Error loading Odoo options: " + e.getMessage());
-                return null;
-            }
-        });
+        } catch (OdooCallMethodException e) {
+            LogUtil.error(getClass().getName(), e, e.getMessage());
+            return null;
+        }
     }
 
     @Override

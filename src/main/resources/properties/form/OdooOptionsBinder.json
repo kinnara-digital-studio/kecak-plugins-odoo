@@ -17,7 +17,8 @@
         "name": "labelField",
         "label": "Label field",
         "type": "textfield",
-        "required": "true"
+        "required": "true",
+        "description": "Label can be multiple fields. Ex: name - company_id[1]; id / name"
       },
       {
         "name": "formattingType",
