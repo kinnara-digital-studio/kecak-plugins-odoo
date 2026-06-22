@@ -1,10 +1,14 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import org.joget.apps.datalist.model.DataList;
+import org.joget.apps.datalist.model.DataListCollection;
+import org.joget.apps.datalist.model.DataListFilterQueryObject;
 import org.joget.plugin.base.ExtDefaultPlugin;
 
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
@@ -54,4 +58,5 @@ public final class OdooDataListBinderUtil {
                 })
                 .toArray(SearchFilter[]::new);
     }
+
 }

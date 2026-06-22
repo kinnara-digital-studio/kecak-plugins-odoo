@@ -3,7 +3,9 @@ package com.kinnarastudio.kecakplugins.odoo.datalist;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListActionUtil;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListActionDefault;
@@ -91,13 +93,16 @@ public class OdooDataListAction extends DataListActionDefault {
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[]{
-                "/properties/common/OdooAuthorization.json",
-                "/properties/datalist/OdooDataListAction.json"
+        final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
+        final Object[] argsOdooAction = null;
+
+        final Pair<String, Object[]>[] resources = new Pair[]{
+                Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
+                Pair.of("/properties/datalist/OdooDataListAction.json", argsOdooAction)
         };
 
         return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere"))
+                .map(pair -> AppUtil.readPluginResource(getClassName(), pair.getLeft(), pair.getRight(), true, ""))
                 .map(Try.onFunction(JSONArray::new))
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())

@@ -26,6 +26,14 @@
         "label": "API Key",
         "required": "true"
       }
+    ],
+    "buttons": [
+      {
+        "name": "testConnection",
+        "label": "Test Connection",
+        "ajax_url": "[CONTEXT_PATH]/web/json/app[APP_PATH]/plugin/%s/service",
+        "fields": ["baseUrl", "database", "user", "apiKey"]
+      }
     ]
   }
 ]

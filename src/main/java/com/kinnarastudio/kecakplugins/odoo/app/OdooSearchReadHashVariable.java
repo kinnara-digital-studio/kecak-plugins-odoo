@@ -1,5 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.app;
 
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
@@ -61,7 +62,8 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/common/OdooAuthorization.json");
+        final Object[] args = new Object[] {OdooTestConnectionWebService.class.getName() };
+        return AppUtil.readPluginResource(getClassName(), "/properties/common/OdooAuthorization.json", args, true, "");
     }
 
     @Override

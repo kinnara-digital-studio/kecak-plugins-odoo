@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListColumn;
@@ -265,13 +267,16 @@ public class OdooManyToOneLookupFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String getPropertyOptions() {
-        final String[] resources = new String[] {
-                "/properties/common/OdooAuthorization.json",
-                "/properties/datalist/formatter/OdooManyToOneLookupFormatter.json"
+        final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
+        final Object[] argsOdooFormatter = null;
+
+        final Pair<String, Object[]>[] resources = new Pair[]{
+                Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
+                Pair.of("/properties/datalist/formatter/OdooManyToOneLookupFormatter.json", argsOdooFormatter)
         };
 
         return Arrays.stream(resources)
-                .map(s -> AppUtil.readPluginResource(getClassName(), s, null, true, "/messages/Idempiere"))
+                .map(pair -> AppUtil.readPluginResource(getClassName(), pair.getLeft(), pair.getRight(), true, ""))
                 .map(Try.onFunction(JSONArray::new))
                 .flatMap(a -> JSONStream.of(a, Try.onBiFunction(JSONArray::getJSONObject)))
                 .collect(JSONCollectors.toJSONArray())

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.kinnarastudio.kecakplugins.odoo.app.OdooSearchReadHashVariable;
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooUserSignatureWebService;
 import com.kinnarastudio.kecakplugins.odoo.datalist.OdooDataListBinder;
 import com.kinnarastudio.kecakplugins.odoo.datalist.OdooDataListFilter;
@@ -37,6 +38,7 @@ public class Activator implements BundleActivator {
         registrationList.add(context.registerService(OdooSearchReadHashVariable.class.getName(), new OdooSearchReadHashVariable(), null));
         registrationList.add(context.registerService(OdooUserSignatureWebService.class.getName(), new OdooUserSignatureWebService(), null));
         registrationList.add(context.registerService(OdooManyToOneLookupFormatter.class.getName(), new OdooManyToOneLookupFormatter(), null));
+        registrationList.add(context.registerService(OdooTestConnectionWebService.class.getName(), new OdooTestConnectionWebService(), null));
     }
 
     public void stop(BundleContext context) {

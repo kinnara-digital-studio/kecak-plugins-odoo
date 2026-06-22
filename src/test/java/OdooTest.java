@@ -1,21 +1,14 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-
-import org.junit.Test;
-
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Please copy and rename this file to test.properties
@@ -188,11 +181,11 @@ public class OdooTest {
         // new SearchFilter("master_category_name", "=", "Finish Good", null)
         // };
 
-         SearchFilter[] filters = new SearchFilter[] {
-             new SearchFilter("master_category_name", "=", "Raw Material", SearchFilter.OR),
-             new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.AND),
-             new SearchFilter("id", "<", 30)
-         };
+        SearchFilter[] filters = new SearchFilter[]{
+                new SearchFilter("master_category_name", "=", "Raw Material", SearchFilter.OR),
+                new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.AND),
+                new SearchFilter("id", "<", 30)
+        };
 
         System.out.println("Executing OdooRpc searchRead...");
         Map<String, Object>[] result = rpc.searchRead(model, filters, "id", null, 100);
@@ -212,13 +205,13 @@ public class OdooTest {
         String model = "hr.employee";
 
         // Kita coba mencari pegawai dengan barcode 061489
-        SearchFilter[] filters = new SearchFilter[] { new SearchFilter("barcode", username) };
+        SearchFilter[] filters = new SearchFilter[]{new SearchFilter("barcode", username)};
 
         // Membatasi request agar HANYA mengambil field "job_id"
-        String[] fields = new String[] { "job_id", "barcode", "name" };
+        String[] fields = new String[]{"job_id", "barcode", "name"};
 
         // Memanggil overloaded method searchRead dengan parameter fields terbatas
-        Map<String, Object>[] records = rpc.searchRead(model, fields, filters , null, null, 1);
+        Map<String, Object>[] records = rpc.searchRead(model, fields, filters, null, null, 1);
 
         System.out.println("Cari barcode " + username + " -> Jumlah record yang ditemukan: " + records.length);
 
@@ -242,9 +235,9 @@ public class OdooTest {
         String model = "hr.employee";
         Integer targetJobId = 588;
 
-        SearchFilter[] filters = new SearchFilter[] { new SearchFilter("job_id", targetJobId) };
+        SearchFilter[] filters = new SearchFilter[]{new SearchFilter("job_id", targetJobId)};
 
-        String[] fields = new String[] { "job_id", "barcode", "name" };
+        String[] fields = new String[]{"job_id", "barcode", "name"};
 
         Map<String, Object>[] records = rpc.searchRead(model, fields, filters, null, null, null);
 
@@ -262,6 +255,23 @@ public class OdooTest {
             System.out.println("  barcode: " + emp.get("barcode")); // null = tidak ada barcode di Odoo
             System.out.println("  job_id : " + jobIdStr);
             System.out.println("  ---");
+        }
+    }
+
+    @Test
+    public void testCostCenter() throws OdooCallMethodException {
+        String model = "account.analytic.account";
+        Map<String, Object>[] records = rpc.searchRead(model, null, null, null, null);
+        for (Map<String, Object> record : records) {
+            record.forEach((key, value) -> {
+                System.out.println("[" + key + "] -> [" + value + "]");
+                if(value instanceof Object[]) {
+                    Object[] values = (Object[]) value;
+                    System.out.println("[" + key + "] -> [" + Arrays.stream(values).map(String::valueOf).collect(Collectors.joining(";")) + "]");
+                }
+            });
+
+            System.out.println("===== ");
         }
     }
 }
