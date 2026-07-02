@@ -1,8 +1,8 @@
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.Field;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class OdooTest {
 
     private final OdooRpc rpc;
 
-    public OdooTest() {
+    public OdooTest() throws com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException {
         final Properties properties = getProperties(PROPERTIES_FILE);
         baseUrl = properties.get("baseUrl").toString();
         database = properties.get("database").toString();
@@ -37,41 +37,38 @@ public class OdooTest {
     }
 
     @org.junit.Test
-    public void testLogin() throws OdooAuthorizationException {
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+    public void testLogin() throws com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException {
         int uid = rpc.login();
         assert uid == 2;
     }
 
     @org.junit.Test
     public void testSearch() throws OdooCallMethodException {
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
-
-        final Collection<Integer> records = new HashSet<>();
-        String model = "uom.uom";
+        String model = "hr.employee";
 
         // SearchFilter[] filters = SearchFilter.single("movement_id", 9);
-        SearchFilter[] filters = SearchFilter.single("product_template_id", false);
-        for (Map<String, Object> record : rpc.searchRead(model, filters, "id", null, null)) {
+        SearchFilter[] filters = new SearchFilter[] { new SearchFilter("active", false)};
+        String[] fields = new String[] {"id", "name", "company_id"};
+        for (Map<String, Object> record : rpc.searchRead(model, fields, filters, "id", null, 1)) {
             System.out.println(record.entrySet().stream().map(e -> e.getKey() + "->" + e.getValue())
                     .collect(Collectors.joining(" | ")));
         }
     }
 
     @org.junit.Test
-    public void testRead() throws OdooCallMethodException {
+    public void testRead() throws com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException {
 
         String model = "room.room";
         SearchFilter[] filter = null;
         int recordId = rpc.search(model, filter, null, null, 4)[0];
         final Map<String, Object> record = rpc.read(model, recordId)
-                .orElseThrow(() -> new OdooCallMethodException("record not found"));
+                .orElseThrow(() -> new com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException("record not found"));
 
         record.forEach((s, o) -> System.out.println(s + "->" + o));
     }
 
     @org.junit.Test
-    public void testFieldsGet() throws OdooCallMethodException {
+    public void testFieldsGet() throws com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException {
         final Collection<Field> fields = rpc.fieldsGet("hr.employee");
 
         assert !fields.isEmpty();
@@ -93,7 +90,7 @@ public class OdooTest {
     }
 
     @org.junit.Test
-    public void testCreate() throws OdooCallMethodException {
+    public void testCreate() throws com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException {
 
         String model = "product.template";
         final Map<String, Object> record = new HashMap<>() {
@@ -123,7 +120,7 @@ public class OdooTest {
     }
 
     @org.junit.Test
-    public void testDelete() throws OdooCallMethodException {
+    public void testDelete() throws com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException {
 
         String model = "stock.movements.lines";
 
@@ -182,9 +179,9 @@ public class OdooTest {
         // };
 
         SearchFilter[] filters = new SearchFilter[]{
-                new SearchFilter("master_category_name", "=", "Raw Material", SearchFilter.OR),
-                new SearchFilter("master_category_name", "=", "Finish Good", SearchFilter.AND),
-                new SearchFilter("id", "<", 30)
+                new SearchFilter("master_category_name", SearchFilter.Operator.EQUAL, "Raw Material", SearchFilter.Join.OR),
+                new SearchFilter("master_category_name", SearchFilter.Operator.EQUAL, "Finish Good", SearchFilter.Join.AND),
+                new SearchFilter("id", SearchFilter.Operator.LESS, 30)
         };
 
         System.out.println("Executing OdooRpc searchRead...");
@@ -195,6 +192,17 @@ public class OdooTest {
         for (Map<String, Object> r : result) {
             System.out.println("ID: " + r.get("id") + ", Name: " + r.get("name"));
         }
+    }
+
+    @Test
+    public void testSearchCount() throws OdooCallMethodException {
+        String model = "hr.employee";
+        SearchFilter[] filters = new SearchFilter[]{
+                new SearchFilter("barcode",  SearchFilter.Operator.NOT_EQUAL, ""),
+                new SearchFilter("active", new Object[] {false})
+        };
+        int count = rpc.searchCount(model, filters);
+        System.out.println(count);
     }
 
     @Test

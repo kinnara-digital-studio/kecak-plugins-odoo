@@ -39,7 +39,6 @@
         "name": "dataType",
         "label": "Data Type",
         "type": "selectbox",
-        "value": "string",
         "required": "true",
         "options": %s
       },
@@ -47,7 +46,7 @@
         "name": "conditionOperator",
         "label": "Condition Operator",
         "type": "textfield",
-        "value": "ilike",
+        "value": "=ilike",
         "control_field": "mode",
         "control_value": "custom",
         "required": "true"

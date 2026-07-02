@@ -1,15 +1,18 @@
 package com.kinnarastudio.kecakplugins.odoo.common.rpc;
 
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;
 
+@Deprecated
 public class OdooFilterQueryObject extends DataListFilterQueryObject implements IOdooFilter {
     private final String field;
     private final String value;
 
-    private final String operator;
+    private final SearchFilter.Operator operator;
     private final DataType dataType;
 
-    public OdooFilterQueryObject(String field, String operator, String value, DataType dataType) {
+    public OdooFilterQueryObject(String field, SearchFilter.Operator operator, String value, DataType dataType) {
         this.field = field;
         this.operator = operator;
         this.value = value;
@@ -23,6 +26,11 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
 
     @Override
     public String getOperator() {
+        return operator.name();
+    }
+
+    @Override
+    public SearchFilter.Operator getFilterOperator() {
         return operator;
     }
 

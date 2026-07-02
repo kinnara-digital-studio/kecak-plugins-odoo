@@ -1,8 +1,8 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist;
 
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooFilterQueryObject;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;
@@ -32,33 +32,31 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
 
     @Override
     public DataListFilterQueryObject getQueryObject(DataList dataList, String name) {
-        final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
-        final DataListFilterType filterPlugin = pluginManager.getPlugin(getFilterPlugin());
-
-        if(getValue(dataList, name) == null) {
+        if (getValue(dataList, name) == null) {
             return null;
         }
 
         final String value;
-        final String operator;
+        final SearchFilter.Operator operator;
 
         final String mode = getMode();
-        if("startsWith".equalsIgnoreCase(mode)) {
+        if ("startsWith".equalsIgnoreCase(mode)) {
             value = getValue(dataList, name) + "%";
-            operator = "=ilike";
-        } else if("contains".equalsIgnoreCase(mode)) {
+            operator = SearchFilter.Operator.ILIKE;
+        } else if ("contains".equalsIgnoreCase(mode)) {
             value = getValue(dataList, name);
-            operator = "ilike";
-        } else if("custom".equalsIgnoreCase(mode)) {
+            operator = SearchFilter.Operator.ILIKE;
+        } else if ("custom".equalsIgnoreCase(mode)) {
             value = getValue(dataList, name);
             name = getConditionField(name);
             operator = getConditionOperator();
         } else {
             value = getValue(dataList, name);
-            operator = "=";
+            operator = SearchFilter.Operator.EQUAL;
         }
 
-        final DataType dataType = getDataType();
+        final com.kinnarastudio.odooxmlrpc.model.DataType dataType = getDataType();
+
         return new OdooFilterQueryObject(name, operator, value, dataType);
     }
 
@@ -92,21 +90,17 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
 
     @Override
     public String getPropertyOptions() {
-        final Object[] args = new Object[] {
+        final Object[] args = new Object[]{
                 new JSONArray() {{
-                    put(new JSONObject() {{
-                        try {
-                            put("value", DataType.INTEGER.name());
-                            put("label", DataType.INTEGER.name());
-                        } catch (JSONException ignored) {}
-                    }});
-
-                    put(new JSONObject() {{
-                        try {
-                            put("value", DataType.STRING.name());
-                            put("label", DataType.STRING.name());
-                        } catch (JSONException ignored) {}
-                    }});
+                    for (DataType value : DataType.values()) {
+                        put(new JSONObject() {{
+                            try {
+                                put("value", value.name());
+                                put("label", value.name());
+                            } catch (JSONException ignored) {
+                            }
+                        }});
+                    }
                 }}.toString()
         };
 
@@ -121,8 +115,8 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
         return getPropertyString("mode");
     }
 
-    protected DataType getDataType () {
-        return DataType.valueOf(getPropertyString("dataType"));
+    protected com.kinnarastudio.odooxmlrpc.model.DataType getDataType() {
+        return com.kinnarastudio.odooxmlrpc.model.DataType.parse(getPropertyString("dataType"));
     }
 
     protected String getConditionField(String name) {
@@ -136,7 +130,7 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
         return sb.toString();
     }
 
-    protected String getConditionOperator() {
-        return getPropertyString("conditionOperator");
+    protected SearchFilter.Operator getConditionOperator() {
+        return SearchFilter.Operator.parse(getPropertyString("conditionOperator"));
     }
 }

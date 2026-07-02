@@ -130,13 +130,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
                                     if(strValue == null) return null;
 
-                                    final Object value;
-                                    if (type == DataType.INTEGER) {
-                                        value = Integer.parseInt(strValue);
-                                    } else {
-                                        value = strValue;
-                                    }
-
+                                    final Object value = type.valueParser(strValue);
                                     return Pair.of(f.getKey(), value);
                                 }, (Exception e) -> null))
                                 .filter(p -> Objects.nonNull(p) && Objects.nonNull(p.getRight()))

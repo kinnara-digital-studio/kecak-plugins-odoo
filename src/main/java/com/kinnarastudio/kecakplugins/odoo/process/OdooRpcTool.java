@@ -80,38 +80,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
             Object rawValue = valueMap.get("value");
 
             if (dataType != null && rawValue != null) {
-                switch (dataType) {
-                    case STRING:
-                        parsedRecord.put(key, String.valueOf(rawValue));
-                        break;
-                    case MANY2ONE:
-                    case INTEGER:
-                        parsedRecord.put(key, Integer.valueOf(rawValue.toString()));
-                        break;
-                    case FLOAT:
-                        parsedRecord.put(key, Float.valueOf(rawValue.toString()));
-                        break;
-                    case BOOLEAN:
-                        parsedRecord.put(key, Boolean.valueOf(rawValue.toString().toLowerCase()));
-                        break;
-                    case MANY2MANY:
-                        Integer[] intValues = Optional.of(rawValue)
-                                .map(String::valueOf)
-                                .filter(Predicate.not(String::isEmpty))
-                                .map(s -> s.split(";"))
-                                .stream()
-                                .flatMap(Arrays::stream)
-                                .map(String::trim)
-                                .filter(Predicate.not(String::isEmpty))
-                                .map(Try.onFunction(Integer::valueOf, (NumberFormatException e) -> null))
-                                .filter(Objects::nonNull)
-                                .toArray(Integer[]::new);
-                        parsedRecord.put(key, intValues);
-                        break;
-
-                    default:
-                        parsedRecord.put(key, rawValue.toString());
-                }
+                parsedRecord.put(key, dataType.valueParser(rawValue));
             }
         }
 

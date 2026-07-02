@@ -41,56 +41,7 @@
             "key": "operator",
             "label": "Operator",
             "required": "true",
-            "options": [
-              {
-                "value": "=",
-                "label": "Equal"
-              },
-              {
-                "value": "<>",
-                "label": "Not Equal"
-              },
-              {
-                "value": ">",
-                "label": "Greater Than"
-              },
-              {
-                "value": ">=",
-                "label": "Greater Equal"
-              },
-              {
-                "value": "<",
-                "label": "Less Than"
-              },
-              {
-                "value": "<=",
-                "label": "Less Equal"
-              },
-              {
-                "value": "in",
-                "label": "In"
-              },
-              {
-                "value": "not in",
-                "label": "Not In"
-              },
-              {
-                "value": "=like",
-                "label": "Like"
-              },
-              {
-                "value": "not =like",
-                "label": "Not Like"
-              },
-              {
-                "value": "=ilike",
-                "label": "ILike"
-              },
-              {
-                "value": "not =ilike",
-                "label": "Not ILike"
-              }
-            ]
+            "options": %s
           },
           {
             "key": "value",
@@ -100,31 +51,13 @@
             "key": "join",
             "label": "Join",
             "required": "true",
-            "options": [
-              {
-                "value": "AND",
-                "label": "AND"
-              },
-              {
-                "value": "OR",
-                "label": "OR"
-              }
-            ]
+            "options": %s
           },
           {
             "key": "dataType",
             "label": "Data Type",
             "required": "true",
-            "options": [
-              {
-                "value": "string",
-                "label": "STRING"
-              },
-              {
-                "value": "integer",
-                "label": "INTEGER"
-              }
-            ]
+            "options": %s
           }
         ]
       }

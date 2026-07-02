@@ -16,10 +16,13 @@ import java.util.stream.Collectors;
 /**
  * Odoo RPC
  *
+ * Deprecated user kinnara-odoo-xmlrpc library instead
+ *
  * @see <a href=
  *      "https://www.odoo.com/documentation/17.0/developer/reference/external_api.html#external-api">External
  *      API</a>
  */
+@Deprecated
 public class OdooRpc {
     public final static String PATH_COMMON = "/xmlrpc/2/common";
     public final static String PATH_OBJECT = "/xmlrpc/2/object";

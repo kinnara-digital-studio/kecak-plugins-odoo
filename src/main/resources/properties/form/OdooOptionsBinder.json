@@ -110,16 +110,7 @@
             "key": "dataType",
             "label": "Data Type",
             "required": "true",
-            "options": [
-              {
-                "value": "string",
-                "label": "STRING"
-              },
-              {
-                "value": "integer",
-                "label": "INTEGER"
-              }
-            ]
+            "options": %s
           }
         ]
       },

@@ -1,37 +1,30 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
-import org.apache.commons.lang3.tuple.Pair;
-import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.datalist.model.DataList;
-import org.joget.apps.datalist.model.DataListBinderDefault;
-import org.joget.apps.datalist.model.DataListCollection;
-import org.joget.apps.datalist.model.DataListColumn;
-import org.joget.apps.datalist.model.DataListFilterQueryObject;
-import org.joget.commons.util.LogUtil;
-import org.joget.plugin.base.PluginManager;
-import org.json.JSONArray;
-
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
+import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
 import com.kinnarastudio.kecakplugins.odoo.common.rpc.IOdooFilter;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
+import org.apache.commons.lang3.tuple.Pair;
+import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.datalist.model.*;
+import org.joget.apps.form.service.FormUtil;
+import org.joget.commons.util.LogUtil;
+import org.joget.plugin.base.PluginManager;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Odoo DataList Binder
@@ -39,17 +32,15 @@ import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 public class OdooDataListBinder extends DataListBinderDefault {
     public final static String LABEL = "Odoo DataList Binder";
 
-    public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<>() {
-        {
-            add("string");
-            add("date");
-            add("datetime");
-            add("integer");
-            add("char");
-            add("monetery");
-            add("boolean");
-        }
-    };
+    public final static Collection<String> VALID_COLUMN_TYPES = new HashSet<>() {{
+        add(DataType.STRING.name());
+        add("date");
+        add("datetime");
+        add("integer");
+        add("char");
+        add("monetery");
+        add("boolean");
+    }};
 
     @Override
     public DataListColumn[] getColumns() {
@@ -58,9 +49,9 @@ public class OdooDataListBinder extends DataListBinderDefault {
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
             return rpc.fieldsGet(model).stream()
                     .map(e -> {
                         final String field = e.getKey();
@@ -70,7 +61,8 @@ public class OdooDataListBinder extends DataListBinderDefault {
                     })
                     .toArray(DataListColumn[]::new);
 
-        } catch (OdooCallMethodException e) {
+        } catch (OdooAuthorizationException |
+                 com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return new DataListColumn[0];
         }
@@ -84,13 +76,12 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public DataListCollection getData(DataList dataList, Map properties, DataListFilterQueryObject[] filterQueryObjects,
-            String sort, Boolean desc, Integer start, Integer rows) {
+                                      String sort, Boolean desc, Integer start, Integer rows) {
         final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
         final String database = OdooAuthorizationUtil.getDatabase(this);
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final SearchFilter[] filters = getFilters(filterQueryObjects);
 
@@ -111,11 +102,13 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .orElse(null);
 
         try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+
             final String order = sort == null ? null : String.join(" ", sort, desc != null && desc ? "desc" : "");
             return Arrays.stream(rpc.searchRead(model, fields, filters, order, start, rows))
                     .collect(Collectors.toCollection(DataListCollection<Map>::new));
 
-        } catch (OdooCallMethodException e) {
+        } catch (OdooCallMethodException | OdooAuthorizationException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
         }
@@ -128,13 +121,13 @@ public class OdooDataListBinder extends DataListBinderDefault {
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final SearchFilter[] filters = getFilters(filterQueryObjects);
 
         try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+            final SearchFilter[] filters = getFilters(filterQueryObjects);
             return rpc.searchCount(model, filters);
-        } catch (OdooCallMethodException e) {
+        } catch (OdooCallMethodException | OdooAuthorizationException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return 0;
         }
@@ -169,11 +162,44 @@ public class OdooDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPropertyOptions() {
-        final Object[] args =  new Object[]{OdooTestConnectionWebService.class.getName() };
+        final Object[] authArgs = new Object[]{OdooTestConnectionWebService.class.getName()};
+
+        final JSONArray jsonOperator = Arrays.stream(SearchFilter.Operator.values())
+                .map(o -> new JSONObject() {{
+                    try {
+                        put(FormUtil.PROPERTY_VALUE, o.toString());
+                        put(FormUtil.PROPERTY_LABEL, o.name());
+                    } catch (JSONException ignored) {}
+                }})
+                .collect(JSONCollectors.toJSONArray());
+        final JSONArray jsonJoin = Arrays.stream(SearchFilter.Join.values())
+                .map(j -> new JSONObject() {{
+                    try {
+                        put(FormUtil.PROPERTY_VALUE, j.toString());
+                        put(FormUtil.PROPERTY_LABEL, j.name());
+                    } catch (JSONException ignored) {}
+                }})
+                .collect(JSONCollectors.toJSONArray());
+
+        final JSONArray jsonDataTypes = Arrays.stream(DataType.values())
+                .map(Enum::name)
+                .map(s -> new JSONObject() {{
+                    try {
+                        put(FormUtil.PROPERTY_VALUE, s);
+                        put(FormUtil.PROPERTY_LABEL, s);
+                    } catch (JSONException ignored) {}
+                }})
+                .collect(JSONCollectors.toJSONArray());
+
+        final Object[] binderArgs = new Object[]{
+                jsonOperator.toString(),
+                jsonJoin.toString(),
+                jsonDataTypes.toString()
+        };
 
         final Pair<String, Object[]>[] resources = new Pair[] {
-                Pair.of("/properties/common/OdooAuthorization.json", args),
-                Pair.of("/properties/datalist/OdooDataListBinder.json", null)
+                Pair.of("/properties/common/OdooAuthorization.json", authArgs),
+                Pair.of("/properties/datalist/OdooDataListBinder.json", binderArgs)
         };
 
         return Arrays.stream(resources)
@@ -194,29 +220,21 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .map(f -> (IOdooFilter) f)
                 .filter(f -> f.getValue() != null && !f.getValue().isEmpty())
                 .map(Try.onFunction(f -> {
+                    DataType dataType = f.getDataType();
+
                     Object value;
-                    if (SearchFilter.IN.equalsIgnoreCase(f.getOperator())) {
+
+                    if (SearchFilter.Operator.IN == f.getFilterOperator()) {
                         value = Arrays.stream(f.getValue().split(";"))
                                 .map(String::trim)
-                                .map(s -> {
-                                    if (f.getDataType() == DataType.INTEGER) {
-                                        try {
-                                            return Integer.parseInt(s);
-                                        } catch (NumberFormatException e) {
-                                            return null;
-                                        }
-                                    }
-                                    return s;
-                                })
+                                .map(dataType::valueParser)
                                 .filter(Objects::nonNull)
                                 .toArray();
-                    } else if(f.getDataType() == DataType.INTEGER) {
-                        value = Integer.parseInt(f.getValue());
                     } else {
-                        value = f.getValue();
+                        value = dataType.valueParser(f.getValue());
                     }
 
-                    return new SearchFilter(f.getField(), f.getOperator(), value);
+                    return new SearchFilter(f.getField(), f.getFilterOperator(), value);
                 }, (NumberFormatException ignored) -> null))
                 .filter(Objects::nonNull);
 

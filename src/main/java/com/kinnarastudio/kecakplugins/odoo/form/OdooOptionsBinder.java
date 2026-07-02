@@ -13,6 +13,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
+import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.Element;
@@ -33,9 +37,8 @@ import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooDataListBinderUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
     public static final String LABEL = "Odoo Options Binder";
@@ -55,7 +58,6 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final String valueField = getValueField();
         final String labelField = getLabelField();
@@ -87,16 +89,18 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         }
 
         try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+
             final boolean hideEmptyValue = hideEmptyValue();
 
-            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)\\])?(?!\\w)");
+            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)])?(?!\\w)");
 
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
 
                         Matcher matcher = fieldPattern.matcher(labelField);
-                        StringBuffer labelBuffer = new StringBuffer();
+                        StringBuilder labelBuffer = new StringBuilder();
 
                         while (matcher.find()) {
                             String fieldName = matcher.group(1);
@@ -154,7 +158,8 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             LogUtil.debug(getClassName(), "Creating Cache for key " + cacheKey);
             return CacheUtil.putCache(cacheKey, ret);
 
-        } catch (OdooCallMethodException e) {
+        } catch (OdooAuthorizationException |
+                 com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
         }
@@ -195,12 +200,25 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
     @Override
     public String getPropertyOptions() {
-        final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
-        final Object[] argsOdooBinder = null;
+        final Object[] argsAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
+
+        final JSONArray jsonDataTypes = Arrays.stream(DataType.values())
+                .map(Enum::name)
+                .map(s -> new JSONObject() {{
+                    try {
+                        put(FormUtil.PROPERTY_VALUE, s);
+                        put(FormUtil.PROPERTY_LABEL, s);
+                    } catch (JSONException ignored) {}
+                }})
+                .collect(JSONCollectors.toJSONArray());
+
+        final Object[] argsBinder = new Object[] {
+                jsonDataTypes.toString(),
+        };
 
         final Pair<String, Object[]>[] resources = new Pair[]{
-                Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
-                Pair.of("/properties/form/OdooOptionsBinder.json", argsOdooBinder)
+                Pair.of("/properties/common/OdooAuthorization.json", argsAuth),
+                Pair.of("/properties/form/OdooOptionsBinder.json", argsBinder)
         };
 
         return Arrays.stream(resources)

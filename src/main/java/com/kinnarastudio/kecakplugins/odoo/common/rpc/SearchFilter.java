@@ -1,5 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.common.rpc;
 
+@Deprecated
 public class SearchFilter {
     public final static String EQUAL = "=";
     public final static String NOT_EQUAL = "<>";
