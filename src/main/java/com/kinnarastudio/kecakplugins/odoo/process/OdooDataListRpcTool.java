@@ -5,8 +5,9 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
 import com.kinnarastudio.kecakplugins.odoo.exception.OdooUtilityException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.dao.DatalistDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
@@ -62,26 +63,46 @@ public class OdooDataListRpcTool extends DefaultApplicationPlugin {
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
 
         final WorkflowAssignment workflowAssignment = (WorkflowAssignment) map.get("workflowAssignment");
         final DataList dataList;
         try {
             dataList = getDataList(workflowAssignment);
         } catch (OdooUtilityException e) {
-            throw new RuntimeException(e);
+            LogUtil.error(getClassName(), e, e.getMessage());
+            return null;
         }
+
         final DataListCollection<Map<String, Object>> dataListRows = dataList.getRows();
         if (dataListRows == null) {
             LogUtil.info(getClassName(), "Rows not found");
             return null;
         }
 
-        dataListRows.forEach(Try.onConsumer(m -> {
-            Map<String, Object> odooRow = remapToOdooRow(m);
-            int recordId = rpc.create(model, odooRow);
-            LogUtil.info(getClassName(), "Record [" + recordId + "] has been created in model [" + model + "]");
-        }));
+        try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+
+            String method = getMethod();
+
+            dataListRows.forEach(Try.onConsumer(m -> {
+                Object[] posArgs = new Object[0]; // TODO
+                Map<String, Object> namedArgs = new HashMap<>(); // TODO
+
+                Object ret = rpc.executeKw(model, method, posArgs, namedArgs);
+
+//                if("create".equalsIgnoreCase(method)) {
+//                    Map<String, Object> odooRow = remapToOdooRow(m);
+//                    int recordId = rpc.create(model, odooRow);
+//
+//                    String messsage = "Record [" + recordId + "] has been created in model [" + model + "]";
+//
+//
+//                    LogUtil.info(getClassName(), messsage);
+//                }
+            }));
+        } catch (OdooAuthorizationException e) {
+            LogUtil.error(getClassName(), e, e.getMessage());
+        }
 
         return null;
     }
@@ -199,10 +220,16 @@ public class OdooDataListRpcTool extends DefaultApplicationPlugin {
     }
 
     protected Map<String, Object> remapToOdooRow(Map<String, Object> dataListRow) {
+        // TODO
         Map<String, String> dataListToOdoofieldMapping = new HashMap<>();
         Map<String, Object> odooRow = new HashMap<>();
 
         dataListRow.forEach((key, value) -> odooRow.put(dataListToOdoofieldMapping.getOrDefault(key, key), value));
-        return null;
+
+        return odooRow;
+    }
+
+    protected String getMethod() {
+        return getPropertyString("method");
     }
 }

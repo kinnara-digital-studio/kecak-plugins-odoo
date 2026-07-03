@@ -3,9 +3,10 @@ package com.kinnarastudio.kecakplugins.odoo.app;
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Triple;
 import org.joget.apps.app.dao.PluginDefaultPropertiesDao;
 import org.joget.apps.app.model.AppDefinition;
@@ -77,7 +78,6 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         final String database = OdooAuthorizationUtil.getDatabase(this);
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         final String cacheKey = CacheUtil.getCacheKey(this.getClass(), database, user, key);
         final String cached = (String) CacheUtil.getCached(cacheKey);
@@ -102,6 +102,8 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         }
 
         try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+
             final String ret = Optional.of(rpc.searchRead(model, filters.getLeft().toArray(new SearchFilter[0]), null, filters.getMiddle(), filters.getRight()))
                     .stream()
                     .flatMap(Arrays::stream)
@@ -118,7 +120,7 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
 
             return CacheUtil.putCache(cacheKey, ret);
 
-        } catch (OdooCallMethodException e) {
+        } catch (OdooCallMethodException | OdooAuthorizationException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             return "";
         }
@@ -159,15 +161,15 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         final List<SearchFilter> filters = new ArrayList<>();
         while (filterMatcher.find()) {
             final String filterField = filterMatcher.group(1);
-            final String operator = filterMatcher.group(2);
+            final SearchFilter.Operator operator = SearchFilter.Operator.parse(filterField);
             final String value = filterMatcher.group(3);
 
             if (value.matches("\\d+")) {
                 // numeric filter, most likely IDs
-                filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
+                filters.add(new SearchFilter(SearchFilter.Join.AND, filterField, operator, Integer.parseInt(value)));
             } else {
                 // string filter
-                filters.add(new SearchFilter(filterField, operator, value.replaceAll("^'|'$", "")));
+                filters.add(new SearchFilter(SearchFilter.Join.AND, filterField, operator, value.replaceAll("^'|'$", "")));
             }
         }
         return Triple.of(filters, offset, limit);
@@ -178,15 +180,15 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
         final List<SearchFilter> filters = new ArrayList<>();
         while (filterMatcher.find()) {
             final String filterField = filterMatcher.group(1);
-            final String operator = filterMatcher.group(2);
+            final SearchFilter.Operator operator = SearchFilter.Operator.parse(filterMatcher.group(2));
             final String value = filterMatcher.group(3);
 
             if (value.matches("\\d+")) {
                 // numeric filter, most likely IDs
-                filters.add(new SearchFilter(filterField, operator, Integer.parseInt(value)));
+                filters.add(new SearchFilter(SearchFilter.Join.AND, filterField, operator, Integer.parseInt(value)));
             } else {
                 // string filter
-                filters.add(new SearchFilter(filterField, operator, value.replaceAll("^'|'$", "")));
+                filters.add(new SearchFilter(SearchFilter.Join.AND, filterField, operator, value.replaceAll("^'|'$", "")));
             }
         }
         return Triple.of(filters, 0, 1);

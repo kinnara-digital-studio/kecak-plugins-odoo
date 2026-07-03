@@ -1,7 +1,7 @@
 package com.kinnarastudio.kecakplugins.odoo.app.webservice;
 
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
@@ -63,7 +63,7 @@ public class OdooTestConnectionWebService extends DefaultApplicationPlugin imple
             String apiKey = getParameter(servletRequest, "apiKey");
 
             OdooRpc odooRpc = new OdooRpc(baseUrl, database, user, apiKey);
-            int uid = odooRpc.login();
+            int uid = odooRpc.getUid();
             boolean success = uid > 0;
             message = success ? "Connection successful [uid=" + uid + "]" : "Connection failed";
 
