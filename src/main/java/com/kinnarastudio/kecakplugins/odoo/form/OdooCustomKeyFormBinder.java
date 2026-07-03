@@ -4,9 +4,10 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.commons.util.LogUtil;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * Odoo Custom Key Form Binder
- *
+ * <p>
  * Load odoo data using field other than ID
  */
 public class OdooCustomKeyFormBinder extends FormBinder implements FormLoadBinder {
@@ -35,12 +36,13 @@ public class OdooCustomKeyFormBinder extends FormBinder implements FormLoadBinde
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
-            String keyField = getKeyField();
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
+            final String keyField = getKeyField();
+            final SearchFilter[] filters = new SearchFilter[]{new SearchFilter(keyField, customKey)};
 
-            return Optional.ofNullable(rpc.searchRead(model, SearchFilter.single(keyField, customKey), null, null, 1))
+            return Optional.ofNullable(rpc.searchRead(model, filters, null, null, 1))
                     .stream()
                     .flatMap(Arrays::stream)
                     .findFirst()
@@ -65,7 +67,7 @@ public class OdooCustomKeyFormBinder extends FormBinder implements FormLoadBinde
                     }})
 
                     .orElse(null);
-        } catch (OdooCallMethodException e) {
+        } catch (OdooAuthorizationException | OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
         }

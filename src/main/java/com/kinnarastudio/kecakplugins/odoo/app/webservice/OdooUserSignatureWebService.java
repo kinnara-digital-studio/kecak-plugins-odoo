@@ -1,9 +1,10 @@
 package com.kinnarastudio.kecakplugins.odoo.app.webservice;
 
 import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.joget.apps.app.dao.PluginDefaultPropertiesDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.PluginDefaultProperties;
@@ -85,7 +86,6 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
 
             final OdooRpc odooRpc = new OdooRpc(baseUrl, database, username, apiKey);
 
-
             final Optional<Integer> optEmployeeId = optParameter(servletRequest, "employeeId")
                     .map(Integer::parseInt);
 
@@ -146,7 +146,7 @@ public class OdooUserSignatureWebService extends DefaultApplicationPlugin implem
         } catch (ApiException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             servletResponse.sendError(e.getErrorCode(), e.getMessage());
-        } catch (OdooCallMethodException e) {
+        } catch (OdooAuthorizationException | OdooCallMethodException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }

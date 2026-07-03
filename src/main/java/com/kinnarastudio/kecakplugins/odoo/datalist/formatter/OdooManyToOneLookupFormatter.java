@@ -11,6 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
@@ -24,9 +28,6 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
 
 public class OdooManyToOneLookupFormatter extends DataListColumnFormatDefault {
     public static final String LABEL = "Odoo Many2one Lookup Formatter";
@@ -141,7 +142,7 @@ public class OdooManyToOneLookupFormatter extends DataListColumnFormatDefault {
             final String apiKey = OdooAuthorizationUtil.getApiKey(this);
             final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-            final SearchFilter inFilter = new SearchFilter("id", SearchFilter.IN, ids.toArray(new Integer[0]));
+            final SearchFilter inFilter = new SearchFilter("id", SearchFilter.Operator.IN, ids.toArray(new Object[0]));
 
             return Arrays.stream(
                     rpc.searchRead(targetModel, new SearchFilter[] { inFilter }, null, null, null))
@@ -153,7 +154,7 @@ public class OdooManyToOneLookupFormatter extends DataListColumnFormatDefault {
                                     .orElse(""),
                             (a, b) -> a));
 
-        } catch (OdooCallMethodException e) {
+        } catch (OdooAuthorizationException | OdooCallMethodException e) {
             LogUtil.error(getClassName(), e,
                     "Batch lookup failed for [" + targetModel + "." + targetField + "]: " + e.getMessage());
             return new HashMap<>();

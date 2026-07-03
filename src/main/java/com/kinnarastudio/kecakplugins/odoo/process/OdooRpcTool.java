@@ -6,12 +6,14 @@ import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooRpcToolUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
+import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
 import org.joget.plugin.base.PluginManager;
@@ -49,7 +51,6 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
         return buildNumber;
     }
 
-
     @Override
     public String getDescription() {
         return getClass().getPackage().getImplementationTitle();
@@ -59,89 +60,96 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
     public Object execute(Map properties) {
         AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
 
-        final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
-        final String database = OdooAuthorizationUtil.getDatabase(this);
-        final String user = OdooAuthorizationUtil.getUsername(this);
-        final String apiKey = OdooAuthorizationUtil.getApiKey(this);
-        final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
+        try {
+            final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
+            final String database = OdooAuthorizationUtil.getDatabase(this);
+            final String user = OdooAuthorizationUtil.getUsername(this);
+            final String apiKey = OdooAuthorizationUtil.getApiKey(this);
+            final String model = OdooAuthorizationUtil.getModel(this);
 
-        final String method = OdooRpcToolUtil.getMethod(this);
-        final Optional<Integer> optRecordId = OdooRpcToolUtil.optRecordId(this);
-        final Map<String, Object> record = OdooRpcToolUtil.getRecord(this);
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
-        final Map<String, Object> parsedRecord = new HashMap<>();
+            final String method = OdooRpcToolUtil.getMethod(this);
+            final Optional<Integer> optRecordId = OdooRpcToolUtil.optRecordId(this);
+            final Map<String, Object> record = OdooRpcToolUtil.getRecord(this);
 
-        for (Map.Entry<String, Object> entry : record.entrySet()) {
-            String key = entry.getKey();
-            Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
+            final Map<String, Object> parsedRecord = new HashMap<>();
 
-            DataType dataType = DataType.parse(String.valueOf(valueMap.get("dataType")));
-            Object rawValue = valueMap.get("value");
+            for (Map.Entry<String, Object> entry : record.entrySet()) {
+                String key = entry.getKey();
+                Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
 
-            if (dataType != null && rawValue != null) {
-                parsedRecord.put(key, dataType.valueParser(rawValue));
+                DataType dataType = DataType.parse(String.valueOf(valueMap.get("dataType")));
+                Object rawValue = valueMap.get("value");
+
+                if (dataType != null && rawValue != null) {
+                    parsedRecord.put(key, dataType.valueParser(rawValue));
+                }
             }
-        }
 
-        long delayInSeconds = getDelayedExecutionTime();
-        runDelayed(Try.onRunnable(() -> {
-            final int recordId;
+            long delayInSeconds = getDelayedExecutionTime();
 
-            switch (method) {
-                case "create": {
-                    recordId = rpc.create(model, parsedRecord);
+            runDelayed(Try.onRunnable(() -> {
+                final int recordId;
 
-                    final String resultWorkflowVariable = OdooRpcToolUtil.getResultWorkflowVariable(this);
+                switch (method) {
+                    case "create": {
+                        recordId = rpc.create(model, parsedRecord);
 
-                    final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-                    final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
-                    workflowManager.activityVariable(workflowAssignment.getActivityId(), resultWorkflowVariable, String.valueOf(recordId));
+                        final String resultWorkflowVariable = OdooRpcToolUtil.getResultWorkflowVariable(this);
 
-                    break;
+                        final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
+                        final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
+                        workflowManager.activityVariable(workflowAssignment.getActivityId(), resultWorkflowVariable, String.valueOf(recordId));
+
+                        break;
+                    }
+
+                    case "write":
+                        recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+
+                        try {
+                            rpc.write(model, recordId, parsedRecord);
+                        } catch (OdooCallMethodException e) {
+                            final String postErrorMessage = getPostErrorMessage();
+                            if (!postErrorMessage.isEmpty()) {
+                                rpc.messagePost(model, recordId, postErrorMessage);
+                            }
+
+                            throw e;
+                        }
+
+                        break;
+
+                    case "unlink":
+                        recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+
+                        try {
+                            rpc.unlink(model, recordId);
+                        } catch (OdooCallMethodException e) {
+                            final String postErrorMessage = getPostErrorMessage();
+                            if (!postErrorMessage.isEmpty()) {
+                                rpc.messagePost(model, recordId, postErrorMessage);
+                            }
+
+                            throw e;
+                        }
+
+                        break;
+
+                    case "messagePost":
+                        recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+                        rpc.messagePost(model, recordId, getMessagePost());
+
+                    default:
+                        throw new OdooCallMethodException("Method [" + method + "] is not understood");
                 }
 
-                case "write":
-                    recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
+            }), delayInSeconds);
+        } catch (OdooAuthorizationException e) {
+            LogUtil.error(getClassName(), e, e.getMessage());
+        }
 
-                    try {
-                        rpc.write(model, recordId, parsedRecord);
-                    } catch (OdooCallMethodException e) {
-                        final String postErrorMessage = getPostErrorMessage();
-                        if (!postErrorMessage.isEmpty()) {
-                            rpc.messagePost(model, recordId, postErrorMessage);
-                        }
-
-                        throw e;
-                    }
-
-                    break;
-
-                case "unlink":
-                    recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
-
-                    try {
-                        rpc.unlink(model, recordId);
-                    } catch (OdooCallMethodException e) {
-                        final String postErrorMessage = getPostErrorMessage();
-                        if (!postErrorMessage.isEmpty()) {
-                            rpc.messagePost(model, recordId, postErrorMessage);
-                        }
-
-                        throw e;
-                    }
-
-                    break;
-
-                case "messagePost":
-                    recordId = optRecordId.orElseThrow(() -> new OdooCallMethodException("Record ID is required for [" + method + "] method"));
-                    rpc.messagePost(model, recordId, getMessagePost());
-
-                default:
-                    throw new OdooCallMethodException("Method [" + method + "] is not understood");
-            }
-
-        }), delayInSeconds);
         return null;
     }
 
@@ -158,21 +166,22 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
     @Override
     public String getPropertyOptions() {
         final JSONArray jsonDataType = Arrays.stream(DataType.values())
-                .map(val -> new JSONObject() {{
+                .map(Enum::name)
+                .map(s -> new JSONObject() {{
                     try {
-                        put("value", val.name());
-                        put("label", val.name());
+                        put(FormUtil.PROPERTY_VALUE, s);
+                        put(FormUtil.PROPERTY_LABEL, s);
                     } catch (JSONException ignored) {
                     }
                 }})
                 .collect(JSONCollectors.toJSONArray());
 
         final Object[] argsOdooAuth = new Object[]{OdooTestConnectionWebService.class.getName()};
-        final Object[] odooRpc = new Object[]{jsonDataType.toString()};
+        final Object[] argsTool = new Object[]{jsonDataType.toString()};
 
         final Pair<String, Object[]>[] resources = new Pair[]{
                 Pair.of("/properties/common/OdooAuthorization.json", argsOdooAuth),
-                Pair.of("/properties/process/OdooRpcTool.json", odooRpc)
+                Pair.of("/properties/process/OdooRpcTool.json", argsTool)
         };
 
         return Arrays.stream(resources)

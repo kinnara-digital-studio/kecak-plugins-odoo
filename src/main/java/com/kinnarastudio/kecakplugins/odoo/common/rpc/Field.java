@@ -1,8 +1,8 @@
 package com.kinnarastudio.kecakplugins.odoo.common.rpc;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 
+@Deprecated
 public class Field {
     private final String key;
     private final String string;

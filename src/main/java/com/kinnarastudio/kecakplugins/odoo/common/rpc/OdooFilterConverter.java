@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@Deprecated
 public class OdooFilterConverter {
     /**
      * Converts an array of SearchFilter objects into an Odoo

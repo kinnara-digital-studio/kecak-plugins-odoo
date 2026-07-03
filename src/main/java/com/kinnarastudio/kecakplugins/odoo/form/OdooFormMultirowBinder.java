@@ -5,11 +5,12 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import com.kinnarastudio.kecakplugins.odoo.app.webservice.OdooTestConnectionWebService;
 import com.kinnarastudio.kecakplugins.odoo.common.property.OdooAuthorizationUtil;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.DataType;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.Field;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.OdooRpc;
-import com.kinnarastudio.kecakplugins.odoo.common.rpc.SearchFilter;
-import com.kinnarastudio.kecakplugins.odoo.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooAuthorizationException;
+import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import com.kinnarastudio.odooxmlrpc.model.Field;
+import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
+import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.app.service.AuditTrailManager;
@@ -37,9 +38,9 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
         final String user = OdooAuthorizationUtil.getUsername(this);
         final String apiKey = OdooAuthorizationUtil.getApiKey(this);
         final String model = OdooAuthorizationUtil.getModel(this);
-        final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
         try {
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
             final String foreignKeyField = getForeignKeyField();
             final SearchFilter[] searchFilters = new SearchFilter[]{
                     new SearchFilter(foreignKeyField, Integer.parseInt(primaryKey))
@@ -65,7 +66,8 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);
                     }}));
-        } catch (OdooCallMethodException e) {
+        } catch (OdooAuthorizationException |
+                 com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException e) {
             LogUtil.error(getClass().getName(), e, e.getMessage());
             return null;
         }
@@ -84,7 +86,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
             final String user = OdooAuthorizationUtil.getUsername(this);
             final String apiKey = OdooAuthorizationUtil.getApiKey(this);
             final String model = OdooAuthorizationUtil.getModel(this);
-            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey, auditTrailManager);
+            final OdooRpc rpc = new OdooRpc(baseUrl, database, user, apiKey);
 
             final Collection<Field> fields = rpc.fieldsGet(model);
 
@@ -113,6 +115,9 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
             final FormRowSet originalRowSet = Optional.ofNullable(load(element, String.valueOf(parentRecordId), formData))
                     .orElseGet(FormRowSet::new);
+
+            originalRowSet.setMultiRow(true);
+
             originalRowSet.sort(Comparator.comparing(FormRow::getId));
 
             final FormRowSet storedRowSet = rowSet.stream()
@@ -150,10 +155,9 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
 
                         return row;
                     }))
+                    .collect(Collectors.toCollection(FormRowSet::new));
 
-                    .collect(Collectors.toCollection(() -> new FormRowSet() {{
-                        setMultiRow(true);
-                    }}));
+            storeBinderData.setMultiRow(true);
 
             // delete old data
             final int[] ids = Optional.of(originalRowSet).stream()
@@ -176,7 +180,7 @@ public class OdooFormMultirowBinder extends FormBinder implements FormLoadElemen
                     });
 
             return storedRowSet;
-        } catch (OdooCallMethodException e) {
+        } catch (OdooCallMethodException | OdooAuthorizationException e) {
             LogUtil.error(getClassName(), e, e.getMessage());
             return null;
         }
