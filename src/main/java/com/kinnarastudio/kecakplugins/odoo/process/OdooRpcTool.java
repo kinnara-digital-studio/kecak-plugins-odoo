@@ -58,7 +58,7 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
     @Override
     public Object execute(Map properties) {
-        AuditTrailManager auditTrailManager = (AuditTrailManager) AppUtil.getApplicationContext().getBean("auditTrailManager");
+        final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
 
         try {
             final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
@@ -71,16 +71,16 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
 
             final String method = OdooRpcToolUtil.getMethod(this);
             final Optional<Integer> optRecordId = OdooRpcToolUtil.optRecordId(this);
-            final Map<String, Object> record = OdooRpcToolUtil.getRecord(this);
+            final Map<String, Pair<DataType, String>> record = OdooRpcToolUtil.getRecord(this);
 
             final Map<String, Object> parsedRecord = new HashMap<>();
 
-            for (Map.Entry<String, Object> entry : record.entrySet()) {
+            for (Map.Entry<String, Pair<DataType, String>> entry : record.entrySet()) {
                 String key = entry.getKey();
-                Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
+                Pair<DataType, String> typedValue = entry.getValue();
 
-                DataType dataType = DataType.parse(String.valueOf(valueMap.get("dataType")));
-                Object rawValue = valueMap.get("value");
+                DataType dataType = typedValue.getLeft();
+                Object rawValue = AppUtil.processHashVariable(typedValue.getRight(), workflowAssignment, null, null);
 
                 if (dataType != null && rawValue != null) {
                     parsedRecord.put(key, dataType.valueParser(rawValue));
@@ -99,7 +99,6 @@ public class OdooRpcTool extends DefaultApplicationPlugin {
                         final String resultWorkflowVariable = OdooRpcToolUtil.getResultWorkflowVariable(this);
 
                         final WorkflowManager workflowManager = (WorkflowManager) AppUtil.getApplicationContext().getBean("workflowManager");
-                        final WorkflowAssignment workflowAssignment = (WorkflowAssignment) properties.get("workflowAssignment");
                         workflowManager.activityVariable(workflowAssignment.getActivityId(), resultWorkflowVariable, String.valueOf(recordId));
 
                         break;

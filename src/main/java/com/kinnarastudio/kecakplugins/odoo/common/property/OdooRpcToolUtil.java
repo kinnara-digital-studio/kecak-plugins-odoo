@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.kinnarastudio.odooxmlrpc.model.DataType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.dao.FormDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.FormDefinition;
@@ -17,6 +19,8 @@ import org.joget.plugin.base.ExtDefaultPlugin;
 import org.springframework.context.ApplicationContext;
 
 import com.kinnarastudio.commons.Try;
+
+import javax.xml.crypto.Data;
 
 /**
  *
@@ -36,15 +40,19 @@ public final class OdooRpcToolUtil {
                 .map(Try.onFunction(Integer::parseInt));
     }
 
-    public static Map<String, Object> getRecord(ExtDefaultPlugin plugin) {
+    /**
+     *
+     * @param plugin
+     * @return
+     */
+    public static Map<String, Pair<DataType, String>> getRecord(ExtDefaultPlugin plugin) {
         return Optional.of(plugin.getPropertyGrid("record"))
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Arrays::stream)
                 .collect(Collectors.toMap(m -> String.valueOf(m.get("field")), m -> {
-                    Map<String, Object> valueMap = new HashMap<>();
-                    valueMap.put("value", m.get("value"));
-                    valueMap.put("dataType", m.get("dataType"));
-                    return valueMap;
+                    DataType dataType = DataType.parse(m.get("dataType"));
+                    String value = m.get("value");
+                    return Pair.of(dataType, value);
                 }));
     }
 
