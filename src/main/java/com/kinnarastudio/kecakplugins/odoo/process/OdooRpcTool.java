@@ -12,7 +12,6 @@ import com.kinnarastudio.odooxmlrpc.model.DataType;
 import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.app.service.AuditTrailManager;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.DefaultApplicationPlugin;
