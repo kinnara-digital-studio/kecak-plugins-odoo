@@ -1,8 +1,7 @@
 package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 
-import java.util.*;
-
 import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
+import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListColumn;
@@ -11,16 +10,19 @@ import org.joget.apps.form.model.*;
 import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 
-import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
- * @since 2025-11-03
  * @author aristo
+ * @since 2025-11-03
  */
 public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
     public final static String LABEL = "Odoo Options Value Formatter";
 
-    //Map<String, String> optionMap = null;
+    Map<String, String> optionMap = null;
 
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
@@ -86,7 +88,7 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 
     @Override
     public String getPropertyOptions() {
-        final Object[] args = new Object[] {
+        final Object[] args = new Object[]{
                 FormLoadOptionsBinder.class.getName(),
                 OdooOptionsBinder.class.getName()
         };
@@ -109,8 +111,9 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         }
 
         // Fetch ke Odoo hanya untuk ID ini
-        Map<String, String> map = fetchOptionMap(new String[]{id});
-        String label = map.get(id);
+//        Map<String, String> map = fetchOptionMap(new String[]{id});
+        if(optionMap == null) optionMap = fetchOptionMap(null);
+        String label = optionMap.get(id);
 
         if (label != null) {
             CacheUtil.putCache(cacheKey, label);
@@ -163,6 +166,7 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 //    }
 
     private Map<String, String> fetchOptionMap(String[] ids) {
+        LogUtil.info(getClassName(), "fetchOptionMap [" + (ids == null ? "" : String.join(";", ids)) + "]");
         Map<String, String> result = new HashMap<>();
 
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
@@ -183,7 +187,8 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
 
         try {
-            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids);
+            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids); // dapet 454 rows
+            LogUtil.info(getClassName(), "Form Row Set Loaded[" + (rowSet == null ? " NULL " : rowSet.size()) + "]");
             if (rowSet != null) {
                 for (FormRow r : rowSet) {
                     String value = r.getProperty("value");

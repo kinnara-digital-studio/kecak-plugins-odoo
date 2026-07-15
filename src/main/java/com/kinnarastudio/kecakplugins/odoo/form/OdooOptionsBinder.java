@@ -1,9 +1,6 @@
 package com.kinnarastudio.kecakplugins.odoo.form;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -95,7 +92,17 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
             final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)])?(?!\\w)");
 
-            FormRowSet ret = Arrays.stream(rpc.searchRead(model, filters, "id", null, null))
+            Set<String> fieldsSet = new HashSet<>();
+            fieldsSet.add(valueField);
+            if (!groupingField.isEmpty()) fieldsSet.add(groupingField);
+            Matcher mFields = fieldPattern.matcher(labelField);
+            while (mFields.find()) {
+                fieldsSet.add(mFields.group(1));
+            }
+            String[] requiredFields = fieldsSet.toArray(new String[0]);
+
+            // Safety limit to optimize cross-network XML-RPC payload parsing sizes
+            FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
                     .map(m -> {
                         final String value = String.valueOf(m.get(valueField));
 
