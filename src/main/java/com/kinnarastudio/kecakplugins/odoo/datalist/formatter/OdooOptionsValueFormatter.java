@@ -166,7 +166,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 //    }
 
     private Map<String, String> fetchOptionMap(String[] ids) {
-        LogUtil.info(getClassName(), "fetchOptionMap [" + (ids == null ? "" : String.join(";", ids)) + "]");
         Map<String, String> result = new HashMap<>();
 
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
@@ -188,7 +187,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 
         try {
             FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids); // dapet 454 rows
-            LogUtil.info(getClassName(), "Form Row Set Loaded[" + (rowSet == null ? " NULL " : rowSet.size()) + "]");
             if (rowSet != null) {
                 for (FormRow r : rowSet) {
                     String value = r.getProperty("value");
