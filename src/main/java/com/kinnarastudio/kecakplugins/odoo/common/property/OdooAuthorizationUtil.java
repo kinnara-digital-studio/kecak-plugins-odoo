@@ -2,15 +2,18 @@ package com.kinnarastudio.kecakplugins.odoo.common.property;
 
 import org.joget.apps.app.service.AppUtil;
 import org.joget.plugin.base.ExtDefaultPlugin;
+import org.joget.workflow.model.WorkflowAssignment;
 
 public final class OdooAuthorizationUtil {
     private OdooAuthorizationUtil() {}
     public static String getBaseUrl(ExtDefaultPlugin plugin) {
-        return AppUtil.processHashVariable(plugin.getPropertyString("baseUrl"), null, null, null);
+        WorkflowAssignment assignment = (WorkflowAssignment) plugin.getProperty("workflowAssignment");
+        return processHashVariable(plugin.getPropertyString("baseUrl"), assignment);
     }
 
     public static String getDatabase(ExtDefaultPlugin plugin) {
-        return AppUtil.processHashVariable(plugin.getPropertyString("database"), null, null, null);
+        WorkflowAssignment assignment = (WorkflowAssignment) plugin.getProperty("workflowAssignment");
+        return processHashVariable(plugin.getPropertyString("database"), assignment);
     }
 
     /**
@@ -20,7 +23,8 @@ public final class OdooAuthorizationUtil {
      * @return
      */
     public static String getUsername(ExtDefaultPlugin plugin) {
-        return AppUtil.processHashVariable(plugin.getPropertyString("user"), null, null, null);
+        WorkflowAssignment assignment = (WorkflowAssignment) plugin.getProperty("workflowAssignment");
+        return processHashVariable(plugin.getPropertyString("user"), assignment);
     }
 
     /**
@@ -30,10 +34,23 @@ public final class OdooAuthorizationUtil {
      * @return
      */
     public static String getApiKey(ExtDefaultPlugin plugin) {
-        return AppUtil.processHashVariable(plugin.getPropertyString("apiKey"), null, null, null);
+        WorkflowAssignment assignment = (WorkflowAssignment) plugin.getProperty("workflowAssignment");
+        return processHashVariable(plugin.getPropertyString("apiKey"), assignment);
     }
 
     public static String getModel(ExtDefaultPlugin plugin) {
-        return AppUtil.processHashVariable(plugin.getPropertyString("model"), null, null, null);
+        WorkflowAssignment assignment = (WorkflowAssignment) plugin.getProperty("workflowAssignment");
+        return processHashVariable(plugin.getPropertyString("model"), assignment);
+    }
+
+    private static String processHashVariable(String value, WorkflowAssignment assignment) {
+        String processedValue;
+        int limit = 10;
+        do {
+            processedValue = AppUtil.processHashVariable(value, assignment, null, null);
+            limit--;
+        } while(!processedValue.equals(value) && limit > 0);
+
+        return processedValue;
     }
 }

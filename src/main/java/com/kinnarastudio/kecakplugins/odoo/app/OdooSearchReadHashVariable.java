@@ -17,6 +17,8 @@ import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.plugin.property.service.PropertyUtil;
+import org.joget.workflow.model.WorkflowActivity;
+import org.joget.workflow.model.WorkflowAssignment;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -74,6 +76,8 @@ public class OdooSearchReadHashVariable extends DefaultHashVariablePlugin {
 
     @Override
     public String processHashVariable(String key) {
+        WorkflowAssignment assignment = (WorkflowAssignment) getProperty("workflowAssignment");
+
         final String baseUrl = OdooAuthorizationUtil.getBaseUrl(this);
         final String database = OdooAuthorizationUtil.getDatabase(this);
         final String user = OdooAuthorizationUtil.getUsername(this);
