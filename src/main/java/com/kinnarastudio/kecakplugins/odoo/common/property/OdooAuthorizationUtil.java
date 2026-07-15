@@ -1,11 +1,14 @@
 package com.kinnarastudio.kecakplugins.odoo.common.property;
 
 import org.joget.apps.app.service.AppUtil;
+import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.ExtDefaultPlugin;
 import org.joget.workflow.model.WorkflowAssignment;
 
 public final class OdooAuthorizationUtil {
-    private OdooAuthorizationUtil() {}
+    private OdooAuthorizationUtil() {
+    }
+
     public static String getBaseUrl(ExtDefaultPlugin plugin) {
         WorkflowAssignment assignment = (WorkflowAssignment) plugin.getProperty("workflowAssignment");
         return processHashVariable(plugin.getPropertyString("baseUrl"), assignment);
@@ -44,13 +47,15 @@ public final class OdooAuthorizationUtil {
     }
 
     private static String processHashVariable(String value, WorkflowAssignment assignment) {
-        String processedValue;
+        String keep;
         int limit = 10;
         do {
-            processedValue = AppUtil.processHashVariable(value, assignment, null, null);
+            keep = value;
+            value = AppUtil.processHashVariable(value, assignment, null, null);
             limit--;
-        } while(!processedValue.equals(value) && limit > 0);
 
-        return processedValue;
+        } while (!keep.equals(value) && limit > 0);
+
+        return keep;
     }
 }
