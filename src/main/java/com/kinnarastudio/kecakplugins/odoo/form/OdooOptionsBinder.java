@@ -61,17 +61,19 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String groupingField = getGroupingField();
 
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
-        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Optional.ofNullable(dependencyValues)
+        final Object[] dependencyFilter = Optional.ofNullable(dependencyValues)
                 .stream()
                 .flatMap(Arrays::stream)
                 .filter(Predicate.not(String::isEmpty))
                 .map(s -> {
                     try {
-                        return new SearchFilter(groupingField, Integer.parseInt(s));
-                    } catch (NumberFormatException e) {
-                        return new SearchFilter(groupingField, s);
+                        return Integer.parseInt(s);
+                    } catch (
+                            NumberFormatException e) {
+                        return s;
                     }
-                });
+                }).toArray(Object[]::new);
+        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Stream.of(new SearchFilter(groupingField, SearchFilter.Operator.IN, dependencyFilter));
 
         final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
@@ -215,11 +217,12 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                     try {
                         put(FormUtil.PROPERTY_VALUE, s);
                         put(FormUtil.PROPERTY_LABEL, s);
-                    } catch (JSONException ignored) {}
+                    } catch (JSONException ignored) {
+                    }
                 }})
                 .collect(JSONCollectors.toJSONArray());
 
-        final Object[] argsBinder = new Object[] {
+        final Object[] argsBinder = new Object[]{
                 jsonDataTypes.toString(),
         };
 

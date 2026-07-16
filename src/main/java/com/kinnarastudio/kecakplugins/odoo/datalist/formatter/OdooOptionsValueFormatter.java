@@ -24,7 +24,7 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
     @Override
     public String format(DataList dataList, DataListColumn column, Object row, Object value) {
 
-        Map<String, String> map = getOptionMap(dataList, column);
+        Map<String, String> map = getOptionMap();
 
         if (value instanceof Object[]) {
             Object[] arrValue = (Object[]) value;
@@ -93,7 +93,7 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         return AppUtil.readPluginResource(getClassName(), "/properties/datalist/formatter/OdooOptionsValueFormatter.json", args, true, null);
     }
 
-    protected Map<String, String> getOptionMap(DataList dataList, DataListColumn column) {
+    protected Map<String, String> getOptionMap() {
         FormBinder optionBinder;
         PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
 
@@ -107,15 +107,12 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         if (optionsBinderProperties != null && optionsBinderProperties.get("className") != null && !optionsBinderProperties.get("className").toString().isEmpty() && (optionBinder = (FormBinder) pluginManager.getPlugin(optionsBinderProperties.get("className").toString())) != null) {
             optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
 
-            String[] ids = collectIdsFromDataList(dataList, column).toArray(new String[0]);
-
             LogUtil.warn(getClassName(), "Collecting ID and calling load() - instance: " + System.identityHashCode(this));
 
-            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(ids);
+            FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(null);
 
             LogUtil.warn(getClassName(), "load() returned - rowSet: " + (rowSet == null ? "NULL" : "size=" + rowSet.size()));
             if (rowSet != null) {
-                optionMap = new HashMap<>();
                 for (FormRow row : rowSet) {
                     String label;
                     Iterator<String> i = row.stringPropertyNames().iterator();
@@ -134,55 +131,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
             }
         }
         return optionMap;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Set<String> collectIdsFromDataList(DataList dataList, DataListColumn column) {
-        final String columnName = column.getName();
-        final boolean isMultiValue = "true".equals(getPropertyString("isMultiValue"));
-
-        Collection<Object> rows;
-        try {
-            rows = (Collection<Object>) dataList.getRows();
-        } catch (Exception e) {
-            LogUtil.warn(getClassName(), "Gagal ambil rows dari dataList untuk kolom [" + columnName + "]: " + e.getMessage());
-            return Collections.emptySet();
-        }
-
-        if (rows == null) {
-            return Collections.emptySet();
-        }
-
-        Set<String> ids = new HashSet<>();
-        for (Object r : rows) {
-            if (!(r instanceof Map)) continue;
-            Object rawValue = ((Map<?, ?>) r).get(columnName);
-            if (rawValue == null) continue;
-            ids.addAll(extractIdsFromValue(rawValue, isMultiValue));
-            //LogUtil.warn(getClassName(), "rows dari dataList untuk kolom [" + columnName + "]");
-        }
-        return ids;
-    }
-
-    private List<String> extractIdsFromValue(Object value, boolean isMultiValue) {
-        if (value instanceof Object[]) {
-            Object[] arr = (Object[]) value;
-
-            if (isMultiValue) {
-                List<String> ids = new ArrayList<>();
-                for (Object o : arr) {
-                    String id = extractIdAsString(o);
-                    if (id != null && !id.isEmpty()) ids.add(id);
-                }
-                return ids;
-            }
-
-            String id = extractIdAsString(value);
-            return id != null && !id.isEmpty() ? Collections.singletonList(id) : Collections.emptyList();
-        }
-
-        String id = extractIdAsString(value);
-        return id != null && !id.isEmpty() ? Collections.singletonList(id) : Collections.emptyList();
     }
 
     private String extractIdAsString(Object value) {
