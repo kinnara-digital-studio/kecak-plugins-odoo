@@ -68,8 +68,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                 .map(s -> {
                     try {
                         return Integer.parseInt(s);
-                    } catch (
-                            NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         return s;
                     }
                 }).toArray(Object[]::new);
