@@ -39,6 +39,7 @@ import org.json.JSONObject;
 
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
     public static final String LABEL = "Odoo Options Binder";
+    final private Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)])?(?!\\w)");
 
     final private Predicate<String> isEmpty = String::isEmpty;
     final private Predicate<String> isNotEmpty = isEmpty.negate();
@@ -60,6 +61,13 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String labelField = getLabelField();
         final String groupingField = getGroupingField();
 
+        String groupingBaseField = "";
+
+        if (!groupingField.isEmpty()) {
+            Matcher mGrouping = fieldPattern.matcher(groupingField);
+            groupingBaseField = mGrouping.find() ? mGrouping.group(1) : groupingField;
+        }
+
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
         final Object[] dependencyFilter = Optional.ofNullable(dependencyValues)
                 .stream()
@@ -72,7 +80,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         return s;
                     }
                 }).toArray(Object[]::new);
-        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Stream.of(new SearchFilter(groupingField, SearchFilter.Operator.IN, dependencyFilter));
+        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Stream.of(new SearchFilter(groupingBaseField, SearchFilter.Operator.IN, dependencyFilter));
 
         final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
@@ -91,20 +99,19 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
             final boolean hideEmptyValue = hideEmptyValue();
 
-            final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)])?(?!\\w)");
-
             Set<String> fieldsSet = new HashSet<>();
             Matcher mValue = fieldPattern.matcher(valueField);
             fieldsSet.add(mValue.find() ? mValue.group(1) : valueField);
-            if (!groupingField.isEmpty()) {
-                Matcher mGrouping = fieldPattern.matcher(groupingField);
-                fieldsSet.add(mGrouping.find() ? mGrouping.group(1) : groupingField);
-            }
             Matcher mFields = fieldPattern.matcher(labelField);
             while (mFields.find()) {
                 fieldsSet.add(mFields.group(1));
             }
+            if (!groupingField.isEmpty()) {
+                fieldsSet.add(groupingBaseField);
+            }
             String[] requiredFields = fieldsSet.toArray(new String[0]);
+//            LogUtil.info(getClassName(), "search_read model=[" + model + "] fields=" + Arrays.toString(requiredFields)
+//                    + " valueField=[" + valueField + "] labelField=[" + labelField + "] groupingField=[" + groupingField + "]");
 
             // Safety limit to optimize cross-network XML-RPC payload parsing sizes
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
