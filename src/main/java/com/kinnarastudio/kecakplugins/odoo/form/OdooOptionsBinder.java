@@ -93,8 +93,12 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             final Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)])?(?!\\w)");
 
             Set<String> fieldsSet = new HashSet<>();
-            fieldsSet.add(valueField);
-            if (!groupingField.isEmpty()) fieldsSet.add(groupingField);
+            Matcher mValue = fieldPattern.matcher(valueField);
+            fieldsSet.add(mValue.find() ? mValue.group(1) : valueField);
+            if (!groupingField.isEmpty()) {
+                Matcher mGrouping = fieldPattern.matcher(groupingField);
+                fieldsSet.add(mGrouping.find() ? mGrouping.group(1) : groupingField);
+            }
             Matcher mFields = fieldPattern.matcher(labelField);
             while (mFields.find()) {
                 fieldsSet.add(mFields.group(1));
