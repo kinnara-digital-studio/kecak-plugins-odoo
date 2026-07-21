@@ -134,7 +134,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
                         while (matcher.find()) {
                             String field = matcher.group(1);
-                            Integer labelIndex = matcher.group(2) != null ? null : Integer.parseInt(matcher.group(2));
+                            Integer labelIndex = matcher.group(2) == null ? null : Integer.parseInt(matcher.group(2));
                             String fieldValue = extractIndexedValue(m, field, labelIndex);
                             matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
                         }
