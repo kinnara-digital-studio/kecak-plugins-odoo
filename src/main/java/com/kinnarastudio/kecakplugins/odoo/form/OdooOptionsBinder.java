@@ -68,8 +68,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             Matcher mGrouping = fieldPattern.matcher(groupingField);
             if (mGrouping.find()) {
                 groupingBaseField = mGrouping.group(1);
-                String groupingIndexStr = mGrouping.group(2) != null ? mGrouping.group(2) : "";
-                groupingIndex = groupingIndexStr.isEmpty() ? null : Integer.parseInt(groupingIndexStr);
+                groupingIndex = mGrouping.group(2) == null ? null : Integer.parseInt(mGrouping.group(2));
             } else {
                 groupingIndex = null;
                 groupingBaseField = groupingField;
@@ -135,8 +134,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
                         while (matcher.find()) {
                             String field = matcher.group(1);
-                            String labelIdxString = matcher.group(2) != null ? matcher.group(2) : "";
-                            Integer labelIndex = labelIdxString.isEmpty() ? null : Integer.parseInt(labelIdxString);
+                            Integer labelIndex = matcher.group(2) != null ? null : Integer.parseInt(matcher.group(2));
                             String fieldValue = extractIndexedValue(m, field, labelIndex);
                             matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
                         }

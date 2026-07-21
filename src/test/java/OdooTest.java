@@ -269,8 +269,12 @@ public class OdooTest {
     @Test
     public void testCostCenter() throws OdooCallMethodException {
         String model = "account.analytic.account";
-        Map<String, Object>[] records = rpc.searchRead(model, null, null, null, null);
+        SearchFilter[] filters = new SearchFilter[]{
+                new SearchFilter("company_id", SearchFilter.Operator.IN, 2),
+        };
+        Map<String, Object>[] records = rpc.searchRead(model, filters, null, null, null);
         for (Map<String, Object> record : records) {
+            System.out.println("-----------------------["+record.get("id")+"]---------------------");
             record.forEach((key, value) -> {
                 System.out.println("[" + key + "] -> [" + value + "]");
                 if(value instanceof Object[]) {
