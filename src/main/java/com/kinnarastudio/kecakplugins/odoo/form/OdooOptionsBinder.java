@@ -61,11 +61,21 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String labelField = getLabelField();
         final String groupingField = getGroupingField();
 
-        String groupingBaseField = "";
+        String groupingBaseField;
+        String groupingIndexStr;
 
         if (!groupingField.isEmpty()) {
             Matcher mGrouping = fieldPattern.matcher(groupingField);
-            groupingBaseField = mGrouping.find() ? mGrouping.group(1) : groupingField;
+            if (mGrouping.find()) {
+                groupingBaseField = mGrouping.group(1);
+                groupingIndexStr = mGrouping.group(2) != null ? mGrouping.group(2) : "";
+            } else {
+                groupingIndexStr = "";
+                groupingBaseField = groupingField;
+            }
+        } else {
+            groupingBaseField = "";
+            groupingIndexStr = "";
         }
 
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
@@ -100,8 +110,9 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             final boolean hideEmptyValue = hideEmptyValue();
 
             Set<String> fieldsSet = new HashSet<>();
-            Matcher mValue = fieldPattern.matcher(valueField);
-            fieldsSet.add(mValue.find() ? mValue.group(1) : valueField);
+//            Matcher mValue = fieldPattern.matcher(valueField);
+//            fieldsSet.add(mValue.find() ? mValue.group(1) : valueField);
+            fieldsSet.add(valueField);
             Matcher mFields = fieldPattern.matcher(labelField);
             while (mFields.find()) {
                 fieldsSet.add(mFields.group(1));
@@ -122,29 +133,12 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         StringBuilder labelBuffer = new StringBuilder();
 
                         while (matcher.find()) {
-                            String fieldName = matcher.group(1);
-                            String indexStr = matcher.group(2);
-                            Object rawValue = m.get(fieldName);
-
-                            String fieldValue;
-                            if (indexStr != null && rawValue instanceof Object[]) {
-                                Object[] arr = (Object[]) rawValue;
-                                int index = Integer.parseInt(indexStr);
-                                if (index >= 0 && index < arr.length) {
-                                    fieldValue = String.valueOf(arr[index]);
-                                } else {
-                                    fieldValue = "";
-                                }
-                            } else {
-                                fieldValue = formatOdooValue(rawValue);
-                            }
-
+                            String fieldValue = extractIndexedValue(m, matcher.group(1), matcher.group(2));
                             matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
                         }
                         matcher.appendTail(labelBuffer);
                         final String label = labelBuffer.toString();
-
-                        final String grouping = String.valueOf(m.get(groupingField));
+                        final String grouping = groupingField.isEmpty() ? "" : extractIndexedValue(m, groupingBaseField, groupingIndexStr);
 
                         if (hideEmptyValue && value.isEmpty())
                             return null;
@@ -303,5 +297,14 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             }
         }
         return value == null ? "" : String.valueOf(value);
+    }
+    private String extractIndexedValue(Map<String, Object> record, String fieldName, String indexStr) {
+        Object rawValue = record.get(fieldName);
+        if (indexStr != null && !indexStr.isEmpty() && rawValue instanceof Object[]) {
+            Object[] arr = (Object[]) rawValue;
+            int index = Integer.parseInt(indexStr);
+            return (index >= 0 && index < arr.length) ? String.valueOf(arr[index]) : "";
+        }
+        return formatOdooValue(rawValue);
     }
 }
