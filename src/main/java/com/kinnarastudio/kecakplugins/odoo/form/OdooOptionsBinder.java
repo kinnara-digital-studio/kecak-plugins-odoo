@@ -62,20 +62,21 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         final String groupingField = getGroupingField();
 
         String groupingBaseField;
-        String groupingIndexStr;
+        Integer groupingIndex;
 
         if (!groupingField.isEmpty()) {
             Matcher mGrouping = fieldPattern.matcher(groupingField);
             if (mGrouping.find()) {
                 groupingBaseField = mGrouping.group(1);
-                groupingIndexStr = mGrouping.group(2) != null ? mGrouping.group(2) : "";
+                String groupingIndexStr = mGrouping.group(2) != null ? mGrouping.group(2) : "";
+                groupingIndex = groupingIndexStr.isEmpty() ? null : Integer.parseInt(groupingIndexStr);
             } else {
-                groupingIndexStr = "";
+                groupingIndex = null;
                 groupingBaseField = groupingField;
             }
         } else {
             groupingBaseField = "";
-            groupingIndexStr = "";
+            groupingIndex = null;
         }
 
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
@@ -133,12 +134,15 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         StringBuilder labelBuffer = new StringBuilder();
 
                         while (matcher.find()) {
-                            String fieldValue = extractIndexedValue(m, matcher.group(1), matcher.group(2));
+                            String field = matcher.group(1);
+                            String labelIdxString = matcher.group(2) != null ? matcher.group(2) : "";
+                            Integer labelIndex = labelIdxString.isEmpty() ? null : Integer.parseInt(labelIdxString);
+                            String fieldValue = extractIndexedValue(m, field, labelIndex);
                             matcher.appendReplacement(labelBuffer, Matcher.quoteReplacement(fieldValue));
                         }
                         matcher.appendTail(labelBuffer);
                         final String label = labelBuffer.toString();
-                        final String grouping = groupingField.isEmpty() ? "" : extractIndexedValue(m, groupingBaseField, groupingIndexStr);
+                        final String grouping = groupingField.isEmpty() ? "" : extractIndexedValue(m, groupingBaseField, groupingIndex);
 
                         if (hideEmptyValue && value.isEmpty())
                             return null;
@@ -298,11 +302,10 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         }
         return value == null ? "" : String.valueOf(value);
     }
-    private String extractIndexedValue(Map<String, Object> record, String fieldName, String indexStr) {
+    private String extractIndexedValue(Map<String, Object> record, String fieldName, Integer index) {
         Object rawValue = record.get(fieldName);
-        if (indexStr != null && !indexStr.isEmpty() && rawValue instanceof Object[]) {
+        if (index != null && rawValue instanceof Object[]) {
             Object[] arr = (Object[]) rawValue;
-            int index = Integer.parseInt(indexStr);
             return (index >= 0 && index < arr.length) ? String.valueOf(arr[index]) : "";
         }
         return formatOdooValue(rawValue);
