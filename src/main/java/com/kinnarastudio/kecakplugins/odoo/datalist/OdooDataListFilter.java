@@ -55,7 +55,7 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
             operator = SearchFilter.Operator.EQUAL;
         }
 
-        final com.kinnarastudio.odooxmlrpc.model.DataType dataType = getDataType();
+        final DataType dataType = getDataType();
 
         return new OdooFilterQueryObject(SearchFilter.Join.AND, name, operator, value, dataType);
     }
@@ -115,8 +115,8 @@ public class OdooDataListFilter extends DataListFilterTypeDefault {
         return getPropertyString("mode");
     }
 
-    protected com.kinnarastudio.odooxmlrpc.model.DataType getDataType() {
-        return com.kinnarastudio.odooxmlrpc.model.DataType.parse(getPropertyString("dataType"));
+    protected DataType getDataType() {
+        return DataType.parse(getPropertyString("dataType"));
     }
 
     protected String getConditionField(String name) {
