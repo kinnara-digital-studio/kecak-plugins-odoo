@@ -4,15 +4,16 @@ import com.kinnarastudio.odooxmlrpc.model.DataType;
 import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
 import org.joget.apps.datalist.model.DataListFilterQueryObject;
 
-@Deprecated
 public class OdooFilterQueryObject extends DataListFilterQueryObject implements IOdooFilter {
+    private final SearchFilter.Join join;
     private final String field;
     private final String value;
 
     private final SearchFilter.Operator operator;
     private final DataType dataType;
 
-    public OdooFilterQueryObject(String field, SearchFilter.Operator operator, String value, DataType dataType) {
+    public OdooFilterQueryObject(SearchFilter.Join join, String field, SearchFilter.Operator operator, String value, DataType dataType) {
+        this.join = join;
         this.field = field;
         this.operator = operator;
         this.value = value;
@@ -42,5 +43,10 @@ public class OdooFilterQueryObject extends DataListFilterQueryObject implements 
     @Override
     public DataType getDataType() {
         return dataType;
+    }
+
+    @Override
+    public SearchFilter.Join getJoin() {
+        return join;
     }
 }

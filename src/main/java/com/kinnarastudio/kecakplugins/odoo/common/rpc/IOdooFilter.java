@@ -11,4 +11,6 @@ public interface IOdooFilter {
     String getValue();
 
     DataType getDataType();
+
+    SearchFilter.Join getJoin();
 }

@@ -3,6 +3,7 @@ import com.kinnarastudio.odooxmlrpc.exception.OdooCallMethodException;
 import com.kinnarastudio.odooxmlrpc.model.Field;
 import com.kinnarastudio.odooxmlrpc.model.SearchFilter;
 import com.kinnarastudio.odooxmlrpc.rpc.OdooRpc;
+import model.HrEmployee;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -285,5 +286,31 @@ public class OdooTest {
 
             System.out.println("===== ");
         }
+    }
+
+
+    @Test
+    public void testSearchRead() throws OdooCallMethodException {
+        SearchFilter[] filter = new SearchFilter[]{
+                new SearchFilter(SearchFilter.Join.AND, "user_id", SearchFilter.Operator.NOT_EQUAL, null),
+                new SearchFilter(SearchFilter.Join.OR, "department_id.name", SearchFilter.Operator.ILIKE, "%Marketing%"),
+        };
+
+        HrEmployee[] records = rpc.searchRead(HrEmployee.class, filter, null, null, null);
+        System.out.println(records.length);
+        Arrays.stream(records)
+                .map(m -> {
+                    String id = String.valueOf(m.getId());
+                    String name = String.valueOf(m.getName());
+                    String barcode = String.valueOf(m.getBarcode());
+//                    Object[] job_id = (Object[]) m.get("job_id");
+//                    String jobId = Arrays.stream(job_id).map(String::valueOf).collect(Collectors.joining(";"));
+                    return String.join(" | ", id, name, barcode);
+                })
+                .map(String::valueOf)
+                .forEach(System.out::println);
+//                .forEach(System.out::println);
+
+//        Arrays.stream(records).forEach(System.out::println);
     }
 }

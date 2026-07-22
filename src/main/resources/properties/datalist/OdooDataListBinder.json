@@ -33,6 +33,12 @@
         "label": "Filter",
         "columns": [
           {
+            "key": "join",
+            "label": "Join",
+            "required": "true",
+            "options": %s
+          },
+          {
             "key": "field",
             "label": "Field",
             "required": "true"
@@ -46,12 +52,6 @@
           {
             "key": "value",
             "label": "Value"
-          },
-          {
-            "key": "join",
-            "label": "Join",
-            "required": "true",
-            "options": %s
           },
           {
             "key": "dataType",

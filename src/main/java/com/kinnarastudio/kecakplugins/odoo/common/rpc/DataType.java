@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 /**
  * Odoo field data types
  */
+@Deprecated
 public enum DataType {
     STRING,
     INTEGER,

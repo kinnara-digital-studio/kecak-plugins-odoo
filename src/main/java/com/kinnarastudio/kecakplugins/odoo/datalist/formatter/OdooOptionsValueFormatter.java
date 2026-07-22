@@ -2,14 +2,12 @@ package com.kinnarastudio.kecakplugins.odoo.datalist.formatter;
 
 import java.util.*;
 
-import com.kinnarastudio.kecakplugins.odoo.common.property.CacheUtil;
 import com.kinnarastudio.kecakplugins.odoo.form.OdooOptionsBinder;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListColumn;
 import org.joget.apps.datalist.model.DataListColumnFormatDefault;
 import org.joget.apps.form.model.*;
-import org.joget.commons.util.LogUtil;
 import org.joget.plugin.base.PluginManager;
 
 /**
@@ -28,8 +26,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
 
         if (value instanceof Object[]) {
             Object[] arrValue = (Object[]) value;
-
-            LogUtil.info(getClassName(), "Original Val: " + Arrays.toString(arrValue));
 
             if ("true".equals(getPropertyString("isMultiValue"))) {
                 for (int i = 0; i < arrValue.length; i++) {
@@ -51,7 +47,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         }
 
         String val = extractIdAsString(value);
-        LogUtil.debug(getClassName(), "Val: [" + val + "]");
         String label = map.get(val);
         return label != null ? label : val;
     }
@@ -107,11 +102,8 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
         if (optionsBinderProperties != null && optionsBinderProperties.get("className") != null && !optionsBinderProperties.get("className").toString().isEmpty() && (optionBinder = (FormBinder) pluginManager.getPlugin(optionsBinderProperties.get("className").toString())) != null) {
             optionBinder.setProperties((Map) optionsBinderProperties.get("properties"));
 
-            LogUtil.warn(getClassName(), "Collecting ID and calling load() - instance: " + System.identityHashCode(this));
-
             FormRowSet rowSet = ((FormAjaxOptionsBinder) optionBinder).loadAjaxOptions(null);
 
-            LogUtil.warn(getClassName(), "load() returned - rowSet: " + (rowSet == null ? "NULL" : "size=" + rowSet.size()));
             if (rowSet != null) {
                 for (FormRow row : rowSet) {
                     String label;
@@ -127,7 +119,6 @@ public class OdooOptionsValueFormatter extends DataListColumnFormatDefault {
                     }
                     optionMap.put(value, label);
                 }
-                LogUtil.warn(getClassName(), "optionMap filled - size: " + optionMap.size());
             }
         }
         return optionMap;

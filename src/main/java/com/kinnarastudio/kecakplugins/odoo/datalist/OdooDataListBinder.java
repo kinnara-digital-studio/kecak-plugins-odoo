@@ -192,8 +192,8 @@ public class OdooDataListBinder extends DataListBinderDefault {
                 .collect(JSONCollectors.toJSONArray());
 
         final Object[] binderArgs = new Object[]{
-                jsonOperator.toString(),
                 jsonJoin.toString(),
+                jsonOperator.toString(),
                 jsonDataTypes.toString()
         };
 
@@ -234,7 +234,7 @@ public class OdooDataListBinder extends DataListBinderDefault {
                         value = dataType.valueParser(f.getValue());
                     }
 
-                    return new SearchFilter(f.getField(), f.getFilterOperator(), value);
+                    return new SearchFilter(f.getJoin(), f.getField(), f.getFilterOperator(), value);
                 }, (NumberFormatException ignored) -> null))
                 .filter(Objects::nonNull);
 
