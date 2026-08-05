@@ -79,6 +79,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
         }
 
         final Stream<SearchFilter> defaultFilterStream = Arrays.stream(OdooDataListBinderUtil.getFilter(this));
+        final boolean isLookupMode = (dependencyValues == null);
         final Object[] dependencyFilter = Optional.ofNullable(dependencyValues)
                 .stream()
                 .flatMap(Arrays::stream)
@@ -90,7 +91,12 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         return s;
                     }
                 }).toArray(Object[]::new);
-        final Stream<SearchFilter> filterQueryObjectStream = groupingField.isEmpty() ? Stream.empty() : Stream.of(new SearchFilter(groupingBaseField, SearchFilter.Operator.IN, dependencyFilter));
+        final Stream<SearchFilter> filterQueryObjectStream;
+        if (groupingField.isEmpty() || isLookupMode) {
+            filterQueryObjectStream = Stream.empty();
+        } else {
+            filterQueryObjectStream = Stream.of(new SearchFilter(groupingBaseField, SearchFilter.Operator.IN, dependencyFilter));
+        }
 
         final SearchFilter[] filters = Stream.concat(defaultFilterStream, filterQueryObjectStream)
                 .toArray(SearchFilter[]::new);
