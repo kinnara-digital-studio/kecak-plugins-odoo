@@ -115,10 +115,19 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 
             final boolean hideEmptyValue = hideEmptyValue();
 
+            Matcher mValue = fieldPattern.matcher(valueField);
+            final String valueBaseField;
+            final Integer valueIndex;
+            if (mValue.find()) {
+                valueBaseField = mValue.group(1);
+                valueIndex = mValue.group(2) == null ? null : Integer.parseInt(mValue.group(2));
+            } else {
+                valueBaseField = valueField;
+                valueIndex = null;
+            }
+
             Set<String> fieldsSet = new HashSet<>();
-//            Matcher mValue = fieldPattern.matcher(valueField);
-//            fieldsSet.add(mValue.find() ? mValue.group(1) : valueField);
-            fieldsSet.add(valueField);
+            fieldsSet.add(valueBaseField);
             Matcher mFields = fieldPattern.matcher(labelField);
             while (mFields.find()) {
                 fieldsSet.add(mFields.group(1));
@@ -133,7 +142,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
             // Safety limit to optimize cross-network XML-RPC payload parsing sizes
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
                     .map(m -> {
-                        final String value = String.valueOf(m.get(valueField));
+                        final String value = extractIndexedValue(m, valueBaseField, valueIndex);
 
                         Matcher matcher = fieldPattern.matcher(labelField);
                         StringBuilder labelBuffer = new StringBuilder();

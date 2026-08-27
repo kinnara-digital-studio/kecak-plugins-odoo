@@ -99,6 +99,10 @@
               {
                 "value": "<=",
                 "label": "Less Equal"
+              },
+              {
+                "value": "in",
+                "label": "In"
               }
             ]
           },
