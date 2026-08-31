@@ -140,6 +140,10 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
 //                    + " valueField=[" + valueField + "] labelField=[" + labelField + "] groupingField=[" + groupingField + "]");
 
             // Safety limit to optimize cross-network XML-RPC payload parsing sizes
+            Set<String> seenValues = new HashSet<>();
+            if (!hideEmptyValue) {
+                seenValues.add("");
+            }
             FormRowSet ret = Arrays.stream(rpc.searchRead(model, requiredFields, filters, "id", null, null))
                     .map(m -> {
                         final String value = extractIndexedValue(m, valueBaseField, valueIndex);
@@ -175,6 +179,7 @@ public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBind
                         }
                     })
                     .filter(Objects::nonNull)
+                    .filter(row -> seenValues.add(row.getProperty(FormUtil.PROPERTY_VALUE)))
                     .collect(Collectors.toCollection(() -> new FormRowSet() {{
                         setMultiRow(true);
                         if (!hideEmptyValue) {
