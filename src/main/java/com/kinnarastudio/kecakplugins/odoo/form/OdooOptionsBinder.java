@@ -39,7 +39,7 @@ import org.json.JSONObject;
 
 public class OdooOptionsBinder extends FormBinder implements FormLoadOptionsBinder, FormAjaxOptionsBinder {
     public static final String LABEL = "Odoo Options Binder";
-    final private Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_]+)(?:\\[(\\d+)])?(?!\\w)");
+    final private Pattern fieldPattern = Pattern.compile("\\b([a-zA-Z0-9_.]+)(?:\\[(\\d+)])?(?!\\w)");
 
     final private Predicate<String> isEmpty = String::isEmpty;
     final private Predicate<String> isNotEmpty = isEmpty.negate();
